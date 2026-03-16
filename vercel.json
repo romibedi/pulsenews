@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/api/guardian/(.*)", "destination": "/api/guardian" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
+}
