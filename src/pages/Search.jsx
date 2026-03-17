@@ -31,8 +31,8 @@ export default function Search() {
   if (!query) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
-        <p className="text-zinc-500">Enter a search term to find news articles.</p>
-        <Link to="/" className="text-indigo-400 mt-4 inline-block no-underline">&larr; Back to home</Link>
+        <p className="text-[#9a9a9a]">Enter a search term to find news articles.</p>
+        <Link to="/" className="text-[#e05d44] mt-4 inline-block no-underline">&larr; Back to home</Link>
       </div>
     );
   }
@@ -40,14 +40,14 @@ export default function Search() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
       <div className="mb-8">
-        <p className="text-sm text-zinc-500 mb-1">Search results for</p>
-        <h1 className="text-3xl font-bold text-white">"{query}"</h1>
-        {!loading && <p className="text-sm text-zinc-500 mt-2">{articles.length} articles found</p>}
+        <p className="text-sm text-[#9a9a9a] mb-1">Search results for</p>
+        <h1 className="text-3xl font-bold text-[#1a1a1a]">"{query}"</h1>
+        {!loading && <p className="text-sm text-[#9a9a9a] mt-2">{articles.length} articles found</p>}
       </div>
 
       {error && (
         <div className="text-center py-12">
-          <p className="text-red-400">{error}</p>
+          <p className="text-red-500">{error}</p>
         </div>
       )}
 
@@ -55,9 +55,9 @@ export default function Search() {
         <Loader count={6} />
       ) : articles.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-zinc-400 text-lg mb-2">No results found</p>
-          <p className="text-zinc-600 text-sm">Try a different search term</p>
-          <Link to="/" className="text-indigo-400 mt-4 inline-block no-underline">&larr; Back to home</Link>
+          <p className="text-[#6b6b6b] text-lg mb-2">No results found</p>
+          <p className="text-[#9a9a9a] text-sm">Try a different search term</p>
+          <Link to="/" className="text-[#e05d44] mt-4 inline-block no-underline">&larr; Back to home</Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

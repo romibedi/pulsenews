@@ -57,15 +57,14 @@ export default function Article() {
   if (error || !article) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center">
-        <p className="text-red-400 mb-4">{error || 'Article not found'}</p>
-        <Link to="/" className="text-indigo-400 hover:text-indigo-300 no-underline">
+        <p className="text-red-500 mb-4">{error || 'Article not found'}</p>
+        <Link to="/" className="text-[#e05d44] hover:text-[#c94e38] no-underline">
           &larr; Back to home
         </Link>
       </div>
     );
   }
 
-  // Split body into paragraphs
   const paragraphs = article.body
     ? article.body.split(/\n+/).filter((p) => p.trim().length > 20)
     : [];
@@ -73,34 +72,34 @@ export default function Article() {
   return (
     <article className="max-w-3xl mx-auto px-4 sm:px-6 py-8 animate-fade-in">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-zinc-500 mb-6">
-        <Link to="/" className="hover:text-indigo-400 no-underline transition-colors">Home</Link>
+      <div className="flex items-center gap-2 text-sm text-[#9a9a9a] mb-6">
+        <Link to="/" className="hover:text-[#e05d44] no-underline transition-colors">Home</Link>
         <span>/</span>
-        <Link to={`/category/${article.sectionId}`} className="hover:text-indigo-400 no-underline transition-colors capitalize">
+        <Link to={`/category/${article.sectionId}`} className="hover:text-[#e05d44] no-underline transition-colors capitalize">
           {article.section}
         </Link>
       </div>
 
       {/* Tag */}
-      <span className="inline-block px-3 py-1 text-xs font-semibold bg-indigo-500/20 text-indigo-400 rounded-full capitalize mb-4">
+      <span className="inline-block px-3 py-1 text-xs font-semibold bg-[#fef0ed] text-[#e05d44] rounded-full capitalize mb-4">
         {article.section}
       </span>
 
       {/* Title */}
-      <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight mb-4">
+      <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#1a1a1a] leading-tight mb-4">
         {article.title}
       </h1>
 
       {/* Meta */}
-      <div className="flex flex-wrap items-center gap-3 text-sm text-zinc-500 mb-8 pb-6 border-b border-zinc-800">
-        <span className="text-zinc-300 font-medium">{article.author}</span>
+      <div className="flex flex-wrap items-center gap-3 text-sm text-[#9a9a9a] mb-8 pb-6 border-b border-[#e8e4df]">
+        <span className="text-[#1a1a1a] font-medium">{article.author}</span>
         <span>&middot;</span>
         <span>{formatDate(article.date)}</span>
         <a
           href={article.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="ml-auto text-indigo-400 hover:text-indigo-300 no-underline text-xs border border-indigo-500/30 px-3 py-1 rounded-full hover:bg-indigo-500/10 transition-all"
+          className="ml-auto text-[#e05d44] hover:text-[#c94e38] no-underline text-xs border border-[#e05d44]/30 px-3 py-1 rounded-full hover:bg-[#fef0ed] transition-all"
         >
           Read on Guardian &nearr;
         </a>
@@ -119,13 +118,13 @@ export default function Article() {
 
       {/* Description */}
       {article.description && (
-        <div className="text-lg text-zinc-300 leading-relaxed mb-8 pl-4 border-l-2 border-indigo-500" dangerouslySetInnerHTML={{ __html: article.description }} />
+        <div className="text-lg text-[#6b6b6b] leading-relaxed mb-8 pl-4 border-l-2 border-[#e05d44]" dangerouslySetInnerHTML={{ __html: article.description }} />
       )}
 
       {/* Body */}
       <div className="prose-custom space-y-5">
         {paragraphs.map((p, i) => (
-          <p key={i} className="text-zinc-400 leading-relaxed text-[15px]">
+          <p key={i} className="text-[#6b6b6b] leading-relaxed text-[15px]">
             {p}
           </p>
         ))}
@@ -133,11 +132,11 @@ export default function Article() {
 
       {/* Tags */}
       {article.tags?.length > 0 && (
-        <div className="mt-10 pt-6 border-t border-zinc-800">
-          <p className="text-xs text-zinc-600 uppercase tracking-wider mb-3">Related Topics</p>
+        <div className="mt-10 pt-6 border-t border-[#e8e4df]">
+          <p className="text-xs text-[#9a9a9a] uppercase tracking-wider mb-3">Related Topics</p>
           <div className="flex flex-wrap gap-2">
             {article.tags.map((tag) => (
-              <span key={tag} className="px-3 py-1 text-xs text-zinc-400 bg-zinc-800 rounded-full">
+              <span key={tag} className="px-3 py-1 text-xs text-[#6b6b6b] bg-[#f5f1ec] rounded-full">
                 {tag}
               </span>
             ))}
@@ -146,8 +145,8 @@ export default function Article() {
       )}
 
       {/* Back */}
-      <div className="mt-10 pt-6 border-t border-zinc-800">
-        <Link to="/" className="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 no-underline transition-colors">
+      <div className="mt-10 pt-6 border-t border-[#e8e4df]">
+        <Link to="/" className="inline-flex items-center gap-2 text-[#e05d44] hover:text-[#c94e38] no-underline transition-colors">
           <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>

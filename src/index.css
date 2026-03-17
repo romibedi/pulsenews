@@ -3,8 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --accent: #6366f1;
-  --accent-light: #818cf8;
+  --accent: #e05d44;
+  --accent-hover: #c94e38;
+  --bg: #faf8f5;
+  --surface: #ffffff;
+  --border: #e8e4df;
+  --text: #1a1a1a;
+  --text-secondary: #6b6b6b;
+  --text-muted: #9a9a9a;
 }
 
 * {
@@ -14,14 +20,17 @@
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: #0f0f14;
-  color: #e4e4e7;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4 {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Instrument Serif', Georgia, serif;
+  letter-spacing: -0.01em;
 }
 
 ::-webkit-scrollbar {
@@ -29,25 +38,19 @@ h1, h2, h3, h4 {
 }
 
 ::-webkit-scrollbar-track {
-  background: #18181b;
+  background: #f0ece7;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3f3f46;
+  background: #ccc5bc;
   border-radius: 3px;
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #6366f1, #a78bfa, #f472b6);
+  background: linear-gradient(135deg, #e05d44, #e8945a, #d4483b);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-}
-
-.glass {
-  background: rgba(24, 24, 27, 0.7);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(63, 63, 70, 0.4);
 }
 
 .card-hover {
@@ -55,13 +58,12 @@ h1, h2, h3, h4 {
 }
 
 .card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-  border-color: rgba(99, 102, 241, 0.4);
+  transform: translateY(-6px);
+  border-color: rgba(224, 93, 68, 0.25);
 }
 
 .shimmer {
-  background: linear-gradient(90deg, #1e1e24 25%, #2a2a32 50%, #1e1e24 75%);
+  background: linear-gradient(90deg, #f0ece7 25%, #e8e4df 50%, #f0ece7 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }

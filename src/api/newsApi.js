@@ -1,4 +1,4 @@
-const API_KEY = 'test';
+const API_KEY = import.meta.env.VITE_GUARDIAN_API_KEY || 'test';
 const BASE_URL = '/api/guardian';
 
 const SECTION_MAP = {
@@ -15,7 +15,7 @@ const SECTION_MAP = {
 export const CATEGORIES = Object.keys(SECTION_MAP);
 
 // --- Request queue to avoid rate limiting ---
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 const REQUEST_DELAY = 250; // ms between requests
 let lastRequestTime = 0;
 
@@ -91,6 +91,8 @@ function transformArticle(item) {
     sectionId: item.sectionId,
     url: item.webUrl,
     tags: (item.tags || []).slice(0, 4).map((t) => t.webTitle),
+    source: 'The Guardian',
+    isExternal: false,
   };
 }
 
