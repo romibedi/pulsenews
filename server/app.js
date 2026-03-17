@@ -584,12 +584,11 @@ app.post('/api/tts', express.json(), async (req, res) => {
   const lang = req.body.lang || 'en';
   if (!text) return res.status(400).json({ error: 'text param required' });
 
-  // Limit text to ~5000 chars to keep audio under 5 min
-  const cleanText = text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 5000);
+  const cleanText = text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 600);
   const voice = TTS_VOICES[lang] || TTS_VOICES.en;
 
   try {
-    const tts = new EdgeTTS(cleanText, voice, { rate: '+5%' });
+    const tts = new EdgeTTS(cleanText, voice, { rate: '+20%' });
     const result = await tts.synthesize();
     const audioBuffer = Buffer.from(await result.audio.arrayBuffer());
 

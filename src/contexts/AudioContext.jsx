@@ -45,7 +45,9 @@ export function AudioProvider({ children }) {
     setLoading(true);
     setProgress(0);
 
-    const text = `${article.title}. ${(article.body || article.description || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}`.slice(0, 5000);
+    // Keep text short for fast TTS — title + summary only (~600 chars)
+    const body = (article.body || article.description || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    const text = `${article.title}. ${body}`.slice(0, 600);
 
     const controller = new AbortController();
     abortRef.current = controller;

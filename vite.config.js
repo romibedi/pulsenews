@@ -700,11 +700,11 @@ export default defineConfig({
             lang = url.searchParams.get('lang') || 'en'
           }
           if (!text) { res.statusCode = 400; res.end(JSON.stringify({ error: 'text param required' })); return }
-          const cleanText = text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 5000)
+          const cleanText = text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 600)
           const voice = TTS_VOICES[lang] || TTS_VOICES.en
           try {
             const { EdgeTTS } = await import('edge-tts-universal')
-            const tts = new EdgeTTS(cleanText, voice, { rate: '+5%' })
+            const tts = new EdgeTTS(cleanText, voice, { rate: '+20%' })
             const result = await tts.synthesize()
             const audioBuffer = Buffer.from(await result.audio.arrayBuffer())
             res.setHeader('Content-Type', 'audio/mpeg')
