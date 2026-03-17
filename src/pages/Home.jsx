@@ -61,7 +61,9 @@ export default function Home() {
   const firstSection = activeSections[0]?.key || 'world';
   const englishArticles = sections[firstSection] || [];
   // When non-English language is selected, use language articles as primary content
+  // Keep showing English articles while language articles load (langLoading)
   const mainArticles = (lang !== 'en' && langArticles.length > 0) ? langArticles : englishArticles;
+  const isLangSwitching = lang !== 'en' && langLoading;
   const featured = mainArticles[0];
   const latest = mainArticles.slice(1, 7);
   const more = mainArticles.slice(7, 13);
@@ -145,10 +147,10 @@ export default function Home() {
           </div>
         </div>
 
-        {(loading || (lang !== 'en' && langLoading)) ? (
+        {loading && !featured ? (
           <HeroLoader />
         ) : featured ? (
-          <div className="animate-fade-in">
+          <div className={`animate-fade-in transition-opacity duration-300 ${isLangSwitching ? 'opacity-40' : ''}`}>
             <NewsCard article={featured} featured />
           </div>
         ) : null}
@@ -159,7 +161,10 @@ export default function Home() {
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
             <h2 className="text-2xl font-normal text-[var(--text)]">{t('latest')}</h2>
-            {!loading && latest.length > 0 && (
+            {isLangSwitching && (
+              <span className="text-xs text-[var(--text-muted)] animate-pulse">Loading...</span>
+            )}
+            {!loading && !isLangSwitching && latest.length > 0 && (
               <button
                 onClick={() => {
                   if (latest.length > 0) {
@@ -181,10 +186,10 @@ export default function Home() {
             {t('viewAll')} &rarr;
           </Link>
         </div>
-        {(loading || (lang !== 'en' && langLoading)) ? (
+        {loading && latest.length === 0 ? (
           <Loader />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 transition-opacity duration-300 ${isLangSwitching ? 'opacity-40' : ''}`}>
             {latest.map((article, i) => (
               <div key={article.id} className="animate-fade-in h-full" style={{ animationDelay: `${i * 80}ms` }}>
                 <NewsCard article={article} />

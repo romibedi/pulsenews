@@ -50,14 +50,19 @@ export default function Category() {
 
   // When non-English, show language articles; otherwise regional articles
   const displayArticles = (lang !== 'en' && langArticles.length > 0) ? langArticles : articles;
-  const isLoading = loading || (lang !== 'en' && langLoading);
+  const isLangSwitching = lang !== 'en' && langLoading;
   const regionLabel = region && region !== 'world' ? regionInfo.label : 'the world';
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
       <div className="mb-8">
-        <div className="inline-block px-3 py-1 bg-[#fef0ed] dark:bg-[#e87461]/10 text-[#e05d44] dark:text-[#e87461] text-xs font-semibold rounded-full uppercase tracking-wider mb-3">
-          {category}
+        <div className="inline-flex items-center gap-2 mb-3">
+          <span className="inline-block px-3 py-1 bg-[#fef0ed] dark:bg-[#e87461]/10 text-[#e05d44] dark:text-[#e87461] text-xs font-semibold rounded-full uppercase tracking-wider">
+            {category}
+          </span>
+          {isLangSwitching && (
+            <span className="text-xs text-[var(--text-muted)] animate-pulse">Loading...</span>
+          )}
         </div>
         <h1 className="text-3xl md:text-4xl font-normal text-[var(--text)] capitalize">{category}</h1>
         <p className="text-[var(--text-muted)] mt-1 text-sm">
@@ -74,10 +79,10 @@ export default function Category() {
         </div>
       )}
 
-      {isLoading ? (
+      {loading && displayArticles.length === 0 ? (
         <Loader count={9} />
       ) : (
-        <>
+        <div className={`transition-opacity duration-300 ${isLangSwitching ? 'opacity-40' : ''}`}>
           {displayArticles[0] && (
             <div className="mb-8 animate-fade-in">
               <NewsCard article={displayArticles[0]} featured />
@@ -95,7 +100,7 @@ export default function Category() {
           {displayArticles.length === 0 && !error && (
             <p className="text-center text-sm text-[var(--text-muted)] mt-10">No articles found</p>
           )}
-        </>
+        </div>
       )}
     </div>
   );
