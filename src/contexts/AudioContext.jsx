@@ -1,6 +1,22 @@
-import { createContext, useContext, useState, useRef, useCallback } from 'react';
+import { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
 
 const AudioCtx = createContext(null);
+
+// Language to BCP-47 voice locale mapping
+const LANG_VOICE_MAP = {
+  en: 'en', hi: 'hi', ta: 'ta', te: 'te', bn: 'bn', mr: 'mr',
+  ur: 'ur', ar: 'ar', fr: 'fr', de: 'de', es: 'es', pt: 'pt',
+  zh: 'zh', ja: 'ja', ko: 'ko', sw: 'sw',
+};
+
+function pickVoice(lang) {
+  const voices = speechSynthesis.getVoices();
+  const locale = LANG_VOICE_MAP[lang] || lang;
+  // Prefer voices matching the language, prioritize those with "Google", "Samantha", "Neural", or "Enhanced"
+  const matching = voices.filter((v) => v.lang.startsWith(locale));
+  const preferred = matching.find((v) => /google|neural|enhanced|samantha/i.test(v.name));
+  return preferred || matching[0] || null;
+}
 
 export function AudioProvider({ children }) {
   const [currentArticle, setCurrentArticle] = useState(null);
@@ -11,33 +27,49 @@ export function AudioProvider({ children }) {
   const [speed, setSpeed] = useState(1);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState('');
-  const audioRef = useRef(null);
-  const abortRef = useRef(null);
+  const utteranceRef = useRef(null);
+  const progressRef = useRef(null);
+  const startTimeRef = useRef(null);
 
-  // Format seconds to m:ss
+  // Preload voices (some browsers load them async)
+  useEffect(() => {
+    speechSynthesis.getVoices();
+    const handler = () => speechSynthesis.getVoices();
+    speechSynthesis.addEventListener?.('voiceschanged', handler);
+    return () => speechSynthesis.removeEventListener?.('voiceschanged', handler);
+  }, []);
+
   const formatTime = (secs) => {
     const m = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
+  const clearProgress = useCallback(() => {
+    if (progressRef.current) {
+      clearInterval(progressRef.current);
+      progressRef.current = null;
+    }
+  }, []);
+
   const stop = useCallback(() => {
-    if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; audioRef.current = null; }
+    speechSynthesis.cancel();
+    utteranceRef.current = null;
+    clearProgress();
     setPlaying(false);
     setPaused(false);
     setLoading(false);
     setProgress(0);
     setDuration('');
     setCurrentArticle(null);
-  }, []);
+  }, [clearProgress]);
 
   const playNextRef = useRef(null);
 
   const playArticle = useCallback((article, lang = 'en') => {
-    // Stop any current playback
-    if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
+    // Stop any current speech
+    speechSynthesis.cancel();
+    clearProgress();
 
     setCurrentArticle(article);
     setPlaying(true);
@@ -45,69 +77,58 @@ export function AudioProvider({ children }) {
     setLoading(true);
     setProgress(0);
 
-    // Keep text short for fast TTS — title + summary only (~600 chars)
     const body = (article.body || article.description || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
-    const text = `${article.title}. ${body}`.slice(0, 600);
+    const text = `${article.title}. ${body}`.slice(0, 2000);
 
-    const controller = new AbortController();
-    abortRef.current = controller;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = speed;
+    utterance.pitch = 1;
 
-    fetch('/api/tts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, lang }),
-      signal: controller.signal,
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('TTS generation failed');
-        return res.blob();
-      })
-      .then((blob) => {
-        if (controller.signal.aborted) return;
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        audio.playbackRate = speed;
-        audioRef.current = audio;
+    const voice = pickVoice(lang);
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang;
+    } else {
+      utterance.lang = LANG_VOICE_MAP[lang] || lang;
+    }
 
-        audio.onloadedmetadata = () => {
-          setDuration(formatTime(audio.duration));
-          setLoading(false);
-        };
+    // Estimate duration based on ~150 words/min at rate 1
+    const wordCount = text.split(/\s+/).length;
+    const estSeconds = (wordCount / 150) * 60 / speed;
 
-        audio.ontimeupdate = () => {
-          if (audio.duration) {
-            setProgress((audio.currentTime / audio.duration) * 100);
-          }
-        };
+    utterance.onstart = () => {
+      setLoading(false);
+      setDuration(formatTime(estSeconds));
+      startTimeRef.current = Date.now();
+      // Update progress on interval since Web Speech API doesn't provide time updates
+      progressRef.current = setInterval(() => {
+        const elapsed = (Date.now() - startTimeRef.current) / 1000;
+        const pct = Math.min((elapsed / estSeconds) * 100, 99);
+        setProgress(pct);
+      }, 200);
+    };
 
-        audio.onended = () => {
-          URL.revokeObjectURL(url);
-          setPlaying(false);
-          setPaused(false);
-          setProgress(100);
-          // Play next in queue
-          if (playNextRef.current) setTimeout(playNextRef.current, 300);
-        };
+    utterance.onend = () => {
+      clearProgress();
+      setPlaying(false);
+      setPaused(false);
+      setProgress(100);
+      utteranceRef.current = null;
+      if (playNextRef.current) setTimeout(playNextRef.current, 300);
+    };
 
-        audio.onerror = () => {
-          URL.revokeObjectURL(url);
-          setPlaying(false);
-          setPaused(false);
-          setLoading(false);
-        };
+    utterance.onerror = (e) => {
+      if (e.error === 'canceled') return;
+      clearProgress();
+      setPlaying(false);
+      setPaused(false);
+      setLoading(false);
+      utteranceRef.current = null;
+    };
 
-        audio.play().catch(() => {
-          setPlaying(false);
-          setLoading(false);
-        });
-      })
-      .catch((err) => {
-        if (err.name === 'AbortError') return;
-        console.error('TTS error:', err);
-        setPlaying(false);
-        setLoading(false);
-      });
-  }, [speed]);
+    utteranceRef.current = utterance;
+    speechSynthesis.speak(utterance);
+  }, [speed, clearProgress]);
 
   const playNext = useCallback(() => {
     setQueue((prev) => {
@@ -121,18 +142,30 @@ export function AudioProvider({ children }) {
     });
   }, [stop, playArticle]);
 
-  // Keep playNextRef in sync
   playNextRef.current = playNext;
 
   const pause = useCallback(() => {
-    audioRef.current?.pause();
+    speechSynthesis.pause();
+    clearProgress();
     setPaused(true);
-  }, []);
+  }, [clearProgress]);
 
   const resume = useCallback(() => {
-    audioRef.current?.play();
+    speechSynthesis.resume();
+    // Restart progress timer from current position
+    const estSeconds = parseFloat(duration?.split(':')[0] || 0) * 60 + parseFloat(duration?.split(':')[1] || 0);
+    if (estSeconds > 0) {
+      const currentPct = progress;
+      const remainSecs = estSeconds * (1 - currentPct / 100);
+      startTimeRef.current = Date.now() - (estSeconds - remainSecs) * 1000;
+      progressRef.current = setInterval(() => {
+        const elapsed = (Date.now() - startTimeRef.current) / 1000;
+        const pct = Math.min((elapsed / estSeconds) * 100, 99);
+        setProgress(pct);
+      }, 200);
+    }
     setPaused(false);
-  }, []);
+  }, [clearProgress, duration, progress]);
 
   const addToQueue = useCallback((article) => {
     setQueue((prev) => {
@@ -149,16 +182,12 @@ export function AudioProvider({ children }) {
 
   const changeSpeed = useCallback((newSpeed) => {
     setSpeed(newSpeed);
-    if (audioRef.current) {
-      audioRef.current.playbackRate = newSpeed;
-    }
+    // Web Speech API doesn't support changing rate mid-utterance,
+    // but the next article will use the new rate
   }, []);
 
-  const seekTo = useCallback((pct) => {
-    if (audioRef.current && audioRef.current.duration) {
-      audioRef.current.currentTime = (pct / 100) * audioRef.current.duration;
-      setProgress(pct);
-    }
+  const seekTo = useCallback(() => {
+    // Web Speech API doesn't support seeking — no-op
   }, []);
 
   const value = {
