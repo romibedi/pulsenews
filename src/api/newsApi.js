@@ -26,8 +26,12 @@ function setCache(key, data) {
   }
 }
 
-export async function fetchByCategory(category, page = 1) {
-  const url = `/api/feeds?category=${encodeURIComponent(category)}`;
+export async function fetchByCategory(category, { region } = {}) {
+  // If region is set, use regional feeds; otherwise global
+  const url = region && region !== 'world'
+    ? `/api/regional-feeds?region=${encodeURIComponent(region)}&category=${encodeURIComponent(category)}`
+    : `/api/feeds?category=${encodeURIComponent(category)}`;
+
   const cached = getCached(url);
   if (cached && cached.articles) return cached;
 
@@ -48,7 +52,6 @@ export async function fetchByCategory(category, page = 1) {
 }
 
 export async function searchNews(query) {
-  // Search across all categories and filter client-side
   const categories = CATEGORIES;
   const results = await Promise.all(
     categories.map((cat) =>
@@ -65,7 +68,6 @@ export async function searchNews(query) {
       a.title?.toLowerCase().includes(q) ||
       a.description?.toLowerCase().includes(q)
   );
-  // Dedupe
   const seen = new Set();
   const unique = matched.filter((a) => {
     const key = a.title.toLowerCase().trim();

@@ -1,6 +1,6 @@
 {
-  "name": "PulseNews",
-  "short_name": "PulseNews",
+  "name": "PulseNewsToday",
+  "short_name": "PulseNewsToday",
   "description": "Global Current Affairs",
   "start_url": "/",
   "display": "standalone",

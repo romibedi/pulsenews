@@ -1,17 +1,27 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { fetchByCategory } from '../api/newsApi';
+import { Link, useLocation } from 'react-router-dom';
+import useRegion from '../hooks/useRegion';
 
 export default function BreakingNewsTicker() {
   const [headlines, setHeadlines] = useState([]);
   const [dismissed, setDismissed] = useState(() => sessionStorage.getItem('pulsenews-ticker-dismissed') === 'true');
+  const { region } = useRegion();
+  const location = useLocation();
+
+  // Use region from URL if on a region page, otherwise detected region
+  const regionMatch = location.pathname.match(/^\/region\/([^/]+)/);
+  const activeRegion = regionMatch?.[1] || region;
 
   useEffect(() => {
     if (dismissed) return;
-    fetchByCategory('world').then((result) => {
-      setHeadlines((result.articles || []).slice(0, 8));
-    }).catch(() => {});
-  }, [dismissed]);
+    const url = activeRegion && activeRegion !== 'world'
+      ? `/api/regional-feeds?region=${encodeURIComponent(activeRegion)}&category=world`
+      : '/api/feeds?category=world';
+    fetch(url)
+      .then((r) => r.json())
+      .then((data) => setHeadlines((data.articles || []).slice(0, 8)))
+      .catch(() => {});
+  }, [dismissed, activeRegion]);
 
   if (dismissed || headlines.length === 0) return null;
 
@@ -23,13 +33,11 @@ export default function BreakingNewsTicker() {
   return (
     <div className="bg-[#1a1a1a] dark:bg-[#e8e4df] text-white dark:text-[#1a1a1a] text-xs overflow-hidden relative z-50">
       <div className="flex items-center max-w-full">
-        {/* Label */}
         <div className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-[#e05d44] text-white font-semibold uppercase tracking-wider z-10">
           <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
           Breaking
         </div>
 
-        {/* Scrolling headlines */}
         <div className="overflow-hidden flex-1">
           <div className="ticker-scroll flex items-center whitespace-nowrap">
             {[...headlines, ...headlines].map((article, i) => (
@@ -45,7 +53,6 @@ export default function BreakingNewsTicker() {
           </div>
         </div>
 
-        {/* Dismiss */}
         <button
           onClick={handleDismiss}
           className="shrink-0 px-3 py-2 text-white/50 dark:text-[#1a1a1a]/50 hover:text-white dark:hover:text-[#1a1a1a] transition-colors"

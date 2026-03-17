@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useBookmarks } from '../contexts/BookmarkContext';
 import useAudio from '../contexts/AudioContext';
+import useLanguage from '../hooks/useLanguage';
 import { estimateReadingTime } from '../utils/readingTime';
 
 function timeAgo(dateStr) {
@@ -69,12 +70,13 @@ function BookmarkBtn({ article }) {
 
 function PlayBtn({ article }) {
   const { playArticle, addToQueue, currentArticle, playing, loading } = useAudio();
+  const { lang } = useLanguage();
   const isPlaying = (playing || loading) && currentArticle?.id === article.id;
 
   const handlePlay = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    playArticle(article);
+    playArticle(article, lang);
   };
 
   const handleQueue = (e) => {

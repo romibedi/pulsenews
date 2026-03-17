@@ -6,7 +6,7 @@ export default function About() {
       {/* Hero */}
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-normal text-[var(--text)] mb-4">
-          About <span className="gradient-text">PulseNews</span>
+          About <span className="gradient-text">PulseNewsToday</span>
         </h1>
         <p className="text-lg text-[var(--text-secondary)] max-w-xl mx-auto">
           Your curated window into global current affairs, delivering stories that matter.
@@ -18,7 +18,7 @@ export default function About() {
         <div className="bg-[var(--surface)] rounded-2xl p-6 md:p-8 border border-[var(--border)] shadow-sm">
           <h2 className="text-xl font-normal text-[var(--text)] mb-3">Our Mission</h2>
           <p className="text-[var(--text-secondary)] leading-relaxed">
-            PulseNews aggregates and presents international news in a clean, modern interface.
+            PulseNewsToday aggregates and presents international news in a clean, modern interface.
             We believe staying informed shouldn't require sifting through cluttered websites and
             intrusive ads. Our platform focuses on what matters most: the stories.
           </p>

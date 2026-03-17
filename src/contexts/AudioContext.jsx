@@ -45,13 +45,17 @@ export function AudioProvider({ children }) {
     setLoading(true);
     setProgress(0);
 
-    const text = `${article.title}. ${(article.body || article.description || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}`;
-    const ttsUrl = `/api/tts?text=${encodeURIComponent(text.slice(0, 5000))}&lang=${encodeURIComponent(lang)}`;
+    const text = `${article.title}. ${(article.body || article.description || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}`.slice(0, 5000);
 
     const controller = new AbortController();
     abortRef.current = controller;
 
-    fetch(ttsUrl, { signal: controller.signal })
+    fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, lang }),
+      signal: controller.signal,
+    })
       .then((res) => {
         if (!res.ok) throw new Error('TTS generation failed');
         return res.blob();

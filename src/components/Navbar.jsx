@@ -4,6 +4,7 @@ import { CATEGORIES } from '../api/newsApi';
 import { useTheme } from '../contexts/ThemeContext';
 import { useBookmarks } from '../contexts/BookmarkContext';
 import useLanguage from '../hooks/useLanguage';
+import useRegion from '../hooks/useRegion';
 import LanguageSelector from './LanguageSelector';
 
 export default function Navbar() {
@@ -14,6 +15,7 @@ export default function Navbar() {
   const { isDark, toggleTheme } = useTheme();
   const { bookmarks } = useBookmarks();
   const { t } = useLanguage();
+  const { region, regionInfo } = useRegion();
 
   useEffect(() => {
     const on = () => setOnline(true);
@@ -44,7 +46,7 @@ export default function Navbar() {
               </svg>
             </div>
             <span className="text-2xl text-[var(--text)]" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>
-              Pulse<span className="text-[#e05d44] dark:text-[#e87461]">News</span>
+              PulseNews<span className="text-[#e05d44] dark:text-[#e87461]">Today</span>
             </span>
           </Link>
 
@@ -107,7 +109,7 @@ export default function Navbar() {
             {/* More menu - desktop */}
             <div className="hidden md:flex items-center gap-1">
               {[
-                { to: '/compare', label: 'Compare' },
+                { to: '/region/india', label: 'Regions' },
                 { to: '/feeds', label: 'Feeds' },
                 { to: '/about', label: 'About' },
               ].map((link) => (
@@ -133,7 +135,15 @@ export default function Navbar() {
 
         {/* Category bar - desktop */}
         <div className="hidden md:flex items-center gap-1 pb-2 overflow-x-auto">
-          {CATEGORIES.map((cat) => (
+          {region && region !== 'world' && (
+            <Link
+              to={`/region/${region}`}
+              className="px-3 py-1 text-xs font-semibold text-[#e05d44] dark:text-[#e87461] bg-[#fef0ed] dark:bg-[#e87461]/10 rounded-full no-underline whitespace-nowrap"
+            >
+              {regionInfo.flag} {regionInfo.label}
+            </Link>
+          )}
+          {CATEGORIES.filter((c) => c !== 'world').map((cat) => (
             <Link
               key={cat}
               to={`/category/${cat}`}
@@ -158,7 +168,16 @@ export default function Navbar() {
             />
           </form>
           <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((cat) => (
+            {region && region !== 'world' && (
+              <Link
+                to={`/region/${region}`}
+                onClick={() => setMenuOpen(false)}
+                className="px-3 py-1 text-xs font-semibold text-[#e05d44] dark:text-[#e87461] bg-[#fef0ed] dark:bg-[#e87461]/10 rounded-full no-underline"
+              >
+                {regionInfo.flag} {regionInfo.label}
+              </Link>
+            )}
+            {CATEGORIES.filter((c) => c !== 'world').map((cat) => (
               <Link
                 key={cat}
                 to={`/category/${cat}`}
@@ -172,7 +191,7 @@ export default function Navbar() {
           <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-[var(--border)]">
             {[
               { to: '/bookmarks', label: `Bookmarks${bookmarks.length > 0 ? ` (${bookmarks.length})` : ''}` },
-              { to: '/compare', label: 'Compare' },
+              { to: '/region/india', label: 'Regions' },
               { to: '/feeds', label: 'Custom Feeds' },
               { to: '/about', label: 'About' },
             ].map((link) => (

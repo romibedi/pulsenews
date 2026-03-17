@@ -15,9 +15,9 @@ import Article from './pages/Article';
 import Search from './pages/Search';
 import About from './pages/About';
 import Bookmarks from './pages/Bookmarks';
+import Region from './pages/Region';
 
 const CustomFeeds = lazy(() => import('./pages/CustomFeeds'));
-const NewsComparison = lazy(() => import('./pages/NewsComparison'));
 
 function PageLoader() {
   return <div className="max-w-7xl mx-auto px-4 py-20 text-center text-[var(--text-muted)]">Loading...</div>;
@@ -38,12 +38,12 @@ export default function App() {
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/category/:category" element={<Category />} />
+                  <Route path="/region/:region" element={<Region />} />
                   <Route path="/article/*" element={<Article />} />
                   <Route path="/search" element={<Search />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/bookmarks" element={<Bookmarks />} />
                   <Route path="/feeds" element={<CustomFeeds />} />
-                  <Route path="/compare" element={<NewsComparison />} />
                 </Routes>
               </Suspense>
             </main>

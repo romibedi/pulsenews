@@ -93,8 +93,265 @@ const REGIONAL_FEEDS = {
   ],
 }
 
-// Language-specific feeds (Indian languages)
+// Regional category feeds — category-specific feeds per region
+const REGIONAL_CATEGORY_FEEDS = {
+  india: {
+    world: [
+      { url: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms', source: 'Times of India' },
+      { url: 'https://www.thehindu.com/news/national/feeder/default.rss', source: 'The Hindu' },
+      { url: 'https://indianexpress.com/feed/', source: 'Indian Express' },
+      { url: 'https://feeds.bbci.co.uk/news/world/asia/india/rss.xml', source: 'BBC India' },
+    ],
+    technology: [
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/66949542.cms', source: 'Times of India Tech' },
+      { url: 'https://indianexpress.com/section/technology/feed/', source: 'Indian Express Tech' },
+    ],
+    business: [
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/1898055.cms', source: 'Times of India Business' },
+      { url: 'https://www.thehindu.com/business/feeder/default.rss', source: 'The Hindu Business' },
+      { url: 'https://indianexpress.com/section/business/feed/', source: 'Indian Express Business' },
+    ],
+    sport: [
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/4719161.cms', source: 'Times of India Sports' },
+      { url: 'https://www.thehindu.com/sport/feeder/default.rss', source: 'The Hindu Sport' },
+      { url: 'https://indianexpress.com/section/sports/feed/', source: 'Indian Express Sports' },
+    ],
+    science: [
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/56845691.cms', source: 'Times of India Science' },
+      { url: 'https://www.thehindu.com/sci-tech/feeder/default.rss', source: 'The Hindu Sci-Tech' },
+      { url: 'https://indianexpress.com/section/technology/science/feed/', source: 'Indian Express Science' },
+    ],
+    culture: [
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/1081479906.cms', source: 'Times of India Entertainment' },
+      { url: 'https://www.thehindu.com/entertainment/feeder/default.rss', source: 'The Hindu Entertainment' },
+      { url: 'https://indianexpress.com/section/entertainment/feed/', source: 'Indian Express Entertainment' },
+    ],
+    politics: [
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/7630538.cms', source: 'Times of India Politics' },
+      { url: 'https://indianexpress.com/section/political-pulse/feed/', source: 'Indian Express Politics' },
+    ],
+  },
+  uk: {
+    world: [
+      { url: 'https://feeds.bbci.co.uk/news/uk/rss.xml', source: 'BBC UK' },
+      { url: 'https://feeds.bbci.co.uk/news/england/rss.xml', source: 'BBC England' },
+      { url: 'https://feeds.skynews.com/feeds/rss/uk.xml', source: 'Sky News UK' },
+    ],
+    technology: [
+      { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', source: 'BBC Tech' },
+      { url: 'https://www.theguardian.com/uk/technology/rss', source: 'Guardian Tech' },
+    ],
+    business: [
+      { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', source: 'BBC Business' },
+      { url: 'https://www.theguardian.com/uk/business/rss', source: 'Guardian Business' },
+    ],
+    sport: [
+      { url: 'https://feeds.bbci.co.uk/sport/rss.xml', source: 'BBC Sport' },
+      { url: 'https://www.theguardian.com/uk/sport/rss', source: 'Guardian Sport' },
+    ],
+    science: [
+      { url: 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml', source: 'BBC Science' },
+      { url: 'https://www.theguardian.com/science/rss', source: 'Guardian Science' },
+    ],
+    culture: [
+      { url: 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml', source: 'BBC Arts' },
+      { url: 'https://www.theguardian.com/uk/culture/rss', source: 'Guardian Culture' },
+    ],
+    politics: [
+      { url: 'https://feeds.bbci.co.uk/news/politics/rss.xml', source: 'BBC Politics' },
+      { url: 'https://www.theguardian.com/politics/rss', source: 'Guardian Politics' },
+    ],
+  },
+  us: {
+    world: [
+      { url: 'https://feeds.npr.org/1003/rss.xml', source: 'NPR US' },
+      { url: 'https://abcnews.go.com/abcnews/usheadlines', source: 'ABC US' },
+      { url: 'https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml', source: 'BBC US' },
+    ],
+    technology: [
+      { url: 'https://feeds.npr.org/1019/rss.xml', source: 'NPR Tech' },
+      { url: 'https://feeds.arstechnica.com/arstechnica/index', source: 'Ars Technica' },
+    ],
+    business: [
+      { url: 'https://feeds.npr.org/1006/rss.xml', source: 'NPR Business' },
+      { url: 'https://abcnews.go.com/abcnews/moneyheadlines', source: 'ABC Business' },
+    ],
+    sport: [
+      { url: 'https://feeds.npr.org/1055/rss.xml', source: 'NPR Sports' },
+      { url: 'https://abcnews.go.com/abcnews/sportsheadlines', source: 'ABC Sports' },
+    ],
+    science: [
+      { url: 'https://feeds.npr.org/1007/rss.xml', source: 'NPR Science' },
+    ],
+    culture: [
+      { url: 'https://feeds.npr.org/1008/rss.xml', source: 'NPR Arts' },
+    ],
+    politics: [
+      { url: 'https://feeds.npr.org/1014/rss.xml', source: 'NPR Politics' },
+      { url: 'https://abcnews.go.com/abcnews/politicsheadlines', source: 'ABC Politics' },
+    ],
+  },
+  australia: {
+    world: [
+      { url: 'https://www.abc.net.au/news/feed/2942460/rss.xml', source: 'ABC Australia' },
+      { url: 'https://feeds.bbci.co.uk/news/world/australia/rss.xml', source: 'BBC Australia' },
+      { url: 'https://www.theguardian.com/australia-news/rss', source: 'Guardian Australia' },
+    ],
+    technology: [
+      { url: 'https://www.theguardian.com/au/technology/rss', source: 'Guardian AU Tech' },
+      { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', source: 'BBC Tech' },
+    ],
+    business: [
+      { url: 'https://www.theguardian.com/au/business/rss', source: 'Guardian AU Business' },
+      { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', source: 'BBC Business' },
+    ],
+    sport: [
+      { url: 'https://www.theguardian.com/au/sport/rss', source: 'Guardian AU Sport' },
+      { url: 'https://feeds.bbci.co.uk/sport/rss.xml', source: 'BBC Sport' },
+    ],
+    science: [
+      { url: 'https://www.theguardian.com/au/environment/rss', source: 'Guardian AU Environment' },
+      { url: 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml', source: 'BBC Science' },
+    ],
+    culture: [
+      { url: 'https://www.theguardian.com/au/culture/rss', source: 'Guardian AU Culture' },
+      { url: 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml', source: 'BBC Arts' },
+    ],
+    politics: [
+      { url: 'https://www.theguardian.com/australia-news/rss', source: 'Guardian AU News' },
+    ],
+  },
+  'middle-east': {
+    world: [
+      { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
+      { url: 'https://feeds.bbci.co.uk/news/world/middle_east/rss.xml', source: 'BBC Middle East' },
+    ],
+    technology: [
+      { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', source: 'BBC Tech' },
+    ],
+    business: [
+      { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', source: 'BBC Business' },
+    ],
+    sport: [
+      { url: 'https://feeds.bbci.co.uk/sport/rss.xml', source: 'BBC Sport' },
+    ],
+    science: [
+      { url: 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml', source: 'BBC Science' },
+    ],
+    culture: [
+      { url: 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml', source: 'BBC Arts' },
+    ],
+    politics: [
+      { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
+      { url: 'https://feeds.bbci.co.uk/news/world/middle_east/rss.xml', source: 'BBC Middle East' },
+    ],
+  },
+  europe: {
+    world: [
+      { url: 'https://feeds.bbci.co.uk/news/world/europe/rss.xml', source: 'BBC Europe' },
+      { url: 'https://www.rfi.fr/en/rss', source: 'RFI' },
+      { url: 'https://rss.dw.com/xml/rss-en-world', source: 'DW News' },
+    ],
+    technology: [
+      { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', source: 'BBC Tech' },
+    ],
+    business: [
+      { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', source: 'BBC Business' },
+      { url: 'https://rss.dw.com/xml/rss-en-bus', source: 'DW Business' },
+    ],
+    sport: [
+      { url: 'https://feeds.bbci.co.uk/sport/rss.xml', source: 'BBC Sport' },
+    ],
+    science: [
+      { url: 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml', source: 'BBC Science' },
+      { url: 'https://rss.dw.com/xml/rss-en-science', source: 'DW Science' },
+    ],
+    culture: [
+      { url: 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml', source: 'BBC Arts' },
+      { url: 'https://rss.dw.com/xml/rss-en-cul', source: 'DW Culture' },
+    ],
+    politics: [
+      { url: 'https://feeds.bbci.co.uk/news/world/europe/rss.xml', source: 'BBC Europe' },
+      { url: 'https://rss.dw.com/xml/rss-en-eu', source: 'DW Europe' },
+    ],
+  },
+  africa: {
+    world: [
+      { url: 'https://feeds.bbci.co.uk/news/world/africa/rss.xml', source: 'BBC Africa' },
+      { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
+    ],
+    technology: [
+      { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', source: 'BBC Tech' },
+    ],
+    business: [
+      { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', source: 'BBC Business' },
+    ],
+    sport: [
+      { url: 'https://feeds.bbci.co.uk/sport/rss.xml', source: 'BBC Sport' },
+    ],
+    science: [
+      { url: 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml', source: 'BBC Science' },
+    ],
+    culture: [
+      { url: 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml', source: 'BBC Arts' },
+    ],
+    politics: [
+      { url: 'https://feeds.bbci.co.uk/news/world/africa/rss.xml', source: 'BBC Africa' },
+    ],
+  },
+  asia: {
+    world: [
+      { url: 'https://feeds.bbci.co.uk/news/world/asia/rss.xml', source: 'BBC Asia' },
+      { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
+    ],
+    technology: [
+      { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', source: 'BBC Tech' },
+    ],
+    business: [
+      { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', source: 'BBC Business' },
+    ],
+    sport: [
+      { url: 'https://feeds.bbci.co.uk/sport/rss.xml', source: 'BBC Sport' },
+    ],
+    science: [
+      { url: 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml', source: 'BBC Science' },
+    ],
+    culture: [
+      { url: 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml', source: 'BBC Arts' },
+    ],
+    politics: [
+      { url: 'https://feeds.bbci.co.uk/news/world/asia/rss.xml', source: 'BBC Asia' },
+    ],
+  },
+  latam: {
+    world: [
+      { url: 'https://feeds.bbci.co.uk/news/world/latin_america/rss.xml', source: 'BBC Latin America' },
+      { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
+    ],
+    technology: [
+      { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', source: 'BBC Tech' },
+    ],
+    business: [
+      { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', source: 'BBC Business' },
+    ],
+    sport: [
+      { url: 'https://feeds.bbci.co.uk/sport/rss.xml', source: 'BBC Sport' },
+    ],
+    science: [
+      { url: 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml', source: 'BBC Science' },
+    ],
+    culture: [
+      { url: 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml', source: 'BBC Arts' },
+    ],
+    politics: [
+      { url: 'https://feeds.bbci.co.uk/news/world/latin_america/rss.xml', source: 'BBC Latin America' },
+    ],
+  },
+}
+
+// Language-specific feeds — region-mapped
 const LANG_FEEDS = {
+  // Indian languages
   hi: [
     { url: 'https://feeds.bbci.co.uk/hindi/rss.xml', source: 'BBC Hindi' },
     { url: 'https://rss.jagran.com/rss/news/national.xml', source: 'Dainik Jagran' },
@@ -117,6 +374,45 @@ const LANG_FEEDS = {
   mr: [
     { url: 'https://zeenews.india.com/marathi/rss/india-news.xml', source: 'Zee News Marathi' },
     { url: 'https://zeenews.india.com/marathi/rss/maharashtra-news.xml', source: 'Zee News Maharashtra' },
+  ],
+  ur: [
+    { url: 'https://feeds.bbci.co.uk/urdu/rss.xml', source: 'BBC Urdu' },
+  ],
+  // Middle East
+  ar: [
+    { url: 'https://feeds.bbci.co.uk/arabic/rss.xml', source: 'BBC Arabic' },
+  ],
+  // European languages
+  fr: [
+    { url: 'https://www.france24.com/fr/rss', source: 'France 24' },
+    { url: 'https://www.rfi.fr/fr/rss', source: 'RFI French' },
+    { url: 'https://www.lemonde.fr/rss/une.xml', source: 'Le Monde' },
+  ],
+  de: [
+    { url: 'https://rss.dw.com/xml/rss-de-all', source: 'DW German' },
+    { url: 'https://www.tagesschau.de/xml/rss2', source: 'Tagesschau' },
+  ],
+  es: [
+    { url: 'https://feeds.bbci.co.uk/mundo/rss.xml', source: 'BBC Mundo' },
+    { url: 'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada', source: 'El País' },
+  ],
+  pt: [
+    { url: 'https://feeds.bbci.co.uk/portuguese/rss.xml', source: 'BBC Portuguese' },
+  ],
+  // Asian languages
+  zh: [
+    { url: 'https://feeds.bbci.co.uk/zhongwen/simp/rss.xml', source: 'BBC Chinese' },
+  ],
+  ja: [
+    { url: 'https://feeds.bbci.co.uk/japanese/rss.xml', source: 'BBC Japanese' },
+    { url: 'https://www3.nhk.or.jp/rss/news/cat0.xml', source: 'NHK' },
+  ],
+  ko: [
+    { url: 'https://feeds.bbci.co.uk/korean/rss.xml', source: 'BBC Korean' },
+  ],
+  // African languages
+  sw: [
+    { url: 'https://feeds.bbci.co.uk/swahili/rss.xml', source: 'BBC Swahili' },
   ],
 }
 
@@ -224,6 +520,27 @@ export default defineConfig({
           res.setHeader('Content-Type', 'application/json')
           res.statusCode = 200
           res.end(JSON.stringify({ articles, region }))
+        })
+
+        // Regional category feeds (region + category)
+        server.middlewares.use('/api/regional-feeds', async (req, res) => {
+          const url = new URL(req.url, 'http://localhost')
+          const region = url.searchParams.get('region') || 'india'
+          const category = url.searchParams.get('category') || 'world'
+          // For regions with dedicated category feeds, use them; otherwise fall back
+          let feeds
+          if (REGIONAL_CATEGORY_FEEDS[region]?.[category]) {
+            feeds = REGIONAL_CATEGORY_FEEDS[region][category]
+          } else if (category === 'world' && REGIONAL_FEEDS[region]) {
+            feeds = REGIONAL_FEEDS[region]
+          } else {
+            feeds = FEEDS[category] || FEEDS.world
+          }
+          const results = await Promise.all(feeds.map((f) => fetchFeed(f.url, f.source)))
+          const articles = results.flat().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20)
+          res.setHeader('Content-Type', 'application/json')
+          res.statusCode = 200
+          res.end(JSON.stringify({ articles, region, category }))
         })
 
         // Language-specific feeds
@@ -355,11 +672,33 @@ export default defineConfig({
           te: 'te-IN-ShrutiNeural',
           bn: 'bn-IN-TanishaaNeural',
           mr: 'mr-IN-AarohiNeural',
+          ur: 'ur-PK-UzmaNeural',
+          ar: 'ar-SA-ZariyahNeural',
+          fr: 'fr-FR-DeniseNeural',
+          de: 'de-DE-KatjaNeural',
+          es: 'es-ES-ElviraNeural',
+          pt: 'pt-BR-FranciscaNeural',
+          zh: 'zh-CN-XiaoxiaoNeural',
+          ja: 'ja-JP-NanamiNeural',
+          ko: 'ko-KR-SunHiNeural',
+          sw: 'sw-KE-ZuriNeural',
         }
         server.middlewares.use('/api/tts', async (req, res) => {
-          const url = new URL(req.url, 'http://localhost')
-          const text = url.searchParams.get('text')
-          const lang = url.searchParams.get('lang') || 'en'
+          // Support both POST (body) and GET (query) for backwards compat
+          let text, lang
+          if (req.method === 'POST') {
+            const chunks = []
+            for await (const chunk of req) chunks.push(chunk)
+            try {
+              const body = JSON.parse(Buffer.concat(chunks).toString())
+              text = body.text
+              lang = body.lang || 'en'
+            } catch { text = null; lang = 'en' }
+          } else {
+            const url = new URL(req.url, 'http://localhost')
+            text = url.searchParams.get('text')
+            lang = url.searchParams.get('lang') || 'en'
+          }
           if (!text) { res.statusCode = 400; res.end(JSON.stringify({ error: 'text param required' })); return }
           const cleanText = text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 5000)
           const voice = TTS_VOICES[lang] || TTS_VOICES.en

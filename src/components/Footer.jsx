@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <h3 className="text-xl text-[var(--text)] mb-3" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>
-              Pulse<span className="text-[#e05d44] dark:text-[#e87461]">News</span>
+              PulseNews<span className="text-[#e05d44] dark:text-[#e87461]">Today</span>
             </h3>
             <p className="text-sm text-[var(--text-muted)] leading-relaxed">
               Your window to global current affairs. Aggregating news from trusted RSS sources worldwide.
@@ -39,7 +39,7 @@ export default function Footer() {
             <div className="space-y-1">
               <Link to="/" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">Home</Link>
               <Link to="/bookmarks" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">Bookmarks</Link>
-              <Link to="/compare" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">Compare</Link>
+              <Link to="/region/india" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">Regions</Link>
               <Link to="/feeds" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">Custom Feeds</Link>
               <Link to="/about" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">About</Link>
             </div>
@@ -48,7 +48,7 @@ export default function Footer() {
 
         <div className="border-t border-[var(--border)] mt-8 pt-6 text-center">
           <p className="text-xs text-[var(--text-muted)]">
-            &copy; {new Date().getFullYear()} PulseNews. News aggregated from trusted RSS sources.
+            &copy; {new Date().getFullYear()} PulseNewsToday. News aggregated from trusted RSS sources.
           </p>
         </div>
       </div>

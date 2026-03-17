@@ -19,7 +19,7 @@ export default function PushNotifications() {
       setPermission(result);
       if (result === 'granted') {
         setEnabled(true);
-        new Notification('PulseNews', {
+        new Notification('PulseNewsToday', {
           body: 'Breaking news notifications are now enabled!',
           icon: '/favicon.svg',
         });
