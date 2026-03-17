@@ -347,6 +347,39 @@ export default defineConfig({
           })
         })
 
+        // TTS via Edge TTS
+        const TTS_VOICES = {
+          en: 'en-IN-NeerjaNeural',
+          hi: 'hi-IN-SwaraNeural',
+          ta: 'ta-IN-PallaviNeural',
+          te: 'te-IN-ShrutiNeural',
+          bn: 'bn-IN-TanishaaNeural',
+          mr: 'mr-IN-AarohiNeural',
+        }
+        server.middlewares.use('/api/tts', async (req, res) => {
+          const url = new URL(req.url, 'http://localhost')
+          const text = url.searchParams.get('text')
+          const lang = url.searchParams.get('lang') || 'en'
+          if (!text) { res.statusCode = 400; res.end(JSON.stringify({ error: 'text param required' })); return }
+          const cleanText = text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 5000)
+          const voice = TTS_VOICES[lang] || TTS_VOICES.en
+          try {
+            const { EdgeTTS } = await import('edge-tts-universal')
+            const tts = new EdgeTTS(cleanText, voice, { rate: '+5%' })
+            const result = await tts.synthesize()
+            const audioBuffer = Buffer.from(await result.audio.arrayBuffer())
+            res.setHeader('Content-Type', 'audio/mpeg')
+            res.setHeader('Content-Length', audioBuffer.length)
+            res.setHeader('Cache-Control', 's-maxage=86400')
+            res.statusCode = 200
+            res.end(audioBuffer)
+          } catch (err) {
+            res.setHeader('Content-Type', 'application/json')
+            res.statusCode = 500
+            res.end(JSON.stringify({ error: err.message }))
+          }
+        })
+
         // CoinGecko proxy
         server.middlewares.use('/api/stocks', async (req, res) => {
           const cacheKey = 'stocks'

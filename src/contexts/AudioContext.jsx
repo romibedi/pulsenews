@@ -1,78 +1,107 @@
-import { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
+import { createContext, useContext, useState, useRef, useCallback } from 'react';
 
-const AudioContext = createContext(null);
-
-// Map language codes to BCP-47 voice language tags
-const LANG_VOICE_MAP = {
-  en: ['en-US', 'en-GB', 'en'],
-  hi: ['hi-IN', 'hi'],
-  ta: ['ta-IN', 'ta'],
-  te: ['te-IN', 'te'],
-  bn: ['bn-IN', 'bn'],
-  mr: ['mr-IN', 'mr'],
-};
-
-function findVoice(langCode) {
-  const voices = window.speechSynthesis?.getVoices() || [];
-  const preferred = LANG_VOICE_MAP[langCode] || LANG_VOICE_MAP.en;
-  for (const tag of preferred) {
-    const voice = voices.find((v) => v.lang.startsWith(tag));
-    if (voice) return voice;
-  }
-  // Fallback: any voice matching the base language
-  const base = langCode.split('-')[0];
-  const fallback = voices.find((v) => v.lang.startsWith(base));
-  return fallback || null;
-}
+const AudioCtx = createContext(null);
 
 export function AudioProvider({ children }) {
   const [currentArticle, setCurrentArticle] = useState(null);
   const [queue, setQueue] = useState([]);
   const [playing, setPlaying] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [speed, setSpeed] = useState(1);
-  const [progress, setProgress] = useState(0); // 0-100
+  const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState('');
-  const utterRef = useRef(null);
-  const progressInterval = useRef(null);
-  const startTime = useRef(0);
-  const estimatedDuration = useRef(0);
+  const audioRef = useRef(null);
+  const abortRef = useRef(null);
 
-  // Load voices (some browsers load async)
-  useEffect(() => {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.getVoices();
-    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-  }, []);
-
-  const stopProgressTracking = useCallback(() => {
-    if (progressInterval.current) {
-      clearInterval(progressInterval.current);
-      progressInterval.current = null;
-    }
-  }, []);
-
-  const startProgressTracking = useCallback(() => {
-    stopProgressTracking();
-    startTime.current = Date.now();
-    progressInterval.current = setInterval(() => {
-      const elapsed = (Date.now() - startTime.current) / 1000;
-      const est = estimatedDuration.current;
-      if (est > 0) {
-        setProgress(Math.min(100, (elapsed / est) * 100));
-      }
-    }, 500);
-  }, [stopProgressTracking]);
+  // Format seconds to m:ss
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
 
   const stop = useCallback(() => {
-    window.speechSynthesis?.cancel();
-    stopProgressTracking();
+    if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; audioRef.current = null; }
     setPlaying(false);
     setPaused(false);
+    setLoading(false);
     setProgress(0);
+    setDuration('');
     setCurrentArticle(null);
-    utterRef.current = null;
-  }, [stopProgressTracking]);
+  }, []);
+
+  const playNextRef = useRef(null);
+
+  const playArticle = useCallback((article, lang = 'en') => {
+    // Stop any current playback
+    if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
+
+    setCurrentArticle(article);
+    setPlaying(true);
+    setPaused(false);
+    setLoading(true);
+    setProgress(0);
+
+    const text = `${article.title}. ${(article.body || article.description || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}`;
+    const ttsUrl = `/api/tts?text=${encodeURIComponent(text.slice(0, 5000))}&lang=${encodeURIComponent(lang)}`;
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    fetch(ttsUrl, { signal: controller.signal })
+      .then((res) => {
+        if (!res.ok) throw new Error('TTS generation failed');
+        return res.blob();
+      })
+      .then((blob) => {
+        if (controller.signal.aborted) return;
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.playbackRate = speed;
+        audioRef.current = audio;
+
+        audio.onloadedmetadata = () => {
+          setDuration(formatTime(audio.duration));
+          setLoading(false);
+        };
+
+        audio.ontimeupdate = () => {
+          if (audio.duration) {
+            setProgress((audio.currentTime / audio.duration) * 100);
+          }
+        };
+
+        audio.onended = () => {
+          URL.revokeObjectURL(url);
+          setPlaying(false);
+          setPaused(false);
+          setProgress(100);
+          // Play next in queue
+          if (playNextRef.current) setTimeout(playNextRef.current, 300);
+        };
+
+        audio.onerror = () => {
+          URL.revokeObjectURL(url);
+          setPlaying(false);
+          setPaused(false);
+          setLoading(false);
+        };
+
+        audio.play().catch(() => {
+          setPlaying(false);
+          setLoading(false);
+        });
+      })
+      .catch((err) => {
+        if (err.name === 'AbortError') return;
+        console.error('TTS error:', err);
+        setPlaying(false);
+        setLoading(false);
+      });
+  }, [speed]);
 
   const playNext = useCallback(() => {
     setQueue((prev) => {
@@ -81,80 +110,26 @@ export function AudioProvider({ children }) {
         return prev;
       }
       const [next, ...rest] = prev;
-      // Slight delay so state settles
       setTimeout(() => playArticle(next), 100);
       return rest;
     });
-  }, []);
+  }, [stop, playArticle]);
 
-  const playArticle = useCallback((article, lang = 'en') => {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    stopProgressTracking();
-
-    setCurrentArticle(article);
-    setPlaying(true);
-    setPaused(false);
-    setProgress(0);
-
-    const text = article.body || article.description || '';
-    const cleanText = text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
-    const fullText = `${article.title}. ${cleanText}`;
-
-    // Estimate duration: ~150 words per minute at 1x speed
-    const wordCount = fullText.split(/\s+/).length;
-    const estSeconds = (wordCount / 150) * 60 / speed;
-    estimatedDuration.current = estSeconds;
-    const mins = Math.floor(estSeconds / 60);
-    const secs = Math.floor(estSeconds % 60);
-    setDuration(`${mins}:${secs.toString().padStart(2, '0')}`);
-
-    const utter = new SpeechSynthesisUtterance(fullText);
-    utter.rate = speed;
-    utter.pitch = 1;
-
-    // Pick language-appropriate voice
-    const voice = findVoice(lang);
-    if (voice) utter.voice = voice;
-
-    utter.onend = () => {
-      stopProgressTracking();
-      setProgress(100);
-      setPlaying(false);
-      setPaused(false);
-      // Play next in queue
-      setTimeout(() => playNext(), 500);
-    };
-
-    utter.onerror = () => {
-      stopProgressTracking();
-      setPlaying(false);
-      setPaused(false);
-      setProgress(0);
-    };
-
-    utterRef.current = utter;
-    window.speechSynthesis.speak(utter);
-    startProgressTracking();
-  }, [speed, stopProgressTracking, startProgressTracking, playNext]);
+  // Keep playNextRef in sync
+  playNextRef.current = playNext;
 
   const pause = useCallback(() => {
-    window.speechSynthesis?.pause();
+    audioRef.current?.pause();
     setPaused(true);
-    stopProgressTracking();
-  }, [stopProgressTracking]);
+  }, []);
 
   const resume = useCallback(() => {
-    window.speechSynthesis?.resume();
+    audioRef.current?.play();
     setPaused(false);
-    // Adjust start time for progress tracking
-    startTime.current = Date.now() - (estimatedDuration.current * (progress / 100) * 1000);
-    startProgressTracking();
-  }, [progress, startProgressTracking]);
+  }, []);
 
   const addToQueue = useCallback((article) => {
     setQueue((prev) => {
-      // Don't add duplicates
       if (prev.some((a) => a.id === article.id)) return prev;
       return [...prev, article];
     });
@@ -168,52 +143,24 @@ export function AudioProvider({ children }) {
 
   const changeSpeed = useCallback((newSpeed) => {
     setSpeed(newSpeed);
-    // If currently playing, restart with new speed
-    if (playing && currentArticle) {
-      const currentProgress = progress;
-      window.speechSynthesis?.cancel();
-      stopProgressTracking();
-
-      const text = currentArticle.body || currentArticle.description || '';
-      const cleanText = text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
-      const fullText = `${currentArticle.title}. ${cleanText}`;
-
-      // Skip ahead proportionally
-      const charIndex = Math.floor((currentProgress / 100) * fullText.length);
-      const remaining = fullText.slice(charIndex);
-
-      const wordCount = remaining.split(/\s+/).length;
-      const estSeconds = (wordCount / 150) * 60 / newSpeed;
-      estimatedDuration.current = estSeconds;
-
-      const utter = new SpeechSynthesisUtterance(remaining);
-      utter.rate = newSpeed;
-      utter.pitch = 1;
-      const voice = findVoice('en');
-      if (voice) utter.voice = voice;
-      utter.onend = () => {
-        stopProgressTracking();
-        setProgress(100);
-        setPlaying(false);
-        setPaused(false);
-        setTimeout(() => playNext(), 500);
-      };
-      utter.onerror = () => {
-        stopProgressTracking();
-        setPlaying(false);
-        setPaused(false);
-      };
-      utterRef.current = utter;
-      window.speechSynthesis.speak(utter);
-      startProgressTracking();
+    if (audioRef.current) {
+      audioRef.current.playbackRate = newSpeed;
     }
-  }, [playing, currentArticle, progress, stopProgressTracking, startProgressTracking, playNext]);
+  }, []);
+
+  const seekTo = useCallback((pct) => {
+    if (audioRef.current && audioRef.current.duration) {
+      audioRef.current.currentTime = (pct / 100) * audioRef.current.duration;
+      setProgress(pct);
+    }
+  }, []);
 
   const value = {
     currentArticle,
     queue,
     playing,
     paused,
+    loading,
     speed,
     progress,
     duration,
@@ -225,13 +172,14 @@ export function AudioProvider({ children }) {
     removeFromQueue,
     clearQueue,
     changeSpeed,
+    seekTo,
   };
 
-  return <AudioContext.Provider value={value}>{children}</AudioContext.Provider>;
+  return <AudioCtx.Provider value={value}>{children}</AudioCtx.Provider>;
 }
 
 export default function useAudio() {
-  const ctx = useContext(AudioContext);
+  const ctx = useContext(AudioCtx);
   if (!ctx) throw new Error('useAudio must be used within AudioProvider');
   return ctx;
 }

@@ -4,20 +4,31 @@ import useAudio from '../contexts/AudioContext';
 const SPEEDS = [0.75, 1, 1.25, 1.5, 2];
 
 export default function AudioPlayer() {
-  const { currentArticle, queue, playing, paused, speed, progress, duration, pause, resume, stop, changeSpeed, clearQueue, removeFromQueue } = useAudio();
+  const { currentArticle, queue, playing, paused, loading, speed, progress, duration, pause, resume, stop, changeSpeed, clearQueue, removeFromQueue, seekTo } = useAudio();
   const [showQueue, setShowQueue] = useState(false);
 
   if (!currentArticle && queue.length === 0) return null;
 
+  const handleProgressClick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = ((e.clientX - rect.left) / rect.width) * 100;
+    seekTo(Math.max(0, Math.min(100, pct)));
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--surface)]/95 backdrop-blur-md border-t border-[var(--border)] shadow-lg">
-      {/* Progress bar */}
+      {/* Seekable progress bar */}
       {currentArticle && (
-        <div className="h-1 bg-[var(--border)]">
+        <div
+          className="h-1.5 bg-[var(--border)] cursor-pointer group"
+          onClick={handleProgressClick}
+        >
           <div
-            className="h-full bg-[#e05d44] dark:bg-[#e87461] transition-all duration-500"
+            className="h-full bg-[#e05d44] dark:bg-[#e87461] transition-all duration-300 relative"
             style={{ width: `${progress}%` }}
-          />
+          >
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-[#e05d44] dark:bg-[#e87461] rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow" />
+          </div>
         </div>
       )}
 
@@ -25,14 +36,19 @@ export default function AudioPlayer() {
         <div className="flex items-center gap-3">
           {/* Play/Pause/Stop controls */}
           <div className="flex items-center gap-1.5">
-            {playing ? (
+            {playing || loading ? (
               <>
                 <button
-                  onClick={paused ? resume : pause}
-                  className="w-10 h-10 flex items-center justify-center rounded-full bg-[#e05d44] dark:bg-[#e87461] text-white hover:bg-[#c94e38] transition-colors"
-                  title={paused ? 'Resume' : 'Pause'}
+                  onClick={loading ? undefined : (paused ? resume : pause)}
+                  className={`w-10 h-10 flex items-center justify-center rounded-full bg-[#e05d44] dark:bg-[#e87461] text-white hover:bg-[#c94e38] transition-colors ${loading ? 'opacity-70' : ''}`}
+                  title={loading ? 'Loading...' : paused ? 'Resume' : 'Pause'}
+                  disabled={loading}
                 >
-                  {paused ? (
+                  {loading ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="animate-spin">
+                      <circle cx="12" cy="12" r="10" strokeDasharray="60" strokeDashoffset="20" />
+                    </svg>
+                  ) : paused ? (
                     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" viewBox="0 0 24 24">
                       <polygon points="5 3 19 12 5 21 5 3" />
                     </svg>
@@ -68,7 +84,8 @@ export default function AudioPlayer() {
                 <p className="text-sm font-medium text-[var(--text)] truncate">{currentArticle.title}</p>
                 <div className="flex items-center gap-2 text-[10px] text-[var(--text-muted)]">
                   <span>{currentArticle.source || currentArticle.author}</span>
-                  {duration && <span>&middot; {duration}</span>}
+                  {loading && <span className="text-[#e05d44] dark:text-[#e87461] font-medium">Generating audio...</span>}
+                  {!loading && duration && <span>&middot; {duration}</span>}
                   {paused && <span className="text-amber-500 font-medium">Paused</span>}
                 </div>
               </>
@@ -78,7 +95,7 @@ export default function AudioPlayer() {
           </div>
 
           {/* Speed control */}
-          {playing && (
+          {(playing || paused) && !loading && (
             <button
               onClick={() => {
                 const idx = SPEEDS.indexOf(speed);
@@ -109,7 +126,7 @@ export default function AudioPlayer() {
           )}
 
           {/* Close */}
-          {!playing && (
+          {!playing && !loading && (
             <button
               onClick={() => { stop(); clearQueue(); }}
               className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"

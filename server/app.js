@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { extract } from '@extractus/article-extractor';
+import { EdgeTTS } from 'edge-tts-universal';
 import { fetchFeed, parseRssFeed, fetchOgImage } from './rss.js';
 
 const app = express();
@@ -242,6 +243,40 @@ app.get('/api/stocks', async (req, res) => {
     stockCache.data = data;
     stockCache.ts = Date.now();
     res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// TTS voice map
+const TTS_VOICES = {
+  en: 'en-IN-NeerjaNeural',
+  hi: 'hi-IN-SwaraNeural',
+  ta: 'ta-IN-PallaviNeural',
+  te: 'te-IN-ShrutiNeural',
+  bn: 'bn-IN-TanishaaNeural',
+  mr: 'mr-IN-AarohiNeural',
+};
+
+// Text-to-Speech via Edge TTS
+app.get('/api/tts', async (req, res) => {
+  const text = req.query.text;
+  const lang = req.query.lang || 'en';
+  if (!text) return res.status(400).json({ error: 'text param required' });
+
+  // Limit text to ~5000 chars to keep audio under 5 min
+  const cleanText = text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 5000);
+  const voice = TTS_VOICES[lang] || TTS_VOICES.en;
+
+  try {
+    const tts = new EdgeTTS(cleanText, voice, { rate: '+5%' });
+    const result = await tts.synthesize();
+    const audioBuffer = Buffer.from(await result.audio.arrayBuffer());
+
+    res.set('Content-Type', 'audio/mpeg');
+    res.set('Content-Length', audioBuffer.length);
+    res.set('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800');
+    res.send(audioBuffer);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

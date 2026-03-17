@@ -68,8 +68,8 @@ function BookmarkBtn({ article }) {
 }
 
 function PlayBtn({ article }) {
-  const { playArticle, addToQueue, currentArticle, playing } = useAudio();
-  const isPlaying = playing && currentArticle?.id === article.id;
+  const { playArticle, addToQueue, currentArticle, playing, loading } = useAudio();
+  const isPlaying = (playing || loading) && currentArticle?.id === article.id;
 
   const handlePlay = (e) => {
     e.preventDefault();
@@ -82,8 +82,6 @@ function PlayBtn({ article }) {
     e.stopPropagation();
     addToQueue(article);
   };
-
-  if (!('speechSynthesis' in window)) return null;
 
   return (
     <div className="flex items-center gap-0.5">
