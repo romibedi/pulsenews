@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import { useBookmarks } from '../contexts/BookmarkContext';
+import { estimateReadingTime } from '../utils/readingTime';
 
 function timeAgo(dateStr) {
   const seconds = Math.floor((Date.now() - new Date(dateStr)) / 1000);
@@ -17,19 +19,46 @@ const PLACEHOLDER = 'data:image/svg+xml,' + encodeURIComponent(
 );
 
 const SOURCE_COLORS = {
-  'BBC': 'bg-red-50 text-red-600',
-  'Al Jazeera': 'bg-amber-50 text-amber-700',
-  'NPR': 'bg-blue-50 text-blue-600',
-  'ABC News': 'bg-yellow-50 text-yellow-700',
-  'Ars Technica': 'bg-orange-50 text-orange-600',
-  'Guardian': 'bg-sky-50 text-sky-600',
+  'BBC': 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400',
+  'Al Jazeera': 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400',
+  'NPR': 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  'ABC News': 'bg-yellow-50 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400',
+  'Ars Technica': 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400',
+  'Guardian': 'bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400',
 };
 
 function getSourceColor(source) {
   for (const [key, val] of Object.entries(SOURCE_COLORS)) {
     if (source?.includes(key)) return val;
   }
-  return 'bg-[#fef0ed] text-[#e05d44]';
+  return 'bg-[#fef0ed] dark:bg-[#e87461]/10 text-[#e05d44] dark:text-[#e87461]';
+}
+
+function BookmarkBtn({ article }) {
+  const { isBookmarked, addBookmark, removeBookmark } = useBookmarks();
+  const saved = isBookmarked(article.id);
+
+  const toggle = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    saved ? removeBookmark(article.id) : addBookmark(article);
+  };
+
+  return (
+    <button
+      onClick={toggle}
+      className={`shrink-0 p-1 rounded-full transition-colors ${
+        saved
+          ? 'text-[#e05d44] dark:text-[#e87461]'
+          : 'text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461]'
+      }`}
+      title={saved ? 'Remove bookmark' : 'Bookmark'}
+    >
+      <svg width="16" height="16" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+      </svg>
+    </button>
+  );
 }
 
 function Wrapper({ article, children }) {
@@ -49,11 +78,12 @@ function Wrapper({ article, children }) {
 
 export default function NewsCard({ article, featured = false }) {
   const sourceBadgeColor = article.source ? getSourceColor(article.source) : getSourceColor(article.author);
+  const readTime = estimateReadingTime(article.body || article.description);
 
   if (featured) {
     return (
       <Wrapper article={article}>
-        <div className="relative rounded-2xl overflow-hidden card-hover border border-[#e8e4df] bg-white shadow-sm">
+        <div className="relative rounded-2xl overflow-hidden card-hover border border-[var(--border)] bg-[var(--surface)] shadow-md hover:shadow-xl">
           <div className="aspect-[16/9] md:aspect-[21/9] overflow-hidden">
             <img
               src={article.image || PLACEHOLDER}
@@ -73,6 +103,7 @@ export default function NewsCard({ article, featured = false }) {
                   {article.source}
                 </span>
               )}
+              <span className="text-white/60 text-[10px]">{readTime} min read</span>
               {article.isExternal && (
                 <span className="text-white/60 text-[10px]">&#8599;</span>
               )}
@@ -85,6 +116,9 @@ export default function NewsCard({ article, featured = false }) {
               <span>{article.author}</span>
               <span>&middot;</span>
               <span>{timeAgo(article.date)}</span>
+              <div className="ml-auto">
+                <BookmarkBtn article={article} />
+              </div>
             </div>
           </div>
         </div>
@@ -94,7 +128,7 @@ export default function NewsCard({ article, featured = false }) {
 
   return (
     <Wrapper article={article}>
-      <div className="rounded-2xl overflow-hidden card-hover border border-[#e8e4df] bg-white h-full flex flex-col shadow-md hover:shadow-xl">
+      <div className="rounded-2xl overflow-hidden card-hover border border-[var(--border)] bg-[var(--surface)] h-full flex flex-col shadow-md hover:shadow-xl">
         <div className="aspect-[3/2] overflow-hidden">
           <img
             src={article.image || PLACEHOLDER}
@@ -105,7 +139,7 @@ export default function NewsCard({ article, featured = false }) {
         </div>
         <div className="p-5 flex flex-col flex-1">
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <span className="px-2.5 py-0.5 text-[10px] font-semibold bg-[#fef0ed] text-[#e05d44] rounded-full capitalize">
+            <span className="px-2.5 py-0.5 text-[10px] font-semibold bg-[#fef0ed] dark:bg-[#e87461]/10 text-[#e05d44] dark:text-[#e87461] rounded-full capitalize">
               {article.sectionId || article.section}
             </span>
             {article.source && (
@@ -113,14 +147,18 @@ export default function NewsCard({ article, featured = false }) {
                 {article.source}{article.isExternal ? ' ↗' : ''}
               </span>
             )}
+            <span className="text-[10px] text-[var(--text-muted)]">{readTime} min read</span>
           </div>
-          <h3 className="text-lg font-normal text-[#1a1a1a] mb-2 line-clamp-2 group-hover:text-[#e05d44] transition-colors leading-snug" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>
+          <h3 className="text-lg font-normal text-[var(--text)] mb-2 line-clamp-2 group-hover:text-[#e05d44] dark:group-hover:text-[#e87461] transition-colors leading-snug" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>
             {article.title}
           </h3>
-          <p className="text-[13px] text-[#4a4a4a] line-clamp-2 leading-relaxed flex-1" dangerouslySetInnerHTML={{ __html: article.description }} />
-          <div className="mt-auto pt-4 flex items-center justify-between text-xs text-[#6b6b6b] border-t border-[#f0ece7]">
-            <span className="truncate max-w-[60%]">{article.author}</span>
-            <span className="text-[#9a9a9a] shrink-0">{timeAgo(article.date)}</span>
+          <p className="text-[13px] text-[var(--text-secondary)] line-clamp-2 leading-relaxed flex-1" dangerouslySetInnerHTML={{ __html: article.description }} />
+          <div className="mt-auto pt-4 flex items-center justify-between text-xs text-[var(--text-secondary)] border-t border-[var(--border)]">
+            <span className="truncate max-w-[50%]">{article.author}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[var(--text-muted)] shrink-0">{timeAgo(article.date)}</span>
+              <BookmarkBtn article={article} />
+            </div>
           </div>
         </div>
       </div>

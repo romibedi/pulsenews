@@ -13,6 +13,17 @@
   --text-muted: #9a9a9a;
 }
 
+.dark {
+  --accent: #e87461;
+  --accent-hover: #f0856f;
+  --bg: #121212;
+  --surface: #1e1e1e;
+  --border: #2e2e2e;
+  --text: #e8e4df;
+  --text-secondary: #a0a0a0;
+  --text-muted: #6b6b6b;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -38,16 +49,23 @@ h1, h2, h3, h4 {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f0ece7;
+  background: var(--bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #ccc5bc;
+  background: var(--border);
   border-radius: 3px;
 }
 
 .gradient-text {
   background: linear-gradient(135deg, #e05d44, #e8945a, #d4483b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark .gradient-text {
+  background: linear-gradient(135deg, #e87461, #f0a870, #e05d44);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -63,7 +81,7 @@ h1, h2, h3, h4 {
 }
 
 .shimmer {
-  background: linear-gradient(90deg, #f0ece7 25%, #e8e4df 50%, #f0ece7 75%);
+  background: linear-gradient(90deg, var(--border) 25%, var(--surface) 50%, var(--border) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
@@ -94,4 +112,18 @@ h1, h2, h3, h4 {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Breaking news ticker */
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-scroll {
+  animation: ticker 30s linear infinite;
+}
+
+.ticker-scroll:hover {
+  animation-play-state: paused;
 }

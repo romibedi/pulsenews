@@ -2,15 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchByCategory } from '../api/newsApi';
 import { fetchRssCategory } from '../api/rssApi';
+import useLocalStorage from '../hooks/useLocalStorage';
 import NewsCard from '../components/NewsCard';
 import Loader, { HeroLoader } from '../components/Loader';
-
-const ALL_SECTIONS = [
-  { key: 'world', label: 'World' },
-  { key: 'technology', label: 'Technology' },
-  { key: 'business', label: 'Business' },
-  { key: 'science', label: 'Science' },
-];
+import CategoryCustomizer, { DEFAULT_SECTIONS } from '../components/CategoryCustomizer';
 
 function mergeAndSort(guardianArticles, rssArticles) {
   const guardian = guardianArticles.map((a) => ({ ...a, source: a.source || 'The Guardian' }));
@@ -26,22 +21,28 @@ function mergeAndSort(guardianArticles, rssArticles) {
 }
 
 export default function Home() {
+  const [savedSections, setSavedSections] = useLocalStorage('pulsenews-sections', null);
   const [sections, setSections] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showCustomizer, setShowCustomizer] = useState(false);
+
+  const activeSections = savedSections
+    ? savedSections.filter((s) => s.pinned !== false)
+    : DEFAULT_SECTIONS.slice(0, 4);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
-        for (const s of ALL_SECTIONS) {
+        for (const s of activeSections) {
           const [guardianResult, rssArticles] = await Promise.all([
             fetchByCategory(s.key),
             fetchRssCategory(s.key),
           ]);
           const merged = mergeAndSort(guardianResult.articles, rssArticles);
           setSections((prev) => ({ ...prev, [s.key]: merged }));
-          if (s.key === 'world') setLoading(false);
+          if (s.key === activeSections[0]?.key) setLoading(false);
         }
       } catch (err) {
         setError(err.message);
@@ -50,19 +51,20 @@ export default function Home() {
       }
     }
     load();
-  }, []);
+  }, [savedSections]);
 
-  const worldArticles = sections.world || [];
-  const featured = worldArticles[0];
-  const latest = worldArticles.slice(1, 7);
-  const more = worldArticles.slice(7, 13);
+  const firstSection = activeSections[0]?.key || 'world';
+  const mainArticles = sections[firstSection] || [];
+  const featured = mainArticles[0];
+  const latest = mainArticles.slice(1, 7);
+  const more = mainArticles.slice(7, 13);
 
   if (error && !featured) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
         <div className="text-red-500 mb-4 text-lg">Something went wrong</div>
-        <p className="text-[#9a9a9a]">{error}</p>
-        <button onClick={() => window.location.reload()} className="mt-6 px-6 py-2 bg-[#e05d44] text-white rounded-full hover:bg-[#c94e38] transition-colors">
+        <p className="text-[var(--text-muted)]">{error}</p>
+        <button onClick={() => window.location.reload()} className="mt-6 px-6 py-2 bg-[#e05d44] dark:bg-[#e87461] text-white rounded-full hover:bg-[#c94e38] transition-colors">
           Try Again
         </button>
       </div>
@@ -75,13 +77,23 @@ export default function Home() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-[#1a1a1a]">
+            <h1 className="text-3xl md:text-4xl font-normal text-[var(--text)]">
               Today's <span className="gradient-text">Headlines</span>
             </h1>
-            <p className="text-sm text-[#9a9a9a] mt-1">
+            <p className="text-sm text-[var(--text-muted)] mt-1">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
+          <button
+            onClick={() => setShowCustomizer(true)}
+            className="p-2 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors rounded-lg hover:bg-[var(--surface)] border border-transparent hover:border-[var(--border)]"
+            title="Customize sections"
+          >
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          </button>
         </div>
 
         {loading ? (
@@ -93,11 +105,11 @@ export default function Home() {
         ) : null}
       </section>
 
-      {/* Latest */}
+      {/* Latest from first section */}
       <section>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-2xl font-bold text-[#1a1a1a]">Latest Stories</h2>
-          <Link to="/category/world" className="text-sm text-[#e05d44] hover:text-[#c94e38] no-underline transition-colors">
+          <h2 className="text-2xl font-normal text-[var(--text)]">Latest Stories</h2>
+          <Link to={`/category/${firstSection}`} className="text-sm text-[#e05d44] dark:text-[#e87461] hover:text-[#c94e38] no-underline transition-colors">
             View all &rarr;
           </Link>
         </div>
@@ -114,14 +126,14 @@ export default function Home() {
         )}
       </section>
 
-      {/* Section highlights */}
-      {ALL_SECTIONS.filter((s) => s.key !== 'world').map((sec) => (
+      {/* Other section highlights */}
+      {activeSections.slice(1).map((sec) => (
         <section key={sec.key}>
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-2xl font-bold text-[#1a1a1a]">{sec.label}</h2>
+            <h2 className="text-2xl font-normal text-[var(--text)]">{sec.label}</h2>
             <Link
               to={`/category/${sec.key}`}
-              className="text-sm text-[#e05d44] hover:text-[#c94e38] no-underline transition-colors"
+              className="text-sm text-[#e05d44] dark:text-[#e87461] hover:text-[#c94e38] no-underline transition-colors"
             >
               View all &rarr;
             </Link>
@@ -143,7 +155,7 @@ export default function Home() {
       {/* More stories */}
       {!loading && more.length > 0 && (
         <section>
-          <h2 className="text-2xl font-bold text-[#1a1a1a] mb-5">More Stories</h2>
+          <h2 className="text-2xl font-normal text-[var(--text)] mb-5">More Stories</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {more.map((article, i) => (
               <div key={article.id} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
@@ -152,6 +164,15 @@ export default function Home() {
             ))}
           </div>
         </section>
+      )}
+
+      {/* Category customizer modal */}
+      {showCustomizer && (
+        <CategoryCustomizer
+          sections={savedSections || DEFAULT_SECTIONS.map((s) => ({ ...s, pinned: true }))}
+          onSave={setSavedSections}
+          onClose={() => setShowCustomizer(false)}
+        />
       )}
     </div>
   );

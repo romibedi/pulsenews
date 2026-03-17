@@ -1,11 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CATEGORIES } from '../api/newsApi';
+import { useTheme } from '../contexts/ThemeContext';
+import { useBookmarks } from '../contexts/BookmarkContext';
 
 export default function Navbar() {
   const [query, setQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [online, setOnline] = useState(navigator.onLine);
   const navigate = useNavigate();
+  const { isDark, toggleTheme } = useTheme();
+  const { bookmarks } = useBookmarks();
+
+  useEffect(() => {
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener('online', on);
+    window.addEventListener('offline', off);
+    return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -16,19 +29,19 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white/80 backdrop-blur-md border-b border-[#e8e4df] sticky top-0 z-50">
+    <nav className="bg-[var(--surface)]/80 backdrop-blur-md border-b border-[var(--border)] sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Top bar */}
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2 no-underline">
-            <div className="w-8 h-8 rounded-lg bg-[#e05d44] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-[#e05d44] dark:bg-[#e87461] flex items-center justify-center">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" />
                 <path d="M18 14h-8M15 18h-5M10 6h8v4h-8V6Z" />
               </svg>
             </div>
-            <span className="text-2xl text-[#1a1a1a]" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>
-              Pulse<span className="text-[#e05d44]">News</span>
+            <span className="text-2xl text-[var(--text)]" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>
+              Pulse<span className="text-[#e05d44] dark:text-[#e87461]">News</span>
             </span>
           </Link>
 
@@ -40,21 +53,55 @@ export default function Navbar() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search news..."
-                className="w-64 bg-[#f5f1ec] border border-[#e8e4df] rounded-full px-4 py-2 pl-10 text-sm text-[#1a1a1a] placeholder-[#9a9a9a] focus:outline-none focus:border-[#e05d44] focus:ring-1 focus:ring-[#e05d44] transition-all"
+                className="w-64 bg-[var(--bg)] border border-[var(--border)] rounded-full px-4 py-2 pl-10 text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#e05d44] dark:focus:border-[#e87461] focus:ring-1 focus:ring-[#e05d44] dark:focus:ring-[#e87461] transition-all"
               />
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9a9a9a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </div>
           </form>
 
-          <div className="flex items-center gap-3">
-            <Link to="/about" className="hidden md:block text-sm text-[#6b6b6b] hover:text-[#e05d44] transition-colors no-underline">
+          <div className="flex items-center gap-2">
+            {!online && (
+              <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded-full">Offline</span>
+            )}
+
+            {/* Bookmarks link */}
+            <Link to="/bookmarks" className="hidden md:flex items-center gap-1 text-sm text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline relative p-1.5">
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+              </svg>
+              {bookmarks.length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#e05d44] dark:bg-[#e87461] text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                  {bookmarks.length > 9 ? '9+' : bookmarks.length}
+                </span>
+              )}
+            </Link>
+
+            {/* Dark mode toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors rounded-lg hover:bg-[var(--bg)]"
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDark ? (
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                </svg>
+              ) : (
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+              )}
+            </button>
+
+            <Link to="/about" className="hidden md:block text-sm text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">
               About
             </Link>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden p-2 text-[#6b6b6b] hover:text-[#1a1a1a]"
+              className="md:hidden p-2 text-[var(--text-secondary)] hover:text-[var(--text)]"
             >
               <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 {menuOpen ? (
@@ -73,7 +120,7 @@ export default function Navbar() {
             <Link
               key={cat}
               to={`/category/${cat}`}
-              className="px-3 py-1 text-xs font-medium text-[#6b6b6b] hover:text-[#e05d44] hover:bg-[#fef0ed] rounded-full transition-all capitalize no-underline whitespace-nowrap"
+              className="px-3 py-1 text-xs font-medium text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] hover:bg-[#fef0ed] dark:hover:bg-[#e87461]/10 rounded-full transition-all capitalize no-underline whitespace-nowrap"
             >
               {cat}
             </Link>
@@ -83,14 +130,14 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="md:hidden border-t border-[#e8e4df] px-4 py-3 space-y-2 animate-fade-in bg-white">
+        <div className="md:hidden border-t border-[var(--border)] px-4 py-3 space-y-2 animate-fade-in bg-[var(--surface)]">
           <form onSubmit={handleSearch} className="mb-3">
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search news..."
-              className="w-full bg-[#f5f1ec] border border-[#e8e4df] rounded-full px-4 py-2 text-sm text-[#1a1a1a] placeholder-[#9a9a9a] focus:outline-none focus:border-[#e05d44]"
+              className="w-full bg-[var(--bg)] border border-[var(--border)] rounded-full px-4 py-2 text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#e05d44] dark:focus:border-[#e87461]"
             />
           </form>
           <div className="flex flex-wrap gap-2">
@@ -99,15 +146,20 @@ export default function Navbar() {
                 key={cat}
                 to={`/category/${cat}`}
                 onClick={() => setMenuOpen(false)}
-                className="px-3 py-1 text-xs font-medium text-[#6b6b6b] bg-[#f5f1ec] rounded-full capitalize no-underline"
+                className="px-3 py-1 text-xs font-medium text-[var(--text-secondary)] bg-[var(--bg)] rounded-full capitalize no-underline"
               >
                 {cat}
               </Link>
             ))}
           </div>
-          <Link to="/about" onClick={() => setMenuOpen(false)} className="block text-sm text-[#6b6b6b] pt-2 no-underline">
-            About
-          </Link>
+          <div className="flex items-center gap-4 pt-2">
+            <Link to="/bookmarks" onClick={() => setMenuOpen(false)} className="text-sm text-[var(--text-secondary)] no-underline">
+              Bookmarks {bookmarks.length > 0 && `(${bookmarks.length})`}
+            </Link>
+            <Link to="/about" onClick={() => setMenuOpen(false)} className="text-sm text-[var(--text-secondary)] no-underline">
+              About
+            </Link>
+          </div>
         </div>
       )}
     </nav>
