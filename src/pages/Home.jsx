@@ -60,13 +60,14 @@ export default function Home() {
 
   const firstSection = activeSections[0]?.key || 'world';
   const englishArticles = sections[firstSection] || [];
-  // When non-English language is selected, use language articles as primary content
-  // Keep showing English articles while language articles load (langLoading)
-  const mainArticles = (lang !== 'en' && langArticles.length > 0) ? langArticles : englishArticles;
-  const isLangSwitching = lang !== 'en' && langLoading;
+  const isNonEnglish = lang !== 'en';
+  const hasLangContent = isNonEnglish && langArticles.length > 0;
+  const mainArticles = hasLangContent ? langArticles : englishArticles;
+  const isLangSwitching = isNonEnglish && langLoading && !hasLangContent;
   const featured = mainArticles[0];
   const latest = mainArticles.slice(1, 7);
-  const more = mainArticles.slice(7, 13);
+  // For non-English: use more of the language articles since we won't show category sections
+  const more = isNonEnglish ? mainArticles.slice(7, 19) : mainArticles.slice(7, 13);
 
   const regionLabel = region && region !== 'world' ? regionInfo.label : 'World';
 
@@ -199,8 +200,8 @@ export default function Home() {
         )}
       </section>
 
-      {/* Other section highlights — all regional */}
-      {activeSections.slice(1).map((sec) => (
+      {/* Other section highlights — only shown in English mode */}
+      {!isNonEnglish && activeSections.slice(1).map((sec) => (
         <section key={sec.key}>
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-2xl font-normal text-[var(--text)]">{sec.label}</h2>
