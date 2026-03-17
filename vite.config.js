@@ -123,6 +123,77 @@ export default defineConfig({
           res.end(JSON.stringify({ articles }))
         })
 
+        // Claude API proxy (summarize)
+        server.middlewares.use('/api/summarize', async (req, res) => {
+          if (req.method === 'OPTIONS') { res.statusCode = 200; res.end(); return }
+          if (req.method !== 'POST') { res.statusCode = 405; res.end('Method not allowed'); return }
+          const apiKey = process.env.ANTHROPIC_API_KEY
+          if (!apiKey) { res.setHeader('Content-Type', 'application/json'); res.statusCode = 500; res.end(JSON.stringify({ error: 'ANTHROPIC_API_KEY not set' })); return }
+          let body = ''
+          req.on('data', (c) => { body += c })
+          req.on('end', async () => {
+            try {
+              const { title, body: articleBody } = JSON.parse(body)
+              const response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+                body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 200, messages: [{ role: 'user', content: `Summarize this news article in 2-3 concise sentences. Focus on the key facts.\n\nTitle: ${title}\n\n${(articleBody || '').slice(0, 3000)}` }] }),
+              })
+              const data = await response.json()
+              res.setHeader('Content-Type', 'application/json')
+              res.statusCode = response.ok ? 200 : response.status
+              res.end(JSON.stringify(response.ok ? { summary: data.content?.[0]?.text } : { error: JSON.stringify(data) }))
+            } catch (err) { res.statusCode = 500; res.end(JSON.stringify({ error: err.message })) }
+          })
+        })
+
+        // Claude API proxy (sentiment)
+        server.middlewares.use('/api/sentiment', async (req, res) => {
+          if (req.method !== 'POST') { res.statusCode = 405; res.end('Method not allowed'); return }
+          const apiKey = process.env.ANTHROPIC_API_KEY
+          if (!apiKey) { res.setHeader('Content-Type', 'application/json'); res.statusCode = 500; res.end(JSON.stringify({ error: 'ANTHROPIC_API_KEY not set' })); return }
+          let body = ''
+          req.on('data', (c) => { body += c })
+          req.on('end', async () => {
+            try {
+              const { articles } = JSON.parse(body)
+              const titles = articles.slice(0, 20).map((a, i) => `${i + 1}. [${a.section || 'general'}] ${a.title}`).join('\n')
+              const response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+                body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 500, messages: [{ role: 'user', content: `Analyze the sentiment of these news headlines. For each, rate sentiment as a number from -1.0 (very negative) to 1.0 (very positive). Return ONLY a JSON array of objects with "index" (1-based) and "score" fields. No explanation.\n\n${titles}` }] }),
+              })
+              const data = await response.json()
+              const text = data.content?.[0]?.text || '[]'
+              const jsonMatch = text.match(/\[[\s\S]*\]/)
+              res.setHeader('Content-Type', 'application/json')
+              res.statusCode = 200
+              res.end(JSON.stringify({ scores: jsonMatch ? JSON.parse(jsonMatch[0]) : [] }))
+            } catch (err) { res.statusCode = 500; res.end(JSON.stringify({ error: err.message })) }
+          })
+        })
+
+        // CoinGecko proxy
+        server.middlewares.use('/api/stocks', async (req, res) => {
+          const cacheKey = 'stocks'
+          const cached = cache.get(cacheKey)
+          if (cached && Date.now() - cached.ts < 5 * 60 * 1000) {
+            res.setHeader('Content-Type', 'application/json')
+            res.statusCode = 200
+            res.end(cached.data)
+            return
+          }
+          try {
+            const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false&price_change_percentage=24h')
+            const coins = await response.json()
+            const data = JSON.stringify(coins.map((c) => ({ id: c.id, symbol: c.symbol.toUpperCase(), name: c.name, price: c.current_price, change24h: c.price_change_percentage_24h, image: c.image, marketCap: c.market_cap })))
+            cache.set(cacheKey, { data, ts: Date.now() })
+            res.setHeader('Content-Type', 'application/json')
+            res.statusCode = 200
+            res.end(data)
+          } catch (err) { res.statusCode = 500; res.end(JSON.stringify({ error: err.message })) }
+        })
+
         // Guardian API proxy
         server.middlewares.use('/api/guardian', async (req, res) => {
           const cacheKey = req.url

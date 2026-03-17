@@ -5,6 +5,9 @@ import { useBookmarks } from '../contexts/BookmarkContext';
 import { estimateReadingTime } from '../utils/readingTime';
 import ShareButtons from '../components/ShareButtons';
 import RelatedArticles from '../components/RelatedArticles';
+import AISummary from '../components/AISummary';
+import TextToSpeech from '../components/TextToSpeech';
+import Reactions from '../components/Reactions';
 
 function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-US', {
@@ -131,9 +134,12 @@ export default function Article() {
         </div>
       </div>
 
-      {/* Share */}
-      <div className="mb-6">
+      {/* Share + TTS */}
+      <div className="flex flex-wrap items-center gap-4 mb-6">
         <ShareButtons url={article.url} title={article.title} />
+        <div className="border-l border-[var(--border)] pl-4">
+          <TextToSpeech text={article.body || article.description} title={article.title} />
+        </div>
       </div>
 
       {/* Image */}
@@ -146,6 +152,11 @@ export default function Article() {
           />
         </div>
       )}
+
+      {/* AI Summary */}
+      <div className="mb-6">
+        <AISummary title={article.title} body={article.body || article.description || ''} />
+      </div>
 
       {/* Description */}
       {article.description && (
@@ -175,8 +186,14 @@ export default function Article() {
         </div>
       )}
 
-      {/* Share at bottom */}
+      {/* Reactions */}
       <div className="mt-10 pt-6 border-t border-[var(--border)]">
+        <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-3">What do you think?</p>
+        <Reactions articleId={article.id} />
+      </div>
+
+      {/* Share at bottom */}
+      <div className="mt-6 pt-6 border-t border-[var(--border)]">
         <ShareButtons url={article.url} title={article.title} />
       </div>
 

@@ -96,9 +96,20 @@ export default function Navbar() {
               )}
             </button>
 
-            <Link to="/about" className="hidden md:block text-sm text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">
-              About
-            </Link>
+            {/* More menu - desktop */}
+            <div className="hidden md:flex items-center gap-1">
+              {[
+                { to: '/map', label: 'Map' },
+                { to: '/sentiment', label: 'Sentiment' },
+                { to: '/compare', label: 'Compare' },
+                { to: '/feeds', label: 'Feeds' },
+                { to: '/about', label: 'About' },
+              ].map((link) => (
+                <Link key={link.to} to={link.to} className="text-xs text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline px-2 py-1 rounded-md hover:bg-[var(--bg)]">
+                  {link.label}
+                </Link>
+              ))}
+            </div>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="md:hidden p-2 text-[var(--text-secondary)] hover:text-[var(--text)]"
@@ -152,13 +163,19 @@ export default function Navbar() {
               </Link>
             ))}
           </div>
-          <div className="flex items-center gap-4 pt-2">
-            <Link to="/bookmarks" onClick={() => setMenuOpen(false)} className="text-sm text-[var(--text-secondary)] no-underline">
-              Bookmarks {bookmarks.length > 0 && `(${bookmarks.length})`}
-            </Link>
-            <Link to="/about" onClick={() => setMenuOpen(false)} className="text-sm text-[var(--text-secondary)] no-underline">
-              About
-            </Link>
+          <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-[var(--border)]">
+            {[
+              { to: '/bookmarks', label: `Bookmarks${bookmarks.length > 0 ? ` (${bookmarks.length})` : ''}` },
+              { to: '/map', label: 'World Map' },
+              { to: '/sentiment', label: 'Sentiment' },
+              { to: '/compare', label: 'Compare' },
+              { to: '/feeds', label: 'Custom Feeds' },
+              { to: '/about', label: 'About' },
+            ].map((link) => (
+              <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)} className="text-sm text-[var(--text-secondary)] no-underline">
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
       )}

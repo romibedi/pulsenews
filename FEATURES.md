@@ -22,15 +22,13 @@
 - [x] **Related articles** — 4 related stories at the bottom of each article page
 - [x] **Offline support (PWA)** — service worker for offline reading of cached articles
 - [x] **Reading list widget** — floating bookmark widget with quick access panel
-
-## Standout Features
-- [ ] **AI-powered summaries** — use the Claude API to generate 2-3 sentence summaries of long articles
-- [ ] **World map view** — interactive map plotting news by region using a library like Leaflet
-- [ ] **Sentiment dashboard** — visualize whether today's news skews positive/negative per category
-- [ ] **Stock/crypto ticker** — financial data widget using free APIs (Alpha Vantage, CoinGecko)
-- [ ] **Push notifications** — browser notifications for breaking news using the Push API
-- [ ] **Text-to-speech** — read articles aloud using the Web Speech API
-- [ ] **Comments/reactions** — lightweight comment system (could use Giscus for GitHub-backed comments)
-- [ ] **Newsletter digest** — daily/weekly email summary of top stories
-- [ ] **Custom RSS feeds** — let users add their own RSS sources
-- [ ] **News comparison** — show how different sources cover the same story side-by-side
+- [x] **AI-powered summaries** — Claude API generates 2-3 sentence summaries on article pages
+- [x] **World map view** — interactive Leaflet map plotting news by region at /map
+- [x] **Sentiment dashboard** — keyword + AI-powered sentiment analysis per category at /sentiment
+- [x] **Stock/crypto ticker** — CoinGecko-powered market data widget on home page
+- [x] **Push notifications** — browser notification permission + alerts toggle
+- [x] **Text-to-speech** — Web Speech API reads articles aloud with play/pause/stop
+- [x] **Comments/reactions** — emoji reaction system (👍❤️😮😢😡) with localStorage persistence
+- [x] **Newsletter digest** — email subscription form with daily/weekly frequency
+- [x] **Custom RSS feeds** — add/manage your own RSS sources at /feeds with suggested feeds
+- [x] **News comparison** — side-by-side source comparison for overlapping stories at /compare

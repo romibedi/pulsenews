@@ -40,36 +40,6 @@ export default function About() {
           </div>
         </div>
 
-        <div className="bg-[var(--surface)] rounded-2xl p-6 md:p-8 border border-[var(--border)] shadow-sm">
-          <h2 className="text-xl font-normal text-[var(--text)] mb-3">Built With</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[
-              { name: 'React', desc: 'Modern component-based UI library' },
-              { name: 'Vite', desc: 'Lightning-fast build tool' },
-              { name: 'Tailwind CSS', desc: 'Utility-first CSS framework' },
-              { name: 'React Router', desc: 'Client-side routing' },
-              { name: 'Guardian API', desc: 'Open journalism platform' },
-              { name: 'Vercel', desc: 'Edge deployment platform' },
-            ].map((tech) => (
-              <div key={tech.name} className="flex items-start gap-3 p-3 rounded-lg bg-[var(--bg)]">
-                <div className="w-2 h-2 rounded-full bg-[#e05d44] dark:bg-[#e87461] mt-2 shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-[var(--text)]">{tech.name}</p>
-                  <p className="text-xs text-[var(--text-muted)]">{tech.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-[var(--surface)] rounded-2xl p-6 md:p-8 border border-[var(--border)] shadow-sm">
-          <h2 className="text-xl font-normal text-[var(--text)] mb-3">Open Source</h2>
-          <p className="text-[var(--text-secondary)] leading-relaxed">
-            PulseNews is built as a demonstration of modern web development practices.
-            The application features responsive design, skeleton loading states,
-            smooth animations, and a warm editorial aesthetic with dark mode support.
-          </p>
-        </div>
       </div>
 
       {/* CTA */}

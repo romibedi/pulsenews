@@ -6,6 +6,9 @@ import useLocalStorage from '../hooks/useLocalStorage';
 import NewsCard from '../components/NewsCard';
 import Loader, { HeroLoader } from '../components/Loader';
 import CategoryCustomizer, { DEFAULT_SECTIONS } from '../components/CategoryCustomizer';
+import StockTicker from '../components/StockTicker';
+import NewsletterSignup from '../components/NewsletterSignup';
+import PushNotifications from '../components/PushNotifications';
 
 function mergeAndSort(guardianArticles, rssArticles) {
   const guardian = guardianArticles.map((a) => ({ ...a, source: a.source || 'The Guardian' }));
@@ -165,6 +168,36 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {/* Widgets sidebar */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <StockTicker />
+        <NewsletterSignup />
+        <div className="space-y-4">
+          <PushNotifications />
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 shadow-sm">
+            <h3 className="text-lg text-[var(--text)] mb-3" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>Explore</h3>
+            <div className="space-y-2">
+              {[
+                { to: '/map', label: 'World Map', desc: 'News plotted by region' },
+                { to: '/sentiment', label: 'Sentiment', desc: 'Today\'s news tone' },
+                { to: '/compare', label: 'Compare', desc: 'Same story, different sources' },
+                { to: '/feeds', label: 'Custom Feeds', desc: 'Add your own RSS' },
+              ].map((link) => (
+                <Link key={link.to} to={link.to} className="flex items-center justify-between p-2 rounded-lg hover:bg-[var(--bg)] transition-colors no-underline group">
+                  <div>
+                    <p className="text-sm font-medium text-[var(--text)] group-hover:text-[#e05d44] dark:group-hover:text-[#e87461] transition-colors">{link.label}</p>
+                    <p className="text-[10px] text-[var(--text-muted)]">{link.desc}</p>
+                  </div>
+                  <svg className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[#e05d44] dark:group-hover:text-[#e87461]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Category customizer modal */}
       {showCustomizer && (

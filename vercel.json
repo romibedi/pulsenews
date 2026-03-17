@@ -2,6 +2,9 @@
   "rewrites": [
     { "source": "/api/guardian/(.*)", "destination": "/api/guardian" },
     { "source": "/api/feeds", "destination": "/api/feeds" },
+    { "source": "/api/summarize", "destination": "/api/summarize" },
+    { "source": "/api/sentiment", "destination": "/api/sentiment" },
+    { "source": "/api/stocks", "destination": "/api/stocks" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

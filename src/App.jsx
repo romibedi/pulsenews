@@ -11,6 +11,10 @@ import Article from './pages/Article';
 import Search from './pages/Search';
 import About from './pages/About';
 import Bookmarks from './pages/Bookmarks';
+import WorldMap from './pages/WorldMap';
+import SentimentDashboard from './pages/SentimentDashboard';
+import CustomFeeds from './pages/CustomFeeds';
+import NewsComparison from './pages/NewsComparison';
 
 export default function App() {
   return (
@@ -28,6 +32,10 @@ export default function App() {
                 <Route path="/search" element={<Search />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/bookmarks" element={<Bookmarks />} />
+                <Route path="/map" element={<WorldMap />} />
+                <Route path="/sentiment" element={<SentimentDashboard />} />
+                <Route path="/feeds" element={<CustomFeeds />} />
+                <Route path="/compare" element={<NewsComparison />} />
               </Routes>
             </main>
             <Footer />
