@@ -492,7 +492,18 @@ app.get('/api/extract', async (req, res) => {
     res.json({
       title: article?.title || '',
       content: article?.content || '',
-      text: (article?.content || '').replace(/<[^>]*>/g, '').replace(/&[a-z]+;/g, ' ').trim(),
+      text: (article?.content || '')
+        .replace(/<\/?(p|div|br|h[1-6]|li|blockquote|section|article)[^>]*>/gi, '\n\n')
+        .replace(/<[^>]*>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&ldquo;|&rdquo;/g, '"')
+        .replace(/&lsquo;|&rsquo;/g, "'")
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&[a-z]+;/g, ' ')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim(),
       image: article?.image || '',
       author: article?.author || '',
       published: article?.published || '',

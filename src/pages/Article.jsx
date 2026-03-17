@@ -30,6 +30,33 @@ function handleImgError(e) {
   e.target.src = PLACEHOLDER;
 }
 
+function decodeEntities(str) {
+  if (!str) return '';
+  return str
+    .replace(/&ldquo;/g, '\u201C').replace(/&rdquo;/g, '\u201D')
+    .replace(/&lsquo;/g, '\u2018').replace(/&rsquo;/g, '\u2019')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ').replace(/&mdash;/g, '\u2014').replace(/&ndash;/g, '\u2013')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/&[a-z]+;/gi, ' ');
+}
+
+function splitIntoParagraphs(text) {
+  if (!text) return [];
+  const decoded = decodeEntities(text);
+  // First try splitting on existing newlines
+  const byNewlines = decoded.split(/\n\n+/).map((p) => p.trim()).filter((p) => p.length > 20);
+  if (byNewlines.length > 1) return byNewlines;
+  // No newlines — split into ~3-sentence paragraphs
+  const sentences = decoded.split(/(?<=[.!?])\s+(?=[A-Z\u0080-\uffff])/);
+  const paragraphs = [];
+  for (let i = 0; i < sentences.length; i += 3) {
+    const chunk = sentences.slice(i, i + 3).join(' ').trim();
+    if (chunk.length > 20) paragraphs.push(chunk);
+  }
+  return paragraphs.length > 0 ? paragraphs : [decoded];
+}
+
 export default function Article() {
   const { '*': articleId } = useParams();
   const location = useLocation();
@@ -129,7 +156,7 @@ export default function Article() {
 
   const isExternal = article.isExternal;
   const bodyText = article.body || '';
-  const allParagraphs = bodyText ? bodyText.split(/\n+/).filter((p) => p.trim().length > 20) : [];
+  const allParagraphs = splitIntoParagraphs(bodyText);
   const MAX_PREVIEW = isExternal ? 4 : allParagraphs.length;
   const paragraphs = allParagraphs.slice(0, MAX_PREVIEW);
   const hasMoreContent = isExternal && allParagraphs.length > MAX_PREVIEW;
@@ -252,7 +279,7 @@ export default function Article() {
       {/* Description / lead */}
       {article.description && (
         <div className="text-lg text-[var(--text-secondary)] leading-relaxed mb-8 pl-4 border-l-2 border-[#e05d44] dark:border-[#e87461]">
-          {article.description}
+          {decodeEntities(article.description)}
         </div>
       )}
 

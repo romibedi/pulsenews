@@ -435,7 +435,7 @@ function extractImageUrl(itemXml) {
 }
 
 function stripHtml(html) {
-  return html.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&apos;/g, "'").replace(/&rsquo;/g, '\u2019').replace(/&lsquo;/g, '\u2018').replace(/&mdash;/g, '\u2014').replace(/&ndash;/g, '\u2013').replace(/&hellip;/g, '\u2026').replace(/&nbsp;/g, ' ').replace(/&#\d+;/g, (m) => String.fromCharCode(parseInt(m.slice(2, -1)))).trim()
+  return html.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&apos;/g, "'").replace(/&ldquo;/g, '\u201C').replace(/&rdquo;/g, '\u201D').replace(/&rsquo;/g, '\u2019').replace(/&lsquo;/g, '\u2018').replace(/&mdash;/g, '\u2014').replace(/&ndash;/g, '\u2013').replace(/&hellip;/g, '\u2026').replace(/&nbsp;/g, ' ').replace(/&#\d+;/g, (m) => String.fromCharCode(parseInt(m.slice(2, -1)))).trim()
 }
 
 function parseRssFeed(xml, source) {
@@ -623,7 +623,18 @@ export default defineConfig({
             const result = JSON.stringify({
               title: article?.title || '',
               content: article?.content || '',
-              text: (article?.content || '').replace(/<[^>]*>/g, '').replace(/&[a-z]+;/g, ' ').trim(),
+              text: (article?.content || '')
+                .replace(/<\/?(p|div|br|h[1-6]|li|blockquote|section|article)[^>]*>/gi, '\n\n')
+                .replace(/<[^>]*>/g, '')
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&ldquo;|&rdquo;/g, '"')
+                .replace(/&lsquo;|&rsquo;/g, "'")
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&[a-z]+;/g, ' ')
+                .replace(/\n{3,}/g, '\n\n')
+                .trim(),
               image: article?.image || '',
               author: article?.author || '',
               published: article?.published || '',
