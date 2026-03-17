@@ -93,6 +93,33 @@ const REGIONAL_FEEDS = {
   ],
 }
 
+// Language-specific feeds (Indian languages)
+const LANG_FEEDS = {
+  hi: [
+    { url: 'https://feeds.bbci.co.uk/hindi/rss.xml', source: 'BBC Hindi' },
+    { url: 'https://www.jagran.com/rss/national-news.xml', source: 'Dainik Jagran' },
+    { url: 'https://www.amarujala.com/rss/breaking-news.xml', source: 'Amar Ujala' },
+    { url: 'https://navbharattimes.indiatimes.com/rssfeedstopstories.cms', source: 'Navbharat Times' },
+    { url: 'https://feeds.feedburner.com/ndaborig', source: 'NDTV India' },
+  ],
+  ta: [
+    { url: 'https://feeds.bbci.co.uk/tamil/rss.xml', source: 'BBC Tamil' },
+    { url: 'https://www.dinamalar.com/rss_feed.asp', source: 'Dinamalar' },
+    { url: 'https://tamil.oneindia.com/rss/tamil-news-fb.xml', source: 'OneIndia Tamil' },
+  ],
+  te: [
+    { url: 'https://feeds.bbci.co.uk/telugu/rss.xml', source: 'BBC Telugu' },
+    { url: 'https://telugu.oneindia.com/rss/telugu-news-fb.xml', source: 'OneIndia Telugu' },
+  ],
+  bn: [
+    { url: 'https://feeds.bbci.co.uk/bengali/rss.xml', source: 'BBC Bangla' },
+    { url: 'https://bengali.oneindia.com/rss/bengali-news-fb.xml', source: 'OneIndia Bangla' },
+  ],
+  mr: [
+    { url: 'https://news.google.com/rss?hl=mr&gl=IN&ceid=IN:mr', source: 'Google News Marathi' },
+  ],
+}
+
 function extractTag(xml, tag) {
   const re = new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`)
   const m = xml.match(re)
@@ -197,6 +224,19 @@ export default defineConfig({
           res.setHeader('Content-Type', 'application/json')
           res.statusCode = 200
           res.end(JSON.stringify({ articles, region }))
+        })
+
+        // Language-specific feeds
+        server.middlewares.use('/api/lang-feeds', async (req, res) => {
+          const url = new URL(req.url, 'http://localhost')
+          const lang = url.searchParams.get('lang') || 'hi'
+          const feeds = LANG_FEEDS[lang]
+          if (!feeds || feeds.length === 0) { res.setHeader('Content-Type', 'application/json'); res.statusCode = 200; res.end(JSON.stringify({ articles: [], lang })); return }
+          const results = await Promise.all(feeds.map((f) => fetchFeed(f.url, f.source)))
+          const articles = results.flat().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20)
+          res.setHeader('Content-Type', 'application/json')
+          res.statusCode = 200
+          res.end(JSON.stringify({ articles, lang }))
         })
 
         // RSS feeds proxy

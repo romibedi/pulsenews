@@ -86,6 +86,33 @@ const REGIONAL_FEEDS = {
   ],
 };
 
+// Language-specific feeds (Indian languages)
+const LANG_FEEDS = {
+  hi: [
+    { url: 'https://feeds.bbci.co.uk/hindi/rss.xml', source: 'BBC Hindi' },
+    { url: 'https://www.jagran.com/rss/national-news.xml', source: 'Dainik Jagran' },
+    { url: 'https://www.amarujala.com/rss/breaking-news.xml', source: 'Amar Ujala' },
+    { url: 'https://navbharattimes.indiatimes.com/rssfeedstopstories.cms', source: 'Navbharat Times' },
+    { url: 'https://feeds.feedburner.com/ndaborig', source: 'NDTV India' },
+  ],
+  ta: [
+    { url: 'https://feeds.bbci.co.uk/tamil/rss.xml', source: 'BBC Tamil' },
+    { url: 'https://www.dinamalar.com/rss_feed.asp', source: 'Dinamalar' },
+    { url: 'https://tamil.oneindia.com/rss/tamil-news-fb.xml', source: 'OneIndia Tamil' },
+  ],
+  te: [
+    { url: 'https://feeds.bbci.co.uk/telugu/rss.xml', source: 'BBC Telugu' },
+    { url: 'https://telugu.oneindia.com/rss/telugu-news-fb.xml', source: 'OneIndia Telugu' },
+  ],
+  bn: [
+    { url: 'https://feeds.bbci.co.uk/bengali/rss.xml', source: 'BBC Bangla' },
+    { url: 'https://bengali.oneindia.com/rss/bengali-news-fb.xml', source: 'OneIndia Bangla' },
+  ],
+  mr: [
+    { url: 'https://news.google.com/rss?hl=mr&gl=IN&ceid=IN:mr', source: 'Google News Marathi' },
+  ],
+};
+
 // --- Routes ---
 
 // RSS category feeds
@@ -107,6 +134,17 @@ app.get('/api/local', async (req, res) => {
   const articles = results.flat().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 15);
   res.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
   res.json({ articles, region });
+});
+
+// Language-specific news feeds
+app.get('/api/lang-feeds', async (req, res) => {
+  const lang = req.query.lang || 'hi';
+  const feeds = LANG_FEEDS[lang];
+  if (!feeds || feeds.length === 0) return res.json({ articles: [], lang });
+  const results = await Promise.all(feeds.map((f) => fetchFeed(f.url, f.source)));
+  const articles = results.flat().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
+  res.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+  res.json({ articles, lang });
 });
 
 // Custom RSS feed proxy (CORS bypass)

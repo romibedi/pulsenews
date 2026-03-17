@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { BookmarkProvider } from './contexts/BookmarkContext';
+import { LanguageProvider } from './hooks/useLanguage';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import BreakingNewsTicker from './components/BreakingNewsTicker';
@@ -23,6 +24,7 @@ function PageLoader() {
 export default function App() {
   return (
     <ThemeProvider>
+      <LanguageProvider>
       <BookmarkProvider>
         <BrowserRouter>
           <div className="min-h-screen flex flex-col bg-[var(--bg)] text-[var(--text)]">
@@ -47,6 +49,7 @@ export default function App() {
           </div>
         </BrowserRouter>
       </BookmarkProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { CATEGORIES } from '../api/newsApi';
 import { useTheme } from '../contexts/ThemeContext';
 import { useBookmarks } from '../contexts/BookmarkContext';
+import useLanguage from '../hooks/useLanguage';
+import LanguageSelector from './LanguageSelector';
 
 export default function Navbar() {
   const [query, setQuery] = useState('');
@@ -11,6 +13,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
   const { bookmarks } = useBookmarks();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const on = () => setOnline(true);
@@ -52,7 +55,7 @@ export default function Navbar() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search news..."
+                placeholder={t('search')}
                 className="w-64 bg-[var(--bg)] border border-[var(--border)] rounded-full px-4 py-2 pl-10 text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#e05d44] dark:focus:border-[#e87461] focus:ring-1 focus:ring-[#e05d44] dark:focus:ring-[#e87461] transition-all"
               />
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,6 +80,11 @@ export default function Navbar() {
                 </span>
               )}
             </Link>
+
+            {/* Language selector */}
+            <div className="hidden md:block">
+              <LanguageSelector />
+            </div>
 
             {/* Dark mode toggle */}
             <button

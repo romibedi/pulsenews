@@ -6,6 +6,7 @@
     { "source": "/api/extract", "destination": "/api/extract" },
     { "source": "/api/proxy-feed", "destination": "/api/proxy-feed" },
     { "source": "/api/local", "destination": "/api/local" },
+    { "source": "/api/lang-feeds", "destination": "/api/lang-feeds" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

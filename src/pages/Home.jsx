@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { fetchByCategory } from '../api/newsApi';
 import useLocalStorage from '../hooks/useLocalStorage';
 import useRegion, { REGIONS } from '../hooks/useRegion';
+import useLanguage, { LANGUAGES } from '../hooks/useLanguage';
 import NewsCard from '../components/NewsCard';
 import Loader, { HeroLoader } from '../components/Loader';
 import CategoryCustomizer, { DEFAULT_SECTIONS } from '../components/CategoryCustomizer';
@@ -17,9 +18,12 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [showCustomizer, setShowCustomizer] = useState(false);
   const { region, regionInfo, setRegion, loading: regionLoading } = useRegion();
+  const { lang, t, langInfo } = useLanguage();
   const [localArticles, setLocalArticles] = useState([]);
   const [localLoading, setLocalLoading] = useState(true);
   const [showRegionPicker, setShowRegionPicker] = useState(false);
+  const [langArticles, setLangArticles] = useState([]);
+  const [langLoading, setLangLoading] = useState(false);
 
   const activeSections = savedSections
     ? savedSections.filter((s) => s.pinned !== false)
@@ -53,6 +57,17 @@ export default function Home() {
       .finally(() => setLocalLoading(false));
   }, [region, regionLoading]);
 
+  // Fetch language-specific news (non-English)
+  useEffect(() => {
+    if (lang === 'en') { setLangArticles([]); setLangLoading(false); return; }
+    setLangLoading(true);
+    fetch(`/api/lang-feeds?lang=${encodeURIComponent(lang)}`)
+      .then((r) => r.json())
+      .then((data) => setLangArticles(data.articles || []))
+      .catch(() => setLangArticles([]))
+      .finally(() => setLangLoading(false));
+  }, [lang]);
+
   const firstSection = activeSections[0]?.key || 'world';
   const mainArticles = sections[firstSection] || [];
   const featured = mainArticles[0];
@@ -78,7 +93,7 @@ export default function Home() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-3xl md:text-4xl font-normal text-[var(--text)]">
-              Today's <span className="gradient-text">Headlines</span>
+              {lang === 'en' ? <>Today's <span className="gradient-text">Headlines</span></> : <span className="gradient-text">{t('headlines')}</span>}
             </h1>
             <p className="text-sm text-[var(--text-muted)] mt-1">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -108,9 +123,9 @@ export default function Home() {
       {/* Latest from first section */}
       <section>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-2xl font-normal text-[var(--text)]">Latest Stories</h2>
+          <h2 className="text-2xl font-normal text-[var(--text)]">{t('latest')}</h2>
           <Link to={`/category/${firstSection}`} className="text-sm text-[#e05d44] dark:text-[#e87461] hover:text-[#c94e38] no-underline transition-colors">
-            View all &rarr;
+            {t('viewAll')} &rarr;
           </Link>
         </div>
         {loading ? (
@@ -125,6 +140,30 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      {/* Language News (non-English) */}
+      {lang !== 'en' && (
+        <section>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-2xl font-normal text-[var(--text)]">
+              {langInfo.flag} {langInfo.nativeLabel} {t('latest')}
+            </h2>
+          </div>
+          {langLoading ? (
+            <Loader count={4} />
+          ) : langArticles.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {langArticles.slice(0, 8).map((article, i) => (
+                <div key={article.id} className="animate-fade-in h-full" style={{ animationDelay: `${i * 80}ms` }}>
+                  <NewsCard article={article} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[var(--text-muted)] text-sm">No news available in {langInfo.label}.</p>
+          )}
+        </section>
+      )}
 
       {/* Local News */}
       {region && region !== 'world' && (
@@ -210,7 +249,7 @@ export default function Home() {
       {/* More stories */}
       {!loading && more.length > 0 && (
         <section>
-          <h2 className="text-2xl font-normal text-[var(--text)] mb-5">More Stories</h2>
+          <h2 className="text-2xl font-normal text-[var(--text)] mb-5">{t('more')}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {more.map((article, i) => (
               <div key={article.id} className="animate-fade-in h-full" style={{ animationDelay: `${i * 80}ms` }}>
