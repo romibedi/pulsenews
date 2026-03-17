@@ -90,26 +90,26 @@ const REGIONAL_FEEDS = {
 const LANG_FEEDS = {
   hi: [
     { url: 'https://feeds.bbci.co.uk/hindi/rss.xml', source: 'BBC Hindi' },
-    { url: 'https://www.jagran.com/rss/national-news.xml', source: 'Dainik Jagran' },
+    { url: 'https://rss.jagran.com/rss/news/national.xml', source: 'Dainik Jagran' },
     { url: 'https://www.amarujala.com/rss/breaking-news.xml', source: 'Amar Ujala' },
-    { url: 'https://navbharattimes.indiatimes.com/rssfeedstopstories.cms', source: 'Navbharat Times' },
-    { url: 'https://feeds.feedburner.com/ndaborig', source: 'NDTV India' },
+    { url: 'https://www.bhaskar.com/rss-feed/1061/', source: 'Dainik Bhaskar' },
   ],
   ta: [
     { url: 'https://feeds.bbci.co.uk/tamil/rss.xml', source: 'BBC Tamil' },
-    { url: 'https://www.dinamalar.com/rss_feed.asp', source: 'Dinamalar' },
-    { url: 'https://tamil.oneindia.com/rss/tamil-news-fb.xml', source: 'OneIndia Tamil' },
+    { url: 'https://www.hindutamil.in/stories.rss', source: 'The Hindu Tamil' },
   ],
   te: [
     { url: 'https://feeds.bbci.co.uk/telugu/rss.xml', source: 'BBC Telugu' },
-    { url: 'https://telugu.oneindia.com/rss/telugu-news-fb.xml', source: 'OneIndia Telugu' },
+    { url: 'https://www.sakshi.com/rss.xml', source: 'Sakshi' },
   ],
   bn: [
     { url: 'https://feeds.bbci.co.uk/bengali/rss.xml', source: 'BBC Bangla' },
-    { url: 'https://bengali.oneindia.com/rss/bengali-news-fb.xml', source: 'OneIndia Bangla' },
+    { url: 'https://eisamay.com/stories.rss', source: 'Ei Samay' },
+    { url: 'https://zeenews.india.com/bengali/rssfeed/nation.xml', source: 'Zee News Bengali' },
   ],
   mr: [
-    { url: 'https://news.google.com/rss?hl=mr&gl=IN&ceid=IN:mr', source: 'Google News Marathi' },
+    { url: 'https://zeenews.india.com/marathi/rss/india-news.xml', source: 'Zee News Marathi' },
+    { url: 'https://zeenews.india.com/marathi/rss/maharashtra-news.xml', source: 'Zee News Maharashtra' },
   ],
 };
 
