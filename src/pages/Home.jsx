@@ -10,6 +10,7 @@ import CategoryCustomizer, { DEFAULT_SECTIONS } from '../components/CategoryCust
 import StockTicker from '../components/StockTicker';
 import NewsletterSignup from '../components/NewsletterSignup';
 import PushNotifications from '../components/PushNotifications';
+import useAudio from '../contexts/AudioContext';
 
 export default function Home() {
   const [savedSections, setSavedSections] = useLocalStorage('pulsenews-sections', null);
@@ -24,6 +25,7 @@ export default function Home() {
   const [showRegionPicker, setShowRegionPicker] = useState(false);
   const [langArticles, setLangArticles] = useState([]);
   const [langLoading, setLangLoading] = useState(false);
+  const { playArticle, addToQueue, playing } = useAudio();
 
   const activeSections = savedSections
     ? savedSections.filter((s) => s.pinned !== false)
@@ -123,7 +125,26 @@ export default function Home() {
       {/* Latest from first section */}
       <section>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-2xl font-normal text-[var(--text)]">{t('latest')}</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-normal text-[var(--text)]">{t('latest')}</h2>
+            {!loading && latest.length > 0 && (
+              <button
+                onClick={() => {
+                  if (latest.length > 0) {
+                    playArticle(latest[0]);
+                    latest.slice(1).forEach((a) => addToQueue(a));
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-[var(--text-secondary)] border border-[var(--border)] rounded-full hover:text-[#e05d44] dark:hover:text-[#e87461] hover:border-[#e05d44]/30 dark:hover:border-[#e87461]/30 transition-all"
+                title="Listen to all headlines"
+              >
+                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" viewBox="0 0 24 24">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+                Listen
+              </button>
+            )}
+          </div>
           <Link to={`/category/${firstSection}`} className="text-sm text-[#e05d44] dark:text-[#e87461] hover:text-[#c94e38] no-underline transition-colors">
             {t('viewAll')} &rarr;
           </Link>

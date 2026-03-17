@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useBookmarks } from '../contexts/BookmarkContext';
+import useAudio from '../contexts/AudioContext';
 import { estimateReadingTime } from '../utils/readingTime';
 
 function timeAgo(dateStr) {
@@ -66,6 +67,60 @@ function BookmarkBtn({ article }) {
   );
 }
 
+function PlayBtn({ article }) {
+  const { playArticle, addToQueue, currentArticle, playing } = useAudio();
+  const isPlaying = playing && currentArticle?.id === article.id;
+
+  const handlePlay = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    playArticle(article);
+  };
+
+  const handleQueue = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToQueue(article);
+  };
+
+  if (!('speechSynthesis' in window)) return null;
+
+  return (
+    <div className="flex items-center gap-0.5">
+      <button
+        onClick={handlePlay}
+        className={`p-1 rounded-full transition-colors ${
+          isPlaying
+            ? 'text-[#e05d44] dark:text-[#e87461] animate-pulse'
+            : 'text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461]'
+        }`}
+        title={isPlaying ? 'Now playing' : 'Listen'}
+      >
+        {isPlaying ? (
+          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
+          </svg>
+        ) : (
+          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
+            <polygon points="5 3 19 12 5 21 5 3" />
+          </svg>
+        )}
+      </button>
+      {!isPlaying && (
+        <button
+          onClick={handleQueue}
+          className="p-1 rounded-full text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors opacity-0 group-hover:opacity-100"
+          title="Add to queue"
+        >
+          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
+      )}
+    </div>
+  );
+}
+
 function Wrapper({ article, children }) {
   return (
     <Link
@@ -119,7 +174,8 @@ export default function NewsCard({ article, featured = false }) {
               <span>{article.author}</span>
               <span>&middot;</span>
               <span>{timeAgo(article.date)}</span>
-              <div className="ml-auto">
+              <div className="ml-auto flex items-center gap-1">
+                <PlayBtn article={article} />
                 <BookmarkBtn article={article} />
               </div>
             </div>
@@ -159,8 +215,9 @@ export default function NewsCard({ article, featured = false }) {
           <p className="text-[13px] text-[var(--text-secondary)] line-clamp-2 leading-relaxed flex-1">{article.description}</p>
           <div className="mt-auto pt-4 flex items-center justify-between text-xs text-[var(--text-secondary)] border-t border-[var(--border)]">
             <span className="truncate max-w-[50%]">{article.author}</span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <span className="text-[var(--text-muted)] shrink-0">{timeAgo(article.date)}</span>
+              <PlayBtn article={article} />
               <BookmarkBtn article={article} />
             </div>
           </div>

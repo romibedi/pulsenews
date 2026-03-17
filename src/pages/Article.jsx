@@ -8,6 +8,7 @@ import RelatedArticles from '../components/RelatedArticles';
 import AISummary from '../components/AISummary';
 import TextToSpeech from '../components/TextToSpeech';
 import Reactions from '../components/Reactions';
+import useAudio from '../contexts/AudioContext';
 
 const PLACEHOLDER = 'data:image/svg+xml,' + encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400"><rect width="800" height="400" fill="#f0ece7"/><text x="400" y="200" dominant-baseline="middle" text-anchor="middle" fill="#ccc5bc" font-family="sans-serif" font-size="16">No Image</text></svg>'
@@ -39,6 +40,8 @@ export default function Article() {
   const [extracting, setExtracting] = useState(false);
   const [error, setError] = useState(null);
   const { isBookmarked, addBookmark, removeBookmark } = useBookmarks();
+  const { playArticle, playing, currentArticle, pause } = useAudio();
+  const isListening = playing && currentArticle?.id === article?.id;
 
   useEffect(() => {
     let ignore = false;
@@ -205,11 +208,29 @@ export default function Article() {
         </div>
       </div>
 
-      {/* Share + TTS */}
+      {/* Share + Listen */}
       <div className="flex flex-wrap items-center gap-4 mb-6">
         <ShareButtons url={shareUrl} title={article.title} />
-        <div className="border-l border-[var(--border)] pl-4">
-          <TextToSpeech text={bodyText || article.description} title={article.title} />
+        <div className="border-l border-[var(--border)] pl-4 flex items-center gap-2">
+          <button
+            onClick={() => isListening ? pause() : playArticle(article)}
+            className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full border transition-all ${
+              isListening
+                ? 'bg-[#e05d44] dark:bg-[#e87461] text-white border-transparent'
+                : 'border-[var(--border)] text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] hover:border-[#e05d44]/30 dark:hover:border-[#e87461]/30'
+            }`}
+          >
+            {isListening ? (
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
+                <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
+              </svg>
+            ) : (
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+            )}
+            {isListening ? 'Listening...' : 'Listen'}
+          </button>
         </div>
       </div>
 

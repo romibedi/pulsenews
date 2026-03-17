@@ -2,11 +2,13 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { BookmarkProvider } from './contexts/BookmarkContext';
+import { AudioProvider } from './contexts/AudioContext';
 import { LanguageProvider } from './hooks/useLanguage';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import BreakingNewsTicker from './components/BreakingNewsTicker';
 import ReadingListWidget from './components/ReadingListWidget';
+import AudioPlayer from './components/AudioPlayer';
 import Home from './pages/Home';
 import Category from './pages/Category';
 import Article from './pages/Article';
@@ -25,6 +27,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
+      <AudioProvider>
       <BookmarkProvider>
         <BrowserRouter>
           <div className="min-h-screen flex flex-col bg-[var(--bg)] text-[var(--text)]">
@@ -46,9 +49,11 @@ export default function App() {
             </main>
             <Footer />
             <ReadingListWidget />
+            <AudioPlayer />
           </div>
         </BrowserRouter>
       </BookmarkProvider>
+      </AudioProvider>
       </LanguageProvider>
     </ThemeProvider>
   );
