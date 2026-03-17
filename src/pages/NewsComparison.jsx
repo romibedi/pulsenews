@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { fetchByCategory } from '../api/newsApi';
-import { fetchRssCategory } from '../api/rssApi';
 
 function timeAgo(dateStr) {
   const seconds = Math.floor((Date.now() - new Date(dateStr)) / 1000);
@@ -41,7 +40,7 @@ function findStoryGroups(articles) {
 
     if (group.length > 1) {
       // Only keep groups with multiple sources
-      const sources = new Set(group.map((a) => a.source || 'The Guardian'));
+      const sources = new Set(group.map((a) => a.source || 'Unknown'));
       if (sources.size > 1) groups.push(group);
     }
   }
@@ -50,7 +49,6 @@ function findStoryGroups(articles) {
 }
 
 const SOURCE_COLORS = {
-  'The Guardian': 'bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-200 dark:border-sky-500/20',
   'BBC': 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/20',
   'Al Jazeera': 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20',
   'NPR': 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/20',
@@ -76,12 +74,8 @@ export default function NewsComparison() {
         const allArticles = [];
 
         for (const cat of categories) {
-          const [guardian, rss] = await Promise.all([
-            fetchByCategory(cat, 1),
-            fetchRssCategory(cat),
-          ]);
-          const gArticles = guardian.articles.map((a) => ({ ...a, source: a.source || 'The Guardian' }));
-          allArticles.push(...gArticles, ...rss);
+          const result = await fetchByCategory(cat);
+          allArticles.push(...(result.articles || []));
         }
 
         const found = findStoryGroups(allArticles);
@@ -147,7 +141,7 @@ export default function NewsComparison() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border ${color}`}>
-                            {article.source || 'The Guardian'}
+                            {article.source || 'Unknown'}
                           </span>
                           <span className="text-[10px] text-[var(--text-muted)]">{timeAgo(article.date)}</span>
                         </div>

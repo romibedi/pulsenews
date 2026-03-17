@@ -8,9 +8,9 @@ export default function BreakingNewsTicker() {
 
   useEffect(() => {
     if (dismissed) return;
-    fetchByCategory('world', 1)
-      .then((data) => setHeadlines(data.articles.slice(0, 8)))
-      .catch(() => {});
+    fetchByCategory('world').then((result) => {
+      setHeadlines((result.articles || []).slice(0, 8));
+    }).catch(() => {});
   }, [dismissed]);
 
   if (dismissed || headlines.length === 0) return null;
@@ -35,8 +35,8 @@ export default function BreakingNewsTicker() {
             {[...headlines, ...headlines].map((article, i) => (
               <Link
                 key={`${article.id}-${i}`}
-                to={article.isExternal ? '#' : `/article/${encodeURIComponent(article.id)}`}
-                {...(article.isExternal ? { onClick: (e) => { e.preventDefault(); window.open(article.url, '_blank'); } } : {})}
+                to={`/article/${encodeURIComponent(article.id)}`}
+                state={article.isExternal ? { article } : undefined}
                 className="inline-block px-6 py-2 no-underline text-white/80 dark:text-[#1a1a1a]/80 hover:text-white dark:hover:text-[#1a1a1a] transition-colors"
               >
                 {article.title}

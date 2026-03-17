@@ -15,8 +15,13 @@ function timeAgo(dateStr) {
 }
 
 const PLACEHOLDER = 'data:image/svg+xml,' + encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="240" fill="%23f0ece7"><rect width="400" height="240"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23ccc5bc" font-family="sans-serif" font-size="14">No Image</text></svg>'
+  '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="267" viewBox="0 0 400 267"><rect width="400" height="267" fill="#f0ece7"/><text x="200" y="134" dominant-baseline="middle" text-anchor="middle" fill="#ccc5bc" font-family="sans-serif" font-size="14">No Image</text></svg>'
 );
+
+function handleImgError(e) {
+  e.target.onerror = null;
+  e.target.src = PLACEHOLDER;
+}
 
 const SOURCE_COLORS = {
   'BBC': 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400',
@@ -62,15 +67,12 @@ function BookmarkBtn({ article }) {
 }
 
 function Wrapper({ article, children }) {
-  if (article.isExternal) {
-    return (
-      <a href={article.url} target="_blank" rel="noopener noreferrer" className="block no-underline group">
-        {children}
-      </a>
-    );
-  }
   return (
-    <Link to={`/article/${encodeURIComponent(article.id)}`} className="block no-underline group">
+    <Link
+      to={`/article/${encodeURIComponent(article.id)}`}
+      state={article.isExternal ? { article } : undefined}
+      className="block no-underline group h-full"
+    >
       {children}
     </Link>
   );
@@ -90,6 +92,7 @@ export default function NewsCard({ article, featured = false }) {
               alt={article.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
+              onError={handleImgError}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
           </div>
@@ -111,7 +114,7 @@ export default function NewsCard({ article, featured = false }) {
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-normal text-white mb-2 leading-tight">
               {article.title}
             </h2>
-            <p className="text-white/90 text-sm md:text-base line-clamp-2 mb-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: article.description }} />
+            <p className="text-white/90 text-sm md:text-base line-clamp-2 mb-3 leading-relaxed">{article.description}</p>
             <div className="flex items-center gap-3 text-xs text-white/60">
               <span>{article.author}</span>
               <span>&middot;</span>
@@ -135,6 +138,7 @@ export default function NewsCard({ article, featured = false }) {
             alt={article.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
+            onError={handleImgError}
           />
         </div>
         <div className="p-5 flex flex-col flex-1">
@@ -144,7 +148,7 @@ export default function NewsCard({ article, featured = false }) {
             </span>
             {article.source && (
               <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${sourceBadgeColor}`}>
-                {article.source}{article.isExternal ? ' ↗' : ''}
+                {article.source}
               </span>
             )}
             <span className="text-[10px] text-[var(--text-muted)]">{readTime} min read</span>
@@ -152,7 +156,7 @@ export default function NewsCard({ article, featured = false }) {
           <h3 className="text-lg font-normal text-[var(--text)] mb-2 line-clamp-2 group-hover:text-[#e05d44] dark:group-hover:text-[#e87461] transition-colors leading-snug" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>
             {article.title}
           </h3>
-          <p className="text-[13px] text-[var(--text-secondary)] line-clamp-2 leading-relaxed flex-1" dangerouslySetInnerHTML={{ __html: article.description }} />
+          <p className="text-[13px] text-[var(--text-secondary)] line-clamp-2 leading-relaxed flex-1">{article.description}</p>
           <div className="mt-auto pt-4 flex items-center justify-between text-xs text-[var(--text-secondary)] border-t border-[var(--border)]">
             <span className="truncate max-w-[50%]">{article.author}</span>
             <div className="flex items-center gap-2">

@@ -9,18 +9,9 @@ export default function RelatedArticles({ article }) {
   useEffect(() => {
     if (!article?.sectionId) return;
     setLoading(true);
-    fetchByCategory(article.sectionId, 1)
+    fetchByCategory(article.sectionId)
       .then((data) => {
-        let candidates = data.articles.filter((a) => a.id !== article.id);
-        // Rank by tag overlap if available
-        if (article.tags?.length > 0) {
-          const tagSet = new Set(article.tags.map((t) => t.toLowerCase()));
-          candidates.sort((a, b) => {
-            const aScore = (a.tags || []).filter((t) => tagSet.has(t.toLowerCase())).length;
-            const bScore = (b.tags || []).filter((t) => tagSet.has(t.toLowerCase())).length;
-            return bScore - aScore;
-          });
-        }
+        const candidates = (data.articles || []).filter((a) => a.id !== article.id);
         setRelated(candidates.slice(0, 4));
       })
       .catch(() => {})
@@ -58,7 +49,7 @@ export default function RelatedArticles({ article }) {
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {related.map((a, i) => (
-          <div key={a.id} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
+          <div key={a.id} className="animate-fade-in h-full" style={{ animationDelay: `${i * 80}ms` }}>
             <NewsCard article={a} />
           </div>
         ))}

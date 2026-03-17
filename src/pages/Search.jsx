@@ -62,7 +62,7 @@ export default function Search() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {articles.map((article, i) => (
-            <div key={article.id} className="animate-fade-in" style={{ animationDelay: `${i * 60}ms` }}>
+            <div key={article.id} className="animate-fade-in h-full" style={{ animationDelay: `${i * 60}ms` }}>
               <NewsCard article={article} />
             </div>
           ))}

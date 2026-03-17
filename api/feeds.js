@@ -59,7 +59,7 @@ function extractImageUrl(itemXml) {
 }
 
 function stripHtml(html) {
-  return html.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, "'").trim();
+  return html.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&apos;/g, "'").replace(/&rsquo;/g, '\u2019').replace(/&lsquo;/g, '\u2018').replace(/&mdash;/g, '\u2014').replace(/&ndash;/g, '\u2013').replace(/&hellip;/g, '\u2026').replace(/&nbsp;/g, ' ').replace(/&#\d+;/g, (m) => String.fromCharCode(parseInt(m.slice(2, -1)))).trim();
 }
 
 function parseRssFeed(xml, source) {
@@ -76,7 +76,7 @@ function parseRssFeed(xml, source) {
 
     if (title && link) {
       items.push({
-        id: `rss-${Buffer.from(link).toString('base64url').slice(0, 40)}`,
+        id: `rss-${Buffer.from(link).toString('base64url')}`,
         title,
         description,
         body: '',
@@ -93,6 +93,20 @@ function parseRssFeed(xml, source) {
     }
   }
   return items;
+}
+
+async function fetchOgImage(url) {
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PulseNews/1.0)' },
+      redirect: 'follow',
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const m = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+      || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    return m ? m[1] : null;
+  } catch { return null; }
 }
 
 // In-memory cache

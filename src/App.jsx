@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { BookmarkProvider } from './contexts/BookmarkContext';
@@ -11,10 +12,13 @@ import Article from './pages/Article';
 import Search from './pages/Search';
 import About from './pages/About';
 import Bookmarks from './pages/Bookmarks';
-import WorldMap from './pages/WorldMap';
-import SentimentDashboard from './pages/SentimentDashboard';
-import CustomFeeds from './pages/CustomFeeds';
-import NewsComparison from './pages/NewsComparison';
+
+const CustomFeeds = lazy(() => import('./pages/CustomFeeds'));
+const NewsComparison = lazy(() => import('./pages/NewsComparison'));
+
+function PageLoader() {
+  return <div className="max-w-7xl mx-auto px-4 py-20 text-center text-[var(--text-muted)]">Loading...</div>;
+}
 
 export default function App() {
   return (
@@ -25,18 +29,18 @@ export default function App() {
             <BreakingNewsTicker />
             <Navbar />
             <main className="flex-1">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/category/:category" element={<Category />} />
-                <Route path="/article/*" element={<Article />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/bookmarks" element={<Bookmarks />} />
-                <Route path="/map" element={<WorldMap />} />
-                <Route path="/sentiment" element={<SentimentDashboard />} />
-                <Route path="/feeds" element={<CustomFeeds />} />
-                <Route path="/compare" element={<NewsComparison />} />
-              </Routes>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/category/:category" element={<Category />} />
+                  <Route path="/article/*" element={<Article />} />
+                  <Route path="/search" element={<Search />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/bookmarks" element={<Bookmarks />} />
+                  <Route path="/feeds" element={<CustomFeeds />} />
+                  <Route path="/compare" element={<NewsComparison />} />
+                </Routes>
+              </Suspense>
             </main>
             <Footer />
             <ReadingListWidget />

@@ -99,8 +99,6 @@ export default function Navbar() {
             {/* More menu - desktop */}
             <div className="hidden md:flex items-center gap-1">
               {[
-                { to: '/map', label: 'Map' },
-                { to: '/sentiment', label: 'Sentiment' },
                 { to: '/compare', label: 'Compare' },
                 { to: '/feeds', label: 'Feeds' },
                 { to: '/about', label: 'About' },
@@ -166,8 +164,6 @@ export default function Navbar() {
           <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-[var(--border)]">
             {[
               { to: '/bookmarks', label: `Bookmarks${bookmarks.length > 0 ? ` (${bookmarks.length})` : ''}` },
-              { to: '/map', label: 'World Map' },
-              { to: '/sentiment', label: 'Sentiment' },
               { to: '/compare', label: 'Compare' },
               { to: '/feeds', label: 'Custom Feeds' },
               { to: '/about', label: 'About' },

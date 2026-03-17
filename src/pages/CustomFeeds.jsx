@@ -11,50 +11,11 @@ const SUGGESTED_FEEDS = [
   { name: 'Reuters', url: 'https://feeds.reuters.com/reuters/topNews' },
 ];
 
-async function fetchFeed(feedUrl) {
-  // Use a CORS proxy (allorigins) for client-side RSS fetching
-  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`;
-  const res = await fetch(proxyUrl);
-  if (!res.ok) throw new Error('Failed to fetch feed');
-  const text = await res.text();
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(text, 'text/xml');
-
-  const items = [];
-  // RSS 2.0
-  doc.querySelectorAll('item').forEach((item) => {
-    items.push({
-      id: item.querySelector('link')?.textContent || Math.random().toString(),
-      title: item.querySelector('title')?.textContent || '',
-      description: item.querySelector('description')?.textContent || '',
-      url: item.querySelector('link')?.textContent || '',
-      date: item.querySelector('pubDate')?.textContent || new Date().toISOString(),
-      image: item.querySelector('enclosure')?.getAttribute('url') ||
-             item.querySelector('media\\:content, content')?.getAttribute('url') || '',
-      author: item.querySelector('dc\\:creator, creator, author')?.textContent || '',
-      section: 'custom',
-      sectionId: 'custom',
-      isExternal: true,
-    });
-  });
-  // Atom
-  if (items.length === 0) {
-    doc.querySelectorAll('entry').forEach((entry) => {
-      items.push({
-        id: entry.querySelector('id')?.textContent || Math.random().toString(),
-        title: entry.querySelector('title')?.textContent || '',
-        description: entry.querySelector('summary, content')?.textContent || '',
-        url: entry.querySelector('link')?.getAttribute('href') || '',
-        date: entry.querySelector('published, updated')?.textContent || new Date().toISOString(),
-        image: '',
-        author: entry.querySelector('author name')?.textContent || '',
-        section: 'custom',
-        sectionId: 'custom',
-        isExternal: true,
-      });
-    });
-  }
-  return items;
+async function fetchFeed(feedUrl, name) {
+  const res = await fetch(`/api/proxy-feed?url=${encodeURIComponent(feedUrl)}&name=${encodeURIComponent(name)}`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data.articles || []).map((a) => ({ ...a, section: 'custom', sectionId: 'custom' }));
 }
 
 export default function CustomFeeds() {
@@ -84,7 +45,7 @@ export default function CustomFeeds() {
     }
     setLoading(true);
     setError(null);
-    Promise.all(feeds.map((f) => fetchFeed(f.url).then((items) => items.map((i) => ({ ...i, source: f.name }))).catch(() => [])))
+    Promise.all(feeds.map((f) => fetchFeed(f.url, f.name).then((items) => items.map((i) => ({ ...i, source: f.name }))).catch(() => [])))
       .then((results) => {
         const all = results.flat().sort((a, b) => new Date(b.date) - new Date(a.date));
         setArticles(all);
@@ -182,7 +143,7 @@ export default function CustomFeeds() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {articles.slice(0, 20).map((article, i) => (
-                <div key={article.id} className="animate-fade-in" style={{ animationDelay: `${Math.min(i, 5) * 60}ms` }}>
+                <div key={article.id} className="animate-fade-in h-full" style={{ animationDelay: `${Math.min(i, 5) * 60}ms` }}>
                   <NewsCard article={article} />
                 </div>
               ))}

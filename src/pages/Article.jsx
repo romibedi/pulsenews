@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { fetchArticle } from '../api/newsApi';
+import { useParams, useLocation, Link } from 'react-router-dom';
+import { fetchByCategory } from '../api/newsApi';
 import { useBookmarks } from '../contexts/BookmarkContext';
 import { estimateReadingTime } from '../utils/readingTime';
 import ShareButtons from '../components/ShareButtons';
@@ -8,6 +8,10 @@ import RelatedArticles from '../components/RelatedArticles';
 import AISummary from '../components/AISummary';
 import TextToSpeech from '../components/TextToSpeech';
 import Reactions from '../components/Reactions';
+
+const PLACEHOLDER = 'data:image/svg+xml,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400"><rect width="800" height="400" fill="#f0ece7"/><text x="400" y="200" dominant-baseline="middle" text-anchor="middle" fill="#ccc5bc" font-family="sans-serif" font-size="16">No Image</text></svg>'
+);
 
 function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-US', {
@@ -20,27 +24,74 @@ function formatDate(dateStr) {
   });
 }
 
+function handleImgError(e) {
+  e.target.onerror = null;
+  e.target.src = PLACEHOLDER;
+}
+
 export default function Article() {
   const { '*': articleId } = useParams();
-  const [article, setArticle] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const rssArticle = location.state?.article || null;
+
+  const [article, setArticle] = useState(rssArticle);
+  const [loading, setLoading] = useState(!rssArticle);
+  const [extracting, setExtracting] = useState(false);
   const [error, setError] = useState(null);
   const { isBookmarked, addBookmark, removeBookmark } = useBookmarks();
 
   useEffect(() => {
+    let ignore = false;
+
+    if (rssArticle) {
+      setArticle(rssArticle);
+      setLoading(false);
+      window.scrollTo(0, 0);
+
+      // Extract full content in background
+      if (rssArticle.url) {
+        setExtracting(true);
+        fetch(`/api/extract?url=${encodeURIComponent(rssArticle.url)}`)
+          .then((r) => r.json())
+          .then((data) => {
+            if (!ignore && data.text) {
+              setArticle((prev) => ({
+                ...prev,
+                body: data.text,
+                image: prev.image || data.image || null,
+              }));
+            }
+          })
+          .catch(() => {})
+          .finally(() => { if (!ignore) setExtracting(false); });
+      }
+      return () => { ignore = true; };
+    }
+
     async function load() {
       setLoading(true);
       try {
-        const data = await fetchArticle(articleId);
-        setArticle(data);
+        // Try to find article across categories
+        const categories = ['world', 'technology', 'business', 'sport', 'science', 'culture', 'environment', 'politics'];
+        let found = null;
+        for (const cat of categories) {
+          const result = await fetchByCategory(cat);
+          found = (result.articles || []).find((a) => a.id === articleId);
+          if (found) break;
+        }
+        if (!ignore) {
+          if (found) setArticle(found);
+          else setError('Article not found');
+        }
       } catch (err) {
-        setError(err.message);
+        if (!ignore) setError(err.message);
       } finally {
-        setLoading(false);
+        if (!ignore) setLoading(false);
       }
     }
     load();
     window.scrollTo(0, 0);
+    return () => { ignore = true; };
   }, [articleId]);
 
   if (loading) {
@@ -73,12 +124,15 @@ export default function Article() {
     );
   }
 
-  const paragraphs = article.body
-    ? article.body.split(/\n+/).filter((p) => p.trim().length > 20)
-    : [];
-
+  const isExternal = article.isExternal;
+  const bodyText = article.body || '';
+  const allParagraphs = bodyText ? bodyText.split(/\n+/).filter((p) => p.trim().length > 20) : [];
+  const MAX_PREVIEW = isExternal ? 4 : allParagraphs.length;
+  const paragraphs = allParagraphs.slice(0, MAX_PREVIEW);
+  const hasMoreContent = isExternal && allParagraphs.length > MAX_PREVIEW;
   const saved = isBookmarked(article.id);
-  const readTime = estimateReadingTime(article.body || article.description);
+  const readTime = estimateReadingTime(bodyText || article.description);
+  const shareUrl = isExternal ? article.url : `${window.location.origin}/article/${encodeURIComponent(article.id)}`;
 
   return (
     <article className="max-w-3xl mx-auto px-4 sm:px-6 py-8 animate-fade-in">
@@ -91,11 +145,16 @@ export default function Article() {
         </Link>
       </div>
 
-      {/* Tag + reading time */}
-      <div className="flex items-center gap-3 mb-4">
+      {/* Source badge + tag + reading time */}
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
         <span className="inline-block px-3 py-1 text-xs font-semibold bg-[#fef0ed] dark:bg-[#e87461]/10 text-[#e05d44] dark:text-[#e87461] rounded-full capitalize">
           {article.section}
         </span>
+        {isExternal && article.source && (
+          <span className="inline-block px-2.5 py-0.5 text-[10px] font-semibold bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full">
+            via {article.source}
+          </span>
+        )}
         <span className="text-xs text-[var(--text-muted)]">{readTime} min read</span>
       </div>
 
@@ -123,54 +182,110 @@ export default function Article() {
             </svg>
             {saved ? 'Saved' : 'Save'}
           </button>
-          <a
-            href={article.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[#e05d44] dark:text-[#e87461] hover:text-[#c94e38] no-underline text-xs border border-[#e05d44]/30 dark:border-[#e87461]/30 px-3 py-1 rounded-full hover:bg-[#fef0ed] dark:hover:bg-[#e87461]/10 transition-all"
-          >
-            Read on Guardian &nearr;
-          </a>
+          {isExternal && (
+            <a
+              href={article.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs border border-[#e05d44]/30 dark:border-[#e87461]/30 text-[#e05d44] dark:text-[#e87461] px-3 py-1 rounded-full hover:bg-[#fef0ed] dark:hover:bg-[#e87461]/10 transition-all no-underline"
+            >
+              Read full article &nearr;
+            </a>
+          )}
+          {!isExternal && (
+            <a
+              href={article.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#e05d44] dark:text-[#e87461] hover:text-[#c94e38] no-underline text-xs border border-[#e05d44]/30 dark:border-[#e87461]/30 px-3 py-1 rounded-full hover:bg-[#fef0ed] dark:hover:bg-[#e87461]/10 transition-all"
+            >
+              Read on Guardian &nearr;
+            </a>
+          )}
         </div>
       </div>
 
       {/* Share + TTS */}
       <div className="flex flex-wrap items-center gap-4 mb-6">
-        <ShareButtons url={article.url} title={article.title} />
+        <ShareButtons url={shareUrl} title={article.title} />
         <div className="border-l border-[var(--border)] pl-4">
-          <TextToSpeech text={article.body || article.description} title={article.title} />
+          <TextToSpeech text={bodyText || article.description} title={article.title} />
         </div>
       </div>
 
       {/* Image */}
-      {article.image && (
-        <div className="rounded-xl overflow-hidden mb-8">
-          <img
-            src={article.image}
-            alt={article.title}
-            className="w-full h-auto"
-          />
-        </div>
-      )}
+      <div className="rounded-xl overflow-hidden mb-8">
+        <img
+          src={article.image || PLACEHOLDER}
+          alt={article.title}
+          className="w-full h-auto"
+          onError={handleImgError}
+        />
+      </div>
 
       {/* AI Summary */}
       <div className="mb-6">
-        <AISummary title={article.title} body={article.body || article.description || ''} />
+        <AISummary title={article.title} body={bodyText || article.description || ''} />
       </div>
 
-      {/* Description */}
+      {/* Description / lead */}
       {article.description && (
-        <div className="text-lg text-[var(--text-secondary)] leading-relaxed mb-8 pl-4 border-l-2 border-[#e05d44] dark:border-[#e87461]" dangerouslySetInnerHTML={{ __html: article.description }} />
+        <div className="text-lg text-[var(--text-secondary)] leading-relaxed mb-8 pl-4 border-l-2 border-[#e05d44] dark:border-[#e87461]">
+          {article.description}
+        </div>
       )}
 
       {/* Body */}
-      <div className="prose-custom space-y-5">
-        {paragraphs.map((p, i) => (
-          <p key={i} className="text-[var(--text-secondary)] leading-relaxed text-[15px]">
-            {p}
+      {extracting && paragraphs.length === 0 && (
+        <div className="space-y-3 mb-6">
+          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin">
+              <circle cx="12" cy="12" r="10" strokeDasharray="60" strokeDashoffset="20" />
+            </svg>
+            Loading full article...
+          </div>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-4 shimmer rounded" style={{ width: `${80 + Math.random() * 20}%` }} />
+          ))}
+        </div>
+      )}
+      {paragraphs.length > 0 && (
+        <div className="relative">
+          <div className="prose-custom space-y-5">
+            {paragraphs.map((p, i) => (
+              <p key={i} className="text-[var(--text-secondary)] leading-relaxed text-[15px]">
+                {p}
+              </p>
+            ))}
+          </div>
+          {hasMoreContent && (
+            <div className="relative -mt-20 pt-24 bg-gradient-to-t from-[var(--bg)] via-[var(--bg)]/90 to-transparent" />
+          )}
+        </div>
+      )}
+
+      {/* CTA for external articles */}
+      {isExternal && (
+        <div className={`${hasMoreContent ? '' : 'mt-8'} p-6 bg-gradient-to-r from-[#fef0ed] to-[#fff8f6] dark:from-[#e87461]/10 dark:to-[#e87461]/5 rounded-xl border border-[#e05d44]/10 dark:border-[#e87461]/20 text-center`}>
+          <p className="text-sm text-[var(--text-secondary)] mb-4">
+            {hasMoreContent
+              ? <>Continue reading this article on <strong>{article.source}</strong></>
+              : <>This article is provided by <strong>{article.source}</strong>. Read the full story on their site.</>
+            }
           </p>
-        ))}
-      </div>
+          <a
+            href={article.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#e05d44] dark:bg-[#e87461] text-white rounded-full text-sm font-medium hover:bg-[#c94e38] transition-colors no-underline"
+          >
+            {hasMoreContent ? 'Continue reading' : 'Read full article'} on {article.source}
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
+              <path d="M7 17L17 7M17 7H7M17 7v10" />
+            </svg>
+          </a>
+        </div>
+      )}
 
       {/* Tags */}
       {article.tags?.length > 0 && (
@@ -194,7 +309,7 @@ export default function Article() {
 
       {/* Share at bottom */}
       <div className="mt-6 pt-6 border-t border-[var(--border)]">
-        <ShareButtons url={article.url} title={article.title} />
+        <ShareButtons url={shareUrl} title={article.title} />
       </div>
 
       {/* Related articles */}

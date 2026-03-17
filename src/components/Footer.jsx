@@ -11,7 +11,7 @@ export default function Footer() {
               Pulse<span className="text-[#e05d44] dark:text-[#e87461]">News</span>
             </h3>
             <p className="text-sm text-[var(--text-muted)] leading-relaxed">
-              Your window to global current affairs. Powered by The Guardian's open journalism platform.
+              Your window to global current affairs. Aggregating news from trusted RSS sources worldwide.
             </p>
           </div>
 
@@ -39,8 +39,6 @@ export default function Footer() {
             <div className="space-y-1">
               <Link to="/" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">Home</Link>
               <Link to="/bookmarks" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">Bookmarks</Link>
-              <Link to="/map" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">World Map</Link>
-              <Link to="/sentiment" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">Sentiment</Link>
               <Link to="/compare" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">Compare</Link>
               <Link to="/feeds" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">Custom Feeds</Link>
               <Link to="/about" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">About</Link>
@@ -50,7 +48,7 @@ export default function Footer() {
 
         <div className="border-t border-[var(--border)] mt-8 pt-6 text-center">
           <p className="text-xs text-[var(--text-muted)]">
-            &copy; {new Date().getFullYear()} PulseNews. Built with React. News data from The Guardian Open Platform.
+            &copy; {new Date().getFullYear()} PulseNews. News aggregated from trusted RSS sources.
           </p>
         </div>
       </div>

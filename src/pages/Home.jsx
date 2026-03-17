@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchByCategory } from '../api/newsApi';
-import { fetchRssCategory } from '../api/rssApi';
 import useLocalStorage from '../hooks/useLocalStorage';
+import useRegion, { REGIONS } from '../hooks/useRegion';
 import NewsCard from '../components/NewsCard';
 import Loader, { HeroLoader } from '../components/Loader';
 import CategoryCustomizer, { DEFAULT_SECTIONS } from '../components/CategoryCustomizer';
@@ -10,25 +10,16 @@ import StockTicker from '../components/StockTicker';
 import NewsletterSignup from '../components/NewsletterSignup';
 import PushNotifications from '../components/PushNotifications';
 
-function mergeAndSort(guardianArticles, rssArticles) {
-  const guardian = guardianArticles.map((a) => ({ ...a, source: a.source || 'The Guardian' }));
-  const all = [...guardian, ...rssArticles];
-  const seen = new Set();
-  const unique = all.filter((a) => {
-    const key = a.title.toLowerCase().trim();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-  return unique.sort((a, b) => new Date(b.date) - new Date(a.date));
-}
-
 export default function Home() {
   const [savedSections, setSavedSections] = useLocalStorage('pulsenews-sections', null);
   const [sections, setSections] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showCustomizer, setShowCustomizer] = useState(false);
+  const { region, regionInfo, setRegion, loading: regionLoading } = useRegion();
+  const [localArticles, setLocalArticles] = useState([]);
+  const [localLoading, setLocalLoading] = useState(true);
+  const [showRegionPicker, setShowRegionPicker] = useState(false);
 
   const activeSections = savedSections
     ? savedSections.filter((s) => s.pinned !== false)
@@ -37,24 +28,30 @@ export default function Home() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      try {
-        for (const s of activeSections) {
-          const [guardianResult, rssArticles] = await Promise.all([
-            fetchByCategory(s.key),
-            fetchRssCategory(s.key),
-          ]);
-          const merged = mergeAndSort(guardianResult.articles, rssArticles);
-          setSections((prev) => ({ ...prev, [s.key]: merged }));
-          if (s.key === activeSections[0]?.key) setLoading(false);
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+      await Promise.all(
+        activeSections.map((s) =>
+          fetchByCategory(s.key)
+            .catch(() => ({ articles: [] }))
+            .then((result) => {
+              setSections((prev) => ({ ...prev, [s.key]: result.articles }));
+            })
+        )
+      );
+      setLoading(false);
     }
     load();
   }, [savedSections]);
+
+  // Fetch local/regional news
+  useEffect(() => {
+    if (regionLoading || !region || region === 'world') { setLocalLoading(false); return; }
+    setLocalLoading(true);
+    fetch(`/api/local?region=${encodeURIComponent(region)}`)
+      .then((r) => r.json())
+      .then((data) => setLocalArticles(data.articles || []))
+      .catch(() => setLocalArticles([]))
+      .finally(() => setLocalLoading(false));
+  }, [region, regionLoading]);
 
   const firstSection = activeSections[0]?.key || 'world';
   const mainArticles = sections[firstSection] || [];
@@ -121,13 +118,68 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {latest.map((article, i) => (
-              <div key={article.id} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
+              <div key={article.id} className="animate-fade-in h-full" style={{ animationDelay: `${i * 80}ms` }}>
                 <NewsCard article={article} />
               </div>
             ))}
           </div>
         )}
       </section>
+
+      {/* Local News */}
+      {region && region !== 'world' && (
+        <section>
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-normal text-[var(--text)]">
+                {regionInfo.flag} {regionInfo.label} News
+              </h2>
+            </div>
+            <div className="relative">
+              <button
+                onClick={() => setShowRegionPicker(!showRegionPicker)}
+                className="text-sm text-[#e05d44] dark:text-[#e87461] hover:text-[#c94e38] transition-colors flex items-center gap-1"
+              >
+                Change region
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+              {showRegionPicker && (
+                <div className="absolute right-0 top-8 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-lg p-2 z-20 min-w-[200px] animate-fade-in">
+                  {Object.entries(REGIONS).map(([key, info]) => (
+                    <button
+                      key={key}
+                      onClick={() => { setRegion(key); setShowRegionPicker(false); }}
+                      className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors flex items-center gap-2 ${
+                        key === region
+                          ? 'bg-[#fef0ed] dark:bg-[#e87461]/10 text-[#e05d44] dark:text-[#e87461]'
+                          : 'text-[var(--text)] hover:bg-[var(--bg)]'
+                      }`}
+                    >
+                      <span>{info.flag}</span>
+                      <span>{info.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          {localLoading ? (
+            <Loader count={4} />
+          ) : localArticles.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {localArticles.slice(0, 8).map((article, i) => (
+                <div key={article.id} className="animate-fade-in h-full" style={{ animationDelay: `${i * 80}ms` }}>
+                  <NewsCard article={article} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[var(--text-muted)] text-sm">No local news available for this region.</p>
+          )}
+        </section>
+      )}
 
       {/* Other section highlights */}
       {activeSections.slice(1).map((sec) => (
@@ -146,7 +198,7 @@ export default function Home() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {(sections[sec.key] || []).slice(0, 4).map((article, i) => (
-                <div key={article.id} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
+                <div key={article.id} className="animate-fade-in h-full" style={{ animationDelay: `${i * 80}ms` }}>
                   <NewsCard article={article} />
                 </div>
               ))}
@@ -161,7 +213,7 @@ export default function Home() {
           <h2 className="text-2xl font-normal text-[var(--text)] mb-5">More Stories</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {more.map((article, i) => (
-              <div key={article.id} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
+              <div key={article.id} className="animate-fade-in h-full" style={{ animationDelay: `${i * 80}ms` }}>
                 <NewsCard article={article} />
               </div>
             ))}
@@ -179,8 +231,6 @@ export default function Home() {
             <h3 className="text-lg text-[var(--text)] mb-3" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>Explore</h3>
             <div className="space-y-2">
               {[
-                { to: '/map', label: 'World Map', desc: 'News plotted by region' },
-                { to: '/sentiment', label: 'Sentiment', desc: 'Today\'s news tone' },
                 { to: '/compare', label: 'Compare', desc: 'Same story, different sources' },
                 { to: '/feeds', label: 'Custom Feeds', desc: 'Add your own RSS' },
               ].map((link) => (

@@ -1,10 +1,11 @@
 {
   "rewrites": [
-    { "source": "/api/guardian/(.*)", "destination": "/api/guardian" },
     { "source": "/api/feeds", "destination": "/api/feeds" },
     { "source": "/api/summarize", "destination": "/api/summarize" },
-    { "source": "/api/sentiment", "destination": "/api/sentiment" },
     { "source": "/api/stocks", "destination": "/api/stocks" },
+    { "source": "/api/extract", "destination": "/api/extract" },
+    { "source": "/api/proxy-feed", "destination": "/api/proxy-feed" },
+    { "source": "/api/local", "destination": "/api/local" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
