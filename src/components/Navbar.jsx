@@ -28,7 +28,7 @@ export default function Navbar() {
               </svg>
             </div>
             <span className="text-2xl text-[#1a1a1a]" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>
-              Stream<span className="text-[#e05d44]">News</span>
+              Pulse<span className="text-[#e05d44]">News</span>
             </span>
           </Link>
 

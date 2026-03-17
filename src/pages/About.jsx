@@ -6,7 +6,7 @@ export default function About() {
       {/* Hero */}
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-bold text-[#1a1a1a] mb-4">
-          About <span className="gradient-text">StreamNews</span>
+          About <span className="gradient-text">PulseNews</span>
         </h1>
         <p className="text-lg text-[#6b6b6b] max-w-xl mx-auto">
           Your curated window into global current affairs, delivering stories that matter.
@@ -18,7 +18,7 @@ export default function About() {
         <div className="bg-white rounded-2xl p-6 md:p-8 border border-[#e8e4df] shadow-sm">
           <h2 className="text-xl font-bold text-[#1a1a1a] mb-3">Our Mission</h2>
           <p className="text-[#6b6b6b] leading-relaxed">
-            StreamNews aggregates and presents international news in a clean, modern interface.
+            PulseNews aggregates and presents international news in a clean, modern interface.
             We believe staying informed shouldn't require sifting through cluttered websites and
             intrusive ads. Our platform focuses on what matters most: the stories.
           </p>
@@ -65,7 +65,7 @@ export default function About() {
         <div className="bg-white rounded-2xl p-6 md:p-8 border border-[#e8e4df] shadow-sm">
           <h2 className="text-xl font-bold text-[#1a1a1a] mb-3">Open Source</h2>
           <p className="text-[#6b6b6b] leading-relaxed">
-            StreamNews is built as a demonstration of modern web development practices.
+            PulseNews is built as a demonstration of modern web development practices.
             The application features responsive design, skeleton loading states,
             smooth animations, and a warm editorial aesthetic.
           </p>

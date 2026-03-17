@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <h3 className="text-xl text-[#1a1a1a] mb-3" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>
-              Stream<span className="text-[#e05d44]">News</span>
+              Pulse<span className="text-[#e05d44]">News</span>
             </h3>
             <p className="text-sm text-[#9a9a9a] leading-relaxed">
               Your window to global current affairs. Powered by The Guardian's open journalism platform.
@@ -45,7 +45,7 @@ export default function Footer() {
 
         <div className="border-t border-[#e8e4df] mt-8 pt-6 text-center">
           <p className="text-xs text-[#9a9a9a]">
-            &copy; {new Date().getFullYear()} StreamNews. Built with React. News data from The Guardian Open Platform.
+            &copy; {new Date().getFullYear()} PulseNews. Built with React. News data from The Guardian Open Platform.
           </p>
         </div>
       </div>
