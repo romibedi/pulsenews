@@ -66,7 +66,11 @@ export function AudioProvider({ children }) {
 
   const playNextRef = useRef(null);
 
-  const playArticle = useCallback((article, lang = 'en') => {
+  const playArticle = useCallback((article, langOverride) => {
+    // Use provided lang, or read current language from localStorage
+    const lang = langOverride || (() => {
+      try { return JSON.parse(localStorage.getItem('pulsenews-lang')) || 'en'; } catch { return 'en'; }
+    })();
     // Stop any current speech
     speechSynthesis.cancel();
     clearProgress();
