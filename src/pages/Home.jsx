@@ -24,7 +24,7 @@ export default function Home() {
   const [langArticles, setLangArticles] = useState([]);
   const [langLoading, setLangLoading] = useState(false);
   const [showRegionPicker, setShowRegionPicker] = useState(false);
-  const { playArticle, addToQueue } = useAudio();
+  const { playArticle, prefetchArticle, addToQueue } = useAudio();
 
   const activeSections = savedSections
     ? savedSections.filter((s) => s.pinned !== false)
@@ -218,6 +218,7 @@ export default function Home() {
             )}
             {!loading && !isLangSwitching && latest.length > 0 && (
               <button
+                onMouseEnter={() => latest.length > 0 && prefetchArticle(latest[0])}
                 onClick={() => {
                   if (latest.length > 0) {
                     playArticle(latest[0]);

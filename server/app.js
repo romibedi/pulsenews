@@ -3,7 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { extract } from '@extractus/article-extractor';
-import { EdgeTTS } from 'edge-tts-universal';
+import { EdgeTTS, Communicate } from 'edge-tts-universal';
 import { fetchFeed, parseRssFeed, fetchOgImage } from './rss.js';
 import {
   FEEDS,
@@ -248,27 +248,38 @@ const TTS_VOICES = {
   ko: 'ko-KR-SunHiNeural',
   sw: 'sw-KE-ZuriNeural',
 };
+const EN_REGION_VOICES = {
+  us: 'en-US-JennyNeural',
+  uk: 'en-GB-SoniaNeural',
+  australia: 'en-AU-NatashaNeural',
+  india: 'en-IN-NeerjaNeural',
+};
 
 // Text-to-Speech via Edge TTS
 app.post('/api/tts', express.json(), async (req, res) => {
   const text = req.body.text;
   const lang = req.body.lang || 'en';
+  const region = req.body.region || '';
   if (!text) return res.status(400).json({ error: 'text param required' });
 
-  const cleanText = text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 600);
-  const voice = TTS_VOICES[lang] || TTS_VOICES.en;
+  const cleanText = text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 2000);
+  const voice = (lang === 'en' && EN_REGION_VOICES[region]) || TTS_VOICES[lang] || TTS_VOICES.en;
 
   try {
-    const tts = new EdgeTTS(cleanText, voice, { rate: '+20%' });
-    const result = await tts.synthesize();
-    const audioBuffer = Buffer.from(await result.audio.arrayBuffer());
-
+    const comm = new Communicate(cleanText, { voice, rate: '+20%' });
     res.set('Content-Type', 'audio/mpeg');
-    res.set('Content-Length', audioBuffer.length);
+    res.set('Transfer-Encoding', 'chunked');
     res.set('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800');
-    res.send(audioBuffer);
+    for await (const chunk of comm.stream()) {
+      if (chunk.type === 'audio' && chunk.data) res.write(chunk.data);
+    }
+    res.end();
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    if (!res.headersSent) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.end();
+    }
   }
 });
 
@@ -298,18 +309,41 @@ app.get('/api/article/:id', async (req, res) => {
   }
 });
 
-// Sitemap.xml for SEO
+// Sitemap.xml for SEO + Google News
 app.get('/api/sitemap.xml', async (req, res) => {
   try {
     const entries = await querySitemapEntries(1000);
     const baseUrl = process.env.SITE_URL || 'https://pulsenewstoday.com';
+    const escXml = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-    xml += `  <url><loc>${baseUrl}/</loc><changefreq>hourly</changefreq><priority>1.0</priority></url>\n`;
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">\n';
+
+    // Homepage
+    xml += `  <url>\n    <loc>${baseUrl}/</loc>\n    <changefreq>hourly</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
+
+    // Category pages
+    for (const cat of ['world', 'technology', 'business', 'science', 'sport', 'culture', 'environment', 'politics']) {
+      xml += `  <url>\n    <loc>${baseUrl}/category/${cat}</loc>\n    <changefreq>hourly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+    }
+
+    // Article pages with Google News metadata
     for (const entry of entries) {
       const loc = entry.slug ? `${baseUrl}/news/${entry.slug}` : `${baseUrl}/article/${encodeURIComponent(entry.id)}`;
-      const lastmod = entry.date ? entry.date.slice(0, 10) : '';
-      xml += `  <url><loc>${loc}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}<changefreq>daily</changefreq><priority>0.7</priority></url>\n`;
+      const pubDate = entry.date || new Date().toISOString();
+      const lang = entry.lang || 'en';
+      xml += `  <url>\n`;
+      xml += `    <loc>${escXml(loc)}</loc>\n`;
+      if (entry.date) xml += `    <lastmod>${entry.date.slice(0, 10)}</lastmod>\n`;
+      xml += `    <news:news>\n`;
+      xml += `      <news:publication>\n`;
+      xml += `        <news:name>PulseNewsToday</news:name>\n`;
+      xml += `        <news:language>${escXml(lang)}</news:language>\n`;
+      xml += `      </news:publication>\n`;
+      xml += `      <news:publication_date>${escXml(pubDate)}</news:publication_date>\n`;
+      xml += `      <news:title>${escXml(entry.title || 'News')}</news:title>\n`;
+      xml += `    </news:news>\n`;
+      xml += `  </url>\n`;
     }
     xml += '</urlset>';
     res.set('Content-Type', 'application/xml');
@@ -444,12 +478,14 @@ app.get('/api/health', (req, res) => {
 
 // --- SEO: Pre-rendered pages for search engine bots ---
 
-// Home page for bots
-app.get('/', (req, res, next) => {
+// Home page for bots — fetch latest articles so crawlers see real content
+app.get('/', async (req, res, next) => {
   if (!isBot(req.headers['user-agent'])) return next();
+  let articles = [];
+  try { articles = await queryByGlobalCategory('world', 20); } catch {}
   res.set('Content-Type', 'text/html');
   res.set('Cache-Control', 's-maxage=600, stale-while-revalidate=1200');
-  res.send(renderHomePage());
+  res.send(renderHomePage(articles));
 });
 
 // Article page by slug for bots
@@ -466,12 +502,28 @@ app.get('/news/:slug', async (req, res, next) => {
   }
 });
 
-// Category page for bots
-app.get('/category/:cat', (req, res, next) => {
+// Article page by ID for bots (fallback for non-slug URLs)
+app.get('/article/:id', async (req, res, next) => {
   if (!isBot(req.headers['user-agent'])) return next();
+  try {
+    const article = await getArticleById(req.params.id);
+    if (!article) return next();
+    res.set('Content-Type', 'text/html');
+    res.set('Cache-Control', 's-maxage=3600, stale-while-revalidate=86400');
+    res.send(renderArticlePage(article));
+  } catch {
+    next();
+  }
+});
+
+// Category page for bots — fetch category articles so crawlers see real content
+app.get('/category/:cat', async (req, res, next) => {
+  if (!isBot(req.headers['user-agent'])) return next();
+  let articles = [];
+  try { articles = await queryByGlobalCategory(req.params.cat, 20); } catch {}
   res.set('Content-Type', 'text/html');
   res.set('Cache-Control', 's-maxage=600, stale-while-revalidate=1200');
-  res.send(renderCategoryPage(req.params.cat));
+  res.send(renderCategoryPage(req.params.cat, articles));
 });
 
 // --- Static files + SPA fallback (for App Runner / container deployment) ---

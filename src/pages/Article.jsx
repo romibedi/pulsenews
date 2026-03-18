@@ -70,7 +70,7 @@ export default function Article() {
   const [extracting, setExtracting] = useState(false);
   const [error, setError] = useState(null);
   const { isBookmarked, addBookmark, removeBookmark } = useBookmarks();
-  const { playArticle, playing, currentArticle, pause } = useAudio();
+  const { playArticle, prefetchArticle, playing, currentArticle, pause } = useAudio();
   const isListening = playing && currentArticle?.id === article?.id;
 
   const lookupKey = slug || articleId;
@@ -311,7 +311,7 @@ export default function Article() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-xs border border-[#e05d44]/30 dark:border-[#e87461]/30 text-[#e05d44] dark:text-[#e87461] px-3 py-1 rounded-full hover:bg-[#fef0ed] dark:hover:bg-[#e87461]/10 transition-all no-underline"
             >
-              Read full article &nearr;
+              Read full article &#x2197;
             </a>
           )}
           {!isExternal && (
@@ -321,7 +321,7 @@ export default function Article() {
               rel="noopener noreferrer"
               className="text-[#e05d44] dark:text-[#e87461] hover:text-[#c94e38] no-underline text-xs border border-[#e05d44]/30 dark:border-[#e87461]/30 px-3 py-1 rounded-full hover:bg-[#fef0ed] dark:hover:bg-[#e87461]/10 transition-all"
             >
-              Read on Guardian &nearr;
+              Read on Guardian &#x2197;
             </a>
           )}
         </div>
@@ -332,6 +332,8 @@ export default function Article() {
         <ShareButtons url={shareUrl} title={article.title} />
         <div className="border-l border-[var(--border)] pl-4 flex items-center gap-2">
           <button
+            onMouseEnter={() => !isListening && article && prefetchArticle(article)}
+            onTouchStart={() => !isListening && article && prefetchArticle(article)}
             onClick={() => isListening ? pause() : playArticle(article)}
             className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full border transition-all ${
               isListening

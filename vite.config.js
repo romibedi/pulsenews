@@ -694,9 +694,15 @@ export default defineConfig({
           ko: 'ko-KR-SunHiNeural',
           sw: 'sw-KE-ZuriNeural',
         }
+        const EN_REGION_VOICES = {
+          us: 'en-US-JennyNeural',
+          uk: 'en-GB-SoniaNeural',
+          australia: 'en-AU-NatashaNeural',
+          india: 'en-IN-NeerjaNeural',
+        }
         server.middlewares.use('/api/tts', async (req, res) => {
-          // Support both POST (body) and GET (query) for backwards compat
-          let text, lang
+          // Support both POST (body) and GET (query)
+          let text, lang, region
           if (req.method === 'POST') {
             const chunks = []
             for await (const chunk of req) chunks.push(chunk)
@@ -704,29 +710,36 @@ export default defineConfig({
               const body = JSON.parse(Buffer.concat(chunks).toString())
               text = body.text
               lang = body.lang || 'en'
-            } catch { text = null; lang = 'en' }
+              region = body.region || ''
+            } catch { text = null; lang = 'en'; region = '' }
           } else {
             const url = new URL(req.url, 'http://localhost')
             text = url.searchParams.get('text')
             lang = url.searchParams.get('lang') || 'en'
+            region = url.searchParams.get('region') || ''
           }
           if (!text) { res.statusCode = 400; res.end(JSON.stringify({ error: 'text param required' })); return }
-          const cleanText = text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 600)
-          const voice = TTS_VOICES[lang] || TTS_VOICES.en
+          const cleanText = text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 2000)
+          const voice = (lang === 'en' && EN_REGION_VOICES[region]) || TTS_VOICES[lang] || TTS_VOICES.en
           try {
-            const { EdgeTTS } = await import('edge-tts-universal')
-            const tts = new EdgeTTS(cleanText, voice, { rate: '+20%' })
-            const result = await tts.synthesize()
-            const audioBuffer = Buffer.from(await result.audio.arrayBuffer())
+            const { Communicate } = await import('edge-tts-universal')
+            const comm = new Communicate(cleanText, { voice, rate: '+20%' })
             res.setHeader('Content-Type', 'audio/mpeg')
-            res.setHeader('Content-Length', audioBuffer.length)
+            res.setHeader('Transfer-Encoding', 'chunked')
             res.setHeader('Cache-Control', 's-maxage=86400')
             res.statusCode = 200
-            res.end(audioBuffer)
+            for await (const chunk of comm.stream()) {
+              if (chunk.type === 'audio' && chunk.data) res.write(chunk.data)
+            }
+            res.end()
           } catch (err) {
-            res.setHeader('Content-Type', 'application/json')
-            res.statusCode = 500
-            res.end(JSON.stringify({ error: err.message }))
+            if (!res.headersSent) {
+              res.setHeader('Content-Type', 'application/json')
+              res.statusCode = 500
+              res.end(JSON.stringify({ error: err.message }))
+            } else {
+              res.end()
+            }
           }
         })
 

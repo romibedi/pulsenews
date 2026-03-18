@@ -175,9 +175,25 @@ export function renderArticlePage(article) {
 }
 
 /**
- * Render the home page for bots.
+ * Render an article card snippet (used in homepage and category pages).
  */
-export function renderHomePage() {
+function renderArticleCard(article) {
+  const slug = article.slug || encodeURIComponent(article.id);
+  const href = article.slug ? `${SITE_URL}/news/${article.slug}` : `${SITE_URL}/article/${encodeURIComponent(article.id)}`;
+  const date = article.date ? new Date(article.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+  return `
+    <article style="margin-bottom:1.5em;padding-bottom:1.5em;border-bottom:1px solid #eee;">
+      ${article.image ? `<a href="${escapeHtml(href)}"><img src="${escapeHtml(article.image)}" alt="${escapeHtml(article.title)}" loading="lazy" style="width:100%;border-radius:8px;margin-bottom:0.5em;"></a>` : ''}
+      <h3 style="margin:0 0 0.3em;"><a href="${escapeHtml(href)}" style="color:#111;text-decoration:none;">${escapeHtml(article.title)}</a></h3>
+      <p style="margin:0 0 0.3em;color:#555;font-size:0.9em;">${escapeHtml((article.description || '').slice(0, 160))}</p>
+      <span style="font-size:0.8em;color:#888;">${escapeHtml(article.source || '')}${date ? ` &middot; ${date}` : ''}</span>
+    </article>`;
+}
+
+/**
+ * Render the home page for bots — includes actual article content.
+ */
+export function renderHomePage(articles = []) {
   const websiteLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -207,6 +223,10 @@ export function renderHomePage() {
     ]
   };
 
+  const articleCards = articles.length > 0
+    ? `<section><h2 style="font-size:1.4em;margin:1em 0 0.5em;">Latest Headlines</h2>${articles.map(renderArticleCard).join('\n')}</section>`
+    : '';
+
   const bodyContent = `
   <main style="max-width:720px;margin:0 auto;padding:1em;font-family:system-ui,sans-serif;">
     <h1 style="font-size:2em;">PulseNewsToday - Breaking News, World News &amp; Current Affairs</h1>
@@ -214,7 +234,8 @@ export function renderHomePage() {
       Stay informed with PulseNewsToday. Breaking news, world news, and current affairs from 99+ trusted sources
       across 9 regions and 16 languages. AI-powered summaries and text-to-speech.
     </p>
-    <nav>
+    ${articleCards}
+    <nav style="margin-top:2em;">
       <h2>Categories</h2>
       <ul>
         <li><a href="${SITE_URL}/category/world">World News</a></li>
@@ -241,9 +262,9 @@ export function renderHomePage() {
 }
 
 /**
- * Render a category page for bots.
+ * Render a category page for bots — includes article listings.
  */
-export function renderCategoryPage(category) {
+export function renderCategoryPage(category, articles = []) {
   const CATEGORY_META = {
     world: { title: 'World News', description: 'Latest world news and international headlines from trusted global sources.' },
     technology: { title: 'Technology News', description: 'Breaking technology news, gadget reviews, and innovation stories.' },
@@ -272,6 +293,13 @@ export function renderCategoryPage(category) {
     ]
   };
 
+  // Use first article image as og:image if available
+  const ogImage = (articles.find(a => a.image)?.image) || `${SITE_URL}/favicon.svg`;
+
+  const articleCards = articles.length > 0
+    ? `<section style="margin-top:1.5em;">${articles.map(renderArticleCard).join('\n')}</section>`
+    : '';
+
   const bodyContent = `
   <main style="max-width:720px;margin:0 auto;padding:1em;font-family:system-ui,sans-serif;">
     <nav aria-label="Breadcrumb" style="font-size:14px;color:#888;margin-bottom:1em;">
@@ -279,6 +307,7 @@ export function renderCategoryPage(category) {
     </nav>
     <h1 style="font-size:2em;">${escapeHtml(meta.title)} - PulseNewsToday</h1>
     <p style="font-size:1.1em;color:#555;">${escapeHtml(meta.description)}</p>
+    ${articleCards}
   </main>`;
 
   return buildHtmlShell({
@@ -286,7 +315,7 @@ export function renderCategoryPage(category) {
     description: meta.description,
     canonicalUrl,
     ogType: 'website',
-    ogImage: `${SITE_URL}/favicon.svg`,
+    ogImage,
     jsonLd: [breadcrumbLd],
     bodyContent,
   });
