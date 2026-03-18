@@ -168,6 +168,30 @@ async function testRobotsTxt() {
   assert(text.includes('Disallow: /api/'), 'Blocks /api/');
   assert(text.includes('Sitemap:'), 'References sitemap');
   assert(text.includes('sitemap.xml'), 'Sitemap URL points to sitemap.xml');
+
+  // AI crawlers
+  assert(text.includes('GPTBot'), 'Mentions GPTBot');
+  assert(text.includes('ClaudeBot'), 'Mentions ClaudeBot');
+  assert(text.includes('PerplexityBot'), 'Mentions PerplexityBot');
+}
+
+async function testIndexNow() {
+  console.log('\n\x1b[1m== IndexNow ==\x1b[0m');
+  // The key file should be accessible at the root
+  const res = await fetch(`${BASE_URL}/2e06266d797d41ad8e5a6fa3795157e6.txt`);
+  assert(res.status === 200, 'IndexNow key file returns 200');
+  const text = await res.text();
+  assert(text.trim() === '2e06266d797d41ad8e5a6fa3795157e6', 'Key file contains correct key');
+}
+
+async function testLlmsTxt() {
+  console.log('\n\x1b[1m== llms.txt ==\x1b[0m');
+  const res = await fetch(`${BASE_URL}/llms.txt`);
+  assert(res.status === 200, 'llms.txt returns 200');
+  const text = await res.text();
+  assert(text.includes('PulseNewsToday'), 'Contains site name');
+  assert(text.includes('/news/'), 'Documents article URL pattern');
+  assert(text.includes('sitemap'), 'References sitemap');
 }
 
 async function testSocialBots() {
@@ -244,6 +268,8 @@ async function run() {
   await testCategoryPage();
   await testSitemap();
   await testRobotsTxt();
+  await testIndexNow();
+  await testLlmsTxt();
   await testSocialBots();
   await testRegularUser();
 

@@ -10,6 +10,7 @@ import { extract } from '@extractus/article-extractor';
 import { buildFeedContextMap } from '../shared/feedRegistry.js';
 import { parseRssFeed, fetchOgImage } from '../rss.js';
 import { articleExists, batchWriteArticles } from '../db.js';
+import { submitUrls, articleUrl } from '../indexnow.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -160,6 +161,7 @@ export async function handler(event) {
   let totalIngested = 0;
   let totalSkipped = 0;
   let feedErrors = 0;
+  const newArticleUrls = []; // Collect URLs for IndexNow submission
 
   // 2. Fetch all feeds concurrently (max 10 at a time)
   const feedEntries = [...feedMap.entries()];
@@ -271,6 +273,7 @@ export async function handler(event) {
             // Batch-write all items for this article
             await batchWriteArticles(items);
             totalIngested++;
+            newArticleUrls.push(articleUrl(slug));
           } catch (err) {
             console.warn(
               `[ingest] Article processing failed: ${article.url} - ${err.message}`,
@@ -281,6 +284,15 @@ export async function handler(event) {
       }),
     ),
   );
+
+  // Submit new URLs to IndexNow for instant indexing by Bing/Yandex/etc.
+  if (newArticleUrls.length > 0) {
+    try {
+      await submitUrls(newArticleUrls);
+    } catch (err) {
+      console.warn(`[ingest] IndexNow submission failed: ${err.message}`);
+    }
+  }
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
   console.log(

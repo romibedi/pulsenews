@@ -27,6 +27,7 @@ import {
   renderHomePage,
   renderCategoryPage,
 } from './ssr.js';
+import { INDEXNOW_KEY } from './indexnow.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -469,6 +470,68 @@ app.get('/api/search', async (req, res) => {
     }
     res.status(500).json({ error: err.message });
   }
+});
+
+// robots.txt
+app.get('/robots.txt', (req, res) => {
+  const siteUrl = process.env.SITE_URL || 'https://www.pulsenewstoday.com';
+  res.set('Content-Type', 'text/plain');
+  res.set('Cache-Control', 's-maxage=86400');
+  res.send(`# PulseNewsToday robots.txt
+User-agent: *
+Allow: /
+Disallow: /api/
+Allow: /api/sitemap.xml
+
+# Search engine bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# AI crawlers — allowed so our content gets cited
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: ${siteUrl}/api/sitemap.xml
+`);
+});
+
+// llms.txt — helps AI systems understand the site
+app.get('/llms.txt', (req, res) => {
+  res.set('Content-Type', 'text/plain');
+  res.set('Cache-Control', 's-maxage=86400');
+  res.send(`# PulseNewsToday
+> A multilingual news aggregator covering world, technology, business, science, sport, culture, environment, and politics.
+
+PulseNewsToday aggregates breaking news from trusted sources including BBC, Guardian, Al Jazeera, Reuters, and regional publishers across 16 languages.
+
+## Content
+- /news/{slug} — Individual news articles with full text
+- /category/{category} — Category pages (world, technology, business, science, sport, culture, environment, politics)
+- /api/sitemap.xml — Full sitemap with all article URLs
+- /api/search?q={query}&lang={lang} — Search articles by keyword
+
+## Structured Data
+All pages include JSON-LD structured data (NewsArticle, WebSite, BreadcrumbList) and Open Graph metadata.
+`);
+});
+
+// IndexNow key verification — search engines fetch this to verify ownership
+app.get(`/${INDEXNOW_KEY}.txt`, (req, res) => {
+  res.set('Content-Type', 'text/plain');
+  res.set('Cache-Control', 's-maxage=86400');
+  res.send(INDEXNOW_KEY);
 });
 
 // Health check
