@@ -141,30 +141,6 @@ export default function About() {
         </div>
 
         <div className="bg-[var(--surface)] rounded-2xl p-6 md:p-8 border border-[var(--border)] shadow-sm">
-          <h2 className="text-xl font-normal text-[var(--text)] mb-3">How It Works</h2>
-          <p className="text-[var(--text-secondary)] leading-relaxed mb-4">
-            PulseNewsToday runs on a fully serverless architecture on AWS. Articles are automatically
-            ingested every 15 minutes from 99+ RSS feeds, stored in DynamoDB with a 90-day retention window,
-            and served through a global CDN for fast load times anywhere in the world.
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {[
-              { label: 'React + Vite', desc: 'Frontend' },
-              { label: 'AWS Lambda', desc: 'API & Ingestion' },
-              { label: 'DynamoDB', desc: 'Storage' },
-              { label: 'CloudFront', desc: 'CDN' },
-              { label: 'OpenSearch', desc: 'Search' },
-              { label: 'EventBridge', desc: 'Scheduling' },
-            ].map((t) => (
-              <div key={t.label} className="text-center p-3 bg-[var(--bg)] rounded-xl border border-[var(--border)]">
-                <span className="text-sm font-medium text-[var(--text)] block">{t.label}</span>
-                <span className="text-xs text-[var(--text-muted)]">{t.desc}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-[var(--surface)] rounded-2xl p-6 md:p-8 border border-[var(--border)] shadow-sm">
           <h2 className="text-xl font-normal text-[var(--text)] mb-3">Built by VeyricTech</h2>
           <p className="text-[var(--text-secondary)] leading-relaxed mb-4">
             PulseNewsToday is built and maintained by VeyricTech. We build AI-powered products
