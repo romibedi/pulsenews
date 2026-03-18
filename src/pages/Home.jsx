@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { fetchByCategory } from '../api/newsApi';
 import useLocalStorage from '../hooks/useLocalStorage';
 import useRegion, { REGIONS } from '../hooks/useRegion';
@@ -9,6 +10,8 @@ import Loader, { HeroLoader } from '../components/Loader';
 import CategoryCustomizer, { DEFAULT_SECTIONS } from '../components/CategoryCustomizer';
 import StockTicker from '../components/StockTicker';
 import useAudio from '../contexts/AudioContext';
+
+const SITE_URL = 'https://pulsenewstoday.com';
 
 export default function Home() {
   const [savedSections, setSavedSections] = useLocalStorage('pulsenews-sections', null);
@@ -85,6 +88,54 @@ export default function Home() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-12">
+      <Helmet>
+        <title>PulseNewsToday - Breaking News, World News &amp; Current Affairs</title>
+        <meta name="description" content="Stay informed with PulseNewsToday. Breaking news, world news, and current affairs from 99+ trusted sources across 9 regions and 16 languages. AI-powered summaries and text-to-speech." />
+        <link rel="canonical" href={SITE_URL} />
+        <meta property="og:title" content="PulseNewsToday - Breaking News, World News & Current Affairs" />
+        <meta property="og:description" content="Stay informed with PulseNewsToday. Breaking news, world news, and current affairs from 99+ trusted sources across 9 regions and 16 languages." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={SITE_URL} />
+        <meta property="og:image" content={`${SITE_URL}/favicon.svg`} />
+        <meta property="og:site_name" content="PulseNewsToday" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="PulseNewsToday - Breaking News, World News & Current Affairs" />
+        <meta name="twitter:description" content="Stay informed with PulseNewsToday. Breaking news, world news, and current affairs from 99+ trusted sources across 9 regions and 16 languages." />
+        <meta name="twitter:image" content={`${SITE_URL}/favicon.svg`} />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "PulseNewsToday",
+          "url": SITE_URL,
+          "description": "AI-powered news aggregator delivering stories from 99+ sources across 9 regions and 16 languages.",
+          "publisher": {
+            "@type": "Organization",
+            "name": "PulseNewsToday",
+            "url": SITE_URL
+          },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": `${SITE_URL}/search?q={search_term_string}`
+            },
+            "query-input": "required name=search_term_string"
+          }
+        })}</script>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": SITE_URL
+            }
+          ]
+        })}</script>
+      </Helmet>
+
       {/* Hero */}
       <section>
         <div className="flex items-center justify-between mb-4">

@@ -40,6 +40,7 @@ export default function App() {
                   <Route path="/category/:category" element={<Category />} />
                   <Route path="/region/:region" element={<Region />} />
                   <Route path="/article/*" element={<Article />} />
+                  <Route path="/news/:slug" element={<Article />} />
                   <Route path="/search" element={<Search />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/bookmarks" element={<Bookmarks />} />

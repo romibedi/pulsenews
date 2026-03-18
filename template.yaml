@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: PulseNews API - Express Lambda behind API Gateway
+Description: PulseNewsToday API - Express Lambda + DynamoDB article store
 
 Globals:
   Function:
@@ -9,6 +9,9 @@ Globals:
     Runtime: nodejs20.x
     Architectures:
       - arm64
+    Environment:
+      Variables:
+        DYNAMODB_TABLE: pulsenews-articles
   Api:
     Cors:
       AllowOrigin: "'*'"
@@ -23,16 +26,107 @@ Parameters:
     Description: Anthropic API key for AI summaries
 
 Resources:
+  # DynamoDB table for article storage (90-day TTL)
+  PulseNewsArticles:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: pulsenews-articles
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: articleId
+          AttributeType: S
+        - AttributeName: date
+          AttributeType: S
+        - AttributeName: slug
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: articleId-index
+          KeySchema:
+            - AttributeName: articleId
+              KeyType: HASH
+            - AttributeName: date
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: slug-index
+          KeySchema:
+            - AttributeName: slug
+              KeyType: HASH
+            - AttributeName: date
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  # OpenSearch domain for full-text multilingual search
+  PulseNewsSearch:
+    Type: AWS::OpenSearchService::Domain
+    Properties:
+      DomainName: pulsenews-search
+      EngineVersion: OpenSearch_2.13
+      ClusterConfig:
+        InstanceType: t3.small.search
+        InstanceCount: 1
+        DedicatedMasterEnabled: false
+        ZoneAwarenessEnabled: false
+      EBSOptions:
+        EBSEnabled: true
+        VolumeType: gp3
+        VolumeSize: 10
+      NodeToNodeEncryptionOptions:
+        Enabled: true
+      EncryptionAtRestOptions:
+        Enabled: true
+      DomainEndpointOptions:
+        EnforceHTTPS: true
+      AdvancedSecurityOptions:
+        Enabled: true
+        InternalUserDatabaseEnabled: false
+        MasterUserOptions:
+          MasterUserARN: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+      AccessPolicies:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: 'es:*'
+            Resource: !Sub 'arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/pulsenews-search/*'
+
+  # API Lambda - serves all /api/* routes
   PulseNewsApi:
     Type: AWS::Serverless::Function
     Properties:
       Handler: lambda.handler
       CodeUri: server/
-      Description: PulseNews API - all routes
+      Description: PulseNewsToday API - all routes
       Environment:
         Variables:
           ANTHROPIC_API_KEY: !Ref AnthropicApiKey
           NODE_ENV: production
+          OPENSEARCH_ENDPOINT: !Sub 'https://${PulseNewsSearch.DomainEndpoint}'
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: pulsenews-articles
+        - Statement:
+            - Effect: Allow
+              Action:
+                - 'es:ESHttpGet'
+                - 'es:ESHttpPost'
+              Resource: !Sub 'arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/pulsenews-search/*'
       Events:
         ApiRoot:
           Type: Api
@@ -45,6 +139,69 @@ Resources:
             Path: /api/health
             Method: GET
 
+  # Ingestion Lambda - crawls RSS feeds every 15 minutes
+  PulseNewsIngest:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: ingest/handler.handler
+      CodeUri: server/
+      Description: PulseNewsToday RSS ingestion cron
+      Timeout: 300
+      MemorySize: 512
+      Environment:
+        Variables:
+          NODE_ENV: production
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: pulsenews-articles
+      Events:
+        ScheduleEvent:
+          Type: Schedule
+          Properties:
+            Schedule: rate(15 minutes)
+            Description: Ingest RSS feeds every 15 minutes
+            Enabled: true
+
+  # OpenSearch indexer Lambda - DynamoDB Streams → OpenSearch
+  PulseNewsSearchIndexer:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: search/indexer.handler
+      CodeUri: server/
+      Description: Indexes articles from DynamoDB Streams into OpenSearch
+      Timeout: 60
+      MemorySize: 256
+      Environment:
+        Variables:
+          OPENSEARCH_ENDPOINT: !Sub 'https://${PulseNewsSearch.DomainEndpoint}'
+          NODE_ENV: production
+      Policies:
+        - DynamoDBStreamReadPolicy:
+            TableName: pulsenews-articles
+            StreamName: '*'
+        - Statement:
+            - Effect: Allow
+              Action:
+                - 'es:ESHttpGet'
+                - 'es:ESHttpPost'
+                - 'es:ESHttpPut'
+                - 'es:ESHttpDelete'
+                - 'es:ESHttpHead'
+              Resource: !Sub 'arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/pulsenews-search/*'
+      Events:
+        DynamoDBStream:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt PulseNewsArticles.StreamArn
+            StartingPosition: TRIM_HORIZON
+            BatchSize: 50
+            MaximumBatchingWindowInSeconds: 30
+            BisectBatchOnFunctionError: true
+            MaximumRetryAttempts: 3
+            FilterCriteria:
+              Filters:
+                - Pattern: '{"dynamodb":{"NewImage":{"PK":{"S":[{"prefix":"SITEMAP"}]}}}}'
+
 Outputs:
   ApiUrl:
     Description: API Gateway URL
@@ -52,3 +209,12 @@ Outputs:
   FunctionArn:
     Description: Lambda function ARN
     Value: !GetAtt PulseNewsApi.Arn
+  TableName:
+    Description: DynamoDB table name
+    Value: !Ref PulseNewsArticles
+  OpenSearchEndpoint:
+    Description: OpenSearch domain endpoint
+    Value: !Sub 'https://${PulseNewsSearch.DomainEndpoint}'
+  SearchIndexerArn:
+    Description: Search indexer Lambda ARN
+    Value: !GetAtt PulseNewsSearchIndexer.Arn

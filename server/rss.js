@@ -39,12 +39,17 @@ export function parseRssFeed(xml, source) {
     const title = stripHtml(extractTag(itemXml, 'title'));
     const link = extractTag(itemXml, 'link');
     const description = stripHtml(extractTag(itemXml, 'description'));
+    // Some feeds include full content in content:encoded — use for richer snippets
+    const contentEncoded = extractTag(itemXml, 'content:encoded');
+    const bodyText = contentEncoded
+      ? stripHtml(contentEncoded.replace(/<\/?(p|div|br|h[1-6]|li|blockquote)[^>]*>/gi, '\n\n').replace(/<[^>]*>/g, '')).slice(0, 2000)
+      : '';
     const pubDate = extractTag(itemXml, 'pubDate');
     const image = extractImageUrl(itemXml);
     if (title && link) {
       items.push({
         id: `rss-${Buffer.from(link).toString('base64url')}`,
-        title, description, body: '', image,
+        title, description, body: bodyText, image,
         author: source,
         date: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
         section: source, sectionId: source.toLowerCase().replace(/\s+/g, '-'),

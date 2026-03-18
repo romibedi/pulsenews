@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { fetchByCategory } from '../api/newsApi';
 import { useBookmarks } from '../contexts/BookmarkContext';
 import { estimateReadingTime } from '../utils/readingTime';
@@ -9,6 +10,8 @@ import AISummary from '../components/AISummary';
 import TextToSpeech from '../components/TextToSpeech';
 import Reactions from '../components/Reactions';
 import useAudio from '../contexts/AudioContext';
+
+const SITE_URL = 'https://pulsenewstoday.com';
 
 const PLACEHOLDER = 'data:image/svg+xml,' + encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400"><rect width="800" height="400" fill="#f0ece7"/><text x="400" y="200" dominant-baseline="middle" text-anchor="middle" fill="#ccc5bc" font-family="sans-serif" font-size="16">No Image</text></svg>'
@@ -58,7 +61,7 @@ function splitIntoParagraphs(text) {
 }
 
 export default function Article() {
-  const { '*': articleId } = useParams();
+  const { '*': articleId, slug } = useParams();
   const location = useLocation();
   const rssArticle = location.state?.article || null;
 
@@ -69,6 +72,8 @@ export default function Article() {
   const { isBookmarked, addBookmark, removeBookmark } = useBookmarks();
   const { playArticle, playing, currentArticle, pause } = useAudio();
   const isListening = playing && currentArticle?.id === article?.id;
+
+  const lookupKey = slug || articleId;
 
   useEffect(() => {
     let ignore = false;
@@ -101,14 +106,27 @@ export default function Article() {
     async function load() {
       setLoading(true);
       try {
-        // Try to find article across categories
-        const categories = ['world', 'technology', 'business', 'sport', 'science', 'culture', 'environment', 'politics'];
         let found = null;
-        for (const cat of categories) {
-          const result = await fetchByCategory(cat);
-          found = (result.articles || []).find((a) => a.id === articleId);
-          if (found) break;
+
+        // Try DynamoDB first (fast — by slug or ID)
+        if (slug) {
+          const res = await fetch(`/api/article/slug/${encodeURIComponent(slug)}`);
+          if (res.ok) found = await res.json();
+        } else if (articleId) {
+          const res = await fetch(`/api/article/${encodeURIComponent(articleId)}`);
+          if (res.ok) found = await res.json();
         }
+
+        // Fall back to searching RSS feeds
+        if (!found && articleId) {
+          const categories = ['world', 'technology', 'business', 'sport', 'science', 'culture', 'environment', 'politics'];
+          for (const cat of categories) {
+            const result = await fetchByCategory(cat);
+            found = (result.articles || []).find((a) => a.id === articleId);
+            if (found) break;
+          }
+        }
+
         if (!ignore) {
           if (found) setArticle(found);
           else setError('Article not found');
@@ -122,7 +140,7 @@ export default function Article() {
     load();
     window.scrollTo(0, 0);
     return () => { ignore = true; };
-  }, [articleId]);
+  }, [lookupKey]);
 
   if (loading) {
     return (
@@ -157,15 +175,89 @@ export default function Article() {
   const isExternal = article.isExternal;
   const bodyText = article.body || '';
   const allParagraphs = splitIntoParagraphs(bodyText);
-  const MAX_PREVIEW = isExternal ? 4 : allParagraphs.length;
+  const MAX_PREVIEW = isExternal ? 8 : allParagraphs.length;
   const paragraphs = allParagraphs.slice(0, MAX_PREVIEW);
   const hasMoreContent = isExternal && allParagraphs.length > MAX_PREVIEW;
   const saved = isBookmarked(article.id);
   const readTime = estimateReadingTime(bodyText || article.description);
   const shareUrl = isExternal ? article.url : `${window.location.origin}/article/${encodeURIComponent(article.id)}`;
 
+  const canonicalUrl = article.slug
+    ? `${SITE_URL}/news/${article.slug}`
+    : `${SITE_URL}/article/${encodeURIComponent(article.id)}`;
+  const metaDescription = (article.description || article.title || '').slice(0, 160);
+  const metaImage = article.image || `${SITE_URL}/favicon.svg`;
+
   return (
     <article className="max-w-3xl mx-auto px-4 sm:px-6 py-8 animate-fade-in">
+      <Helmet>
+        <title>{`${article.title} | PulseNewsToday`}</title>
+        <meta name="description" content={metaDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={article.title} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content={metaImage} />
+        <meta property="og:site_name" content="PulseNewsToday" />
+        <meta property="article:published_time" content={article.date} />
+        {article.author && <meta property="article:author" content={article.author} />}
+        {article.section && <meta property="article:section" content={article.section} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={article.title} />
+        <meta name="twitter:description" content={metaDescription} />
+        <meta name="twitter:image" content={metaImage} />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "NewsArticle",
+          "headline": article.title,
+          "description": metaDescription,
+          "image": article.image || undefined,
+          "datePublished": article.date,
+          "dateModified": article.date,
+          "author": {
+            "@type": "Person",
+            "name": article.author || "PulseNewsToday"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "PulseNewsToday",
+            "url": SITE_URL,
+            "logo": {
+              "@type": "ImageObject",
+              "url": `${SITE_URL}/favicon.svg`
+            }
+          },
+          "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": canonicalUrl
+          }
+        })}</script>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": SITE_URL
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": article.section || "News",
+              "item": `${SITE_URL}/category/${article.sectionId || 'world'}`
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": article.title
+            }
+          ]
+        })}</script>
+      </Helmet>
+
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-6">
         <Link to="/" className="hover:text-[#e05d44] dark:hover:text-[#e87461] no-underline transition-colors">Home</Link>

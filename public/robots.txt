@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+
+User-agent: Googlebot
+Allow: /api/sitemap.xml
+
+Sitemap: https://pulsenewstoday.com/api/sitemap.xml

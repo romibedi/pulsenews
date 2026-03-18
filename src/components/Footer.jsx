@@ -48,7 +48,14 @@ export default function Footer() {
 
         <div className="border-t border-[var(--border)] mt-8 pt-6 text-center">
           <p className="text-xs text-[var(--text-muted)]">
-            &copy; {new Date().getFullYear()} PulseNewsToday. News aggregated from trusted RSS sources.
+            &copy; 2026 PulseNewsToday. A product of{' '}
+            <a href="mailto:info@veyrictech.com" className="hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline text-[var(--text-muted)] font-medium">VeyricTech</a>.
+            AI-powered news from 99+ sources across 9 regions and 16 languages.
+          </p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">
+            <a href="https://www.pulsenewstoday.com" className="hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline text-[var(--text-muted)]">www.pulsenewstoday.com</a>
+            <span className="mx-2">&middot;</span>
+            <a href="mailto:info@veyrictech.com" className="hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline text-[var(--text-muted)]">info@veyrictech.com</a>
           </p>
         </div>
       </div>
