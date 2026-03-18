@@ -28,7 +28,7 @@ export const LANGUAGE_ANALYZERS = {
   pt: { analyzer: 'portuguese', name: 'Portuguese' },
   zh: { analyzer: 'smartcn', name: 'Chinese' },
   ja: { analyzer: 'kuromoji', name: 'Japanese' },
-  ko: { analyzer: 'nori', name: 'Korean' },
+  ko: { analyzer: 'icu_analyzer', name: 'Korean' },
   sw: { analyzer: 'icu_analyzer', name: 'Swahili' },
 };
 

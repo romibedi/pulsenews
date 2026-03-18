@@ -10,6 +10,7 @@
 //   node server/search/backfill.js
 // ---------------------------------------------------------------------------
 
+import { createHash } from 'crypto';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { getClient } from './client.js';
@@ -20,6 +21,12 @@ import {
 } from './mappings.js';
 
 const TABLE_NAME = process.env.DYNAMODB_TABLE || 'pulsenews-articles';
+
+// OpenSearch _id max is 512 bytes — hash long IDs
+function safeId(id) {
+  if (Buffer.byteLength(id, 'utf8') <= 512) return id;
+  return createHash('sha256').update(id).digest('hex');
+}
 const SUPPORTED = new Set(supportedLanguages());
 
 const ddbClient = new DynamoDBClient({});
@@ -87,7 +94,7 @@ async function main() {
       const idx = indexName(safeLang);
 
       bulkBody.push(
-        { index: { _index: idx, _id: id } },
+        { index: { _index: idx, _id: safeId(id) } },
         {
           articleId: id,
           title: item.title || '',

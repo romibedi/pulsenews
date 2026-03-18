@@ -6,8 +6,14 @@
 // Routes each article to the correct per-language index.
 // ---------------------------------------------------------------------------
 
+import { createHash } from 'crypto';
 import { getClient } from './client.js';
 import { indexName, supportedLanguages, buildIndexSettings } from './mappings.js';
+
+function safeId(id) {
+  if (Buffer.byteLength(id, 'utf8') <= 512) return id;
+  return createHash('sha256').update(id).digest('hex');
+}
 
 const SUPPORTED = new Set(supportedLanguages());
 
@@ -109,7 +115,7 @@ export async function handler(event) {
         try {
           await client.delete({
             index: idx,
-            id: articleId,
+            id: safeId(articleId),
             refresh: false,
           });
           deleted++;
@@ -159,7 +165,7 @@ export async function handler(event) {
 
       await client.index({
         index: indexName(safeLang),
-        id: articleId,
+        id: safeId(articleId),
         body: searchDoc,
         refresh: false,
       });
