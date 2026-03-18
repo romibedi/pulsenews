@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">PulseNewsToday</string>
+    <string name="title_activity_main">PulseNewsToday</string>
+    <string name="package_name">com.veyrictech.pulsenewstoday</string>
+    <string name="custom_url_scheme">com.veyrictech.pulsenewstoday</string>
+</resources>

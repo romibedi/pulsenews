@@ -16,11 +16,12 @@
     <script type="module" src="/src/main.jsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
-        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-          // Dev: unregister stale service workers
+        var isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+        if (isNative || location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+          // Native app or dev: unregister stale service workers
           navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
         } else {
-          // Prod: register service worker
+          // Prod web: register service worker
           window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js');
           });
