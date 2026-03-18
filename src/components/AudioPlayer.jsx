@@ -16,7 +16,7 @@ export default function AudioPlayer() {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--surface)]/95 backdrop-blur-md border-t border-[var(--border)] shadow-lg">
+    <div className="fixed left-0 right-0 z-50 bg-[var(--surface)]/95 backdrop-blur-md border-t border-[var(--border)] shadow-lg bottom-[calc(49px+env(safe-area-inset-bottom,0px))] md:bottom-0">
       {/* Seekable progress bar */}
       {currentArticle && (
         <div

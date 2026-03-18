@@ -30,6 +30,7 @@ export default function Navbar() {
     if (query.trim()) {
       navigate(`/search?q=${encodeURIComponent(query.trim())}`);
       setQuery('');
+      setMenuOpen(false);
     }
   };
 
@@ -37,7 +38,7 @@ export default function Navbar() {
     <nav className="bg-[var(--surface)]/80 backdrop-blur-md border-b border-[var(--border)] sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Top bar */}
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-14 md:h-16">
           <Link to="/" className="flex items-center gap-2 no-underline">
             <div className="w-8 h-8 rounded-lg bg-[#e05d44] dark:bg-[#e87461] flex items-center justify-center">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -45,7 +46,7 @@ export default function Navbar() {
                 <path d="M18 14h-8M15 18h-5M10 6h8v4h-8V6Z" />
               </svg>
             </div>
-            <span className="text-2xl text-[var(--text)]" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>
+            <span className="text-xl md:text-2xl text-[var(--text)]" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>
               PulseNews<span className="text-[#e05d44] dark:text-[#e87461]">Today</span>
             </span>
           </Link>
@@ -71,7 +72,17 @@ export default function Navbar() {
               <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded-full">Offline</span>
             )}
 
-            {/* Bookmarks link */}
+            {/* Mobile: search icon navigates to /search */}
+            <button
+              onClick={() => navigate('/search')}
+              className="md:hidden p-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors"
+            >
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+              </svg>
+            </button>
+
+            {/* Bookmarks link - desktop */}
             <Link to="/bookmarks" className="hidden md:flex items-center gap-1 text-sm text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline relative p-1.5">
               <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
@@ -83,15 +94,15 @@ export default function Navbar() {
               )}
             </Link>
 
-            {/* Language selector */}
+            {/* Language selector - desktop */}
             <div className="hidden md:block">
               <LanguageSelector />
             </div>
 
-            {/* Dark mode toggle */}
+            {/* Dark mode toggle - desktop */}
             <button
               onClick={toggleTheme}
-              className="p-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors rounded-lg hover:bg-[var(--bg)]"
+              className="hidden md:block p-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors rounded-lg hover:bg-[var(--bg)]"
               title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {isDark ? (
@@ -118,18 +129,6 @@ export default function Navbar() {
                 </Link>
               ))}
             </div>
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden p-2 text-[var(--text-secondary)] hover:text-[var(--text)]"
-            >
-              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                {menuOpen ? (
-                  <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>
-                ) : (
-                  <><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></>
-                )}
-              </svg>
-            </button>
           </div>
         </div>
 
@@ -154,54 +153,6 @@ export default function Navbar() {
           ))}
         </div>
       </div>
-
-      {/* Mobile menu */}
-      {menuOpen && (
-        <div className="md:hidden border-t border-[var(--border)] px-4 py-3 space-y-2 animate-fade-in bg-[var(--surface)]">
-          <form onSubmit={handleSearch} className="mb-3">
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search news..."
-              className="w-full bg-[var(--bg)] border border-[var(--border)] rounded-full px-4 py-2 text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#e05d44] dark:focus:border-[#e87461]"
-            />
-          </form>
-          <div className="flex flex-wrap gap-2">
-            {region && region !== 'world' && (
-              <Link
-                to={`/region/${region}`}
-                onClick={() => setMenuOpen(false)}
-                className="px-3 py-1 text-xs font-semibold text-[#e05d44] dark:text-[#e87461] bg-[#fef0ed] dark:bg-[#e87461]/10 rounded-full no-underline"
-              >
-                {regionInfo.flag} {regionInfo.label}
-              </Link>
-            )}
-            {CATEGORIES.filter((c) => c !== 'world').map((cat) => (
-              <Link
-                key={cat}
-                to={`/category/${cat}`}
-                onClick={() => setMenuOpen(false)}
-                className="px-3 py-1 text-xs font-medium text-[var(--text-secondary)] bg-[var(--bg)] rounded-full capitalize no-underline"
-              >
-                {cat}
-              </Link>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-[var(--border)]">
-            {[
-              { to: '/bookmarks', label: `Bookmarks${bookmarks.length > 0 ? ` (${bookmarks.length})` : ''}` },
-              { to: '/region/india', label: 'Regions' },
-              { to: '/feeds', label: 'Custom Feeds' },
-              { to: '/about', label: 'About' },
-            ].map((link) => (
-              <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)} className="text-sm text-[var(--text-secondary)] no-underline">
-                {link.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
     </nav>
   );
 }
