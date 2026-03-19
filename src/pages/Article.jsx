@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { fetchByCategory } from '../api/newsApi';
@@ -70,10 +70,22 @@ export default function Article() {
   const [extracting, setExtracting] = useState(false);
   const [error, setError] = useState(null);
   const { isBookmarked, addBookmark, removeBookmark } = useBookmarks();
-  const { playArticle, prefetchArticle, playing, currentArticle, pause } = useAudio();
-  const isListening = playing && currentArticle?.id === article?.id;
+  const { playArticle, prefetchArticle, playing, paused, currentArticle, pause, resume } = useAudio();
+  const isListening = (playing || paused) && currentArticle?.id === article?.id;
 
   const lookupKey = slug || articleId;
+
+  // Auto-start TTS when article loads — shows player at bottom to encourage listening
+  const autoPlayedRef = useRef(false);
+  useEffect(() => {
+    if (article && !autoPlayedRef.current && !playing) {
+      autoPlayedRef.current = true;
+      // Small delay to let the page render first
+      const timer = setTimeout(() => prefetchArticle(article), 300);
+      const playTimer = setTimeout(() => playArticle(article), 800);
+      return () => { clearTimeout(timer); clearTimeout(playTimer); };
+    }
+  }, [article?.id]);
 
   useEffect(() => {
     let ignore = false;
@@ -334,14 +346,18 @@ export default function Article() {
           <button
             onMouseEnter={() => !isListening && article && prefetchArticle(article)}
             onTouchStart={() => !isListening && article && prefetchArticle(article)}
-            onClick={() => isListening ? pause() : playArticle(article)}
+            onClick={() => {
+              if (playing && isListening) pause();
+              else if (paused && isListening) resume();
+              else playArticle(article);
+            }}
             className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full border transition-all ${
               isListening
                 ? 'bg-[#e05d44] dark:bg-[#e87461] text-white border-transparent'
                 : 'border-[var(--border)] text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] hover:border-[#e05d44]/30 dark:hover:border-[#e87461]/30'
             }`}
           >
-            {isListening ? (
+            {playing && isListening ? (
               <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
                 <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
               </svg>
@@ -350,7 +366,7 @@ export default function Article() {
                 <polygon points="5 3 19 12 5 21 5 3" />
               </svg>
             )}
-            {isListening ? 'Listening...' : 'Listen'}
+            {playing && isListening ? 'Listening...' : paused && isListening ? 'Paused' : 'Listen'}
           </button>
         </div>
       </div>
