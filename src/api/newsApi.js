@@ -52,9 +52,12 @@ export async function fetchByCategory(category, { region, before } = {}) {
   }
 }
 
-export async function fetchArchive(date) {
+export async function fetchArchive(date, { region, lang } = {}) {
   try {
-    const res = await fetch(`/api/archive?date=${encodeURIComponent(date)}`);
+    let url = `/api/archive?date=${encodeURIComponent(date)}`;
+    if (region) url += `&region=${encodeURIComponent(region)}`;
+    if (lang) url += `&lang=${encodeURIComponent(lang)}`;
+    const res = await fetch(url);
     if (!res.ok) return { articles: [], date };
     const data = await res.json();
     return { articles: data.articles || [], date };

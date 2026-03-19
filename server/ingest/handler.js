@@ -259,13 +259,19 @@ export async function handler(event) {
               });
             }
 
-            // 7. Write SITEMAP entry (one per unique article)
+            // 7. Write SITEMAP entry (one per unique article, with display fields for archive)
+            const primaryCtx = contexts[0] ? contextFields(contexts[0]) : { category: 'world', lang: 'en' };
             items.push({
               PK: 'SITEMAP',
               SK: `${date}#${article.id}`,
               articleId: article.id,
               title: article.title,
+              description: article.description,
+              image,
               url: article.url,
+              source,
+              category: primaryCtx.category,
+              lang: primaryCtx.lang,
               slug,
               date,
               ttl,

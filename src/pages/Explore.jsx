@@ -84,6 +84,27 @@ export default function Explore() {
           ))}
         </div>
       )}
+
+      {/* Quick links */}
+      <div className="mt-8 border-t border-[var(--border)] pt-6">
+        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">More</p>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { to: '/archive', label: 'Archive', icon: '📅' },
+            { to: '/feeds', label: 'Feeds', icon: '📡' },
+            { to: '/about', label: 'About', icon: 'ℹ️' },
+          ].map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className="flex flex-col items-center gap-1.5 p-3 bg-[var(--surface)] border border-[var(--border)] rounded-2xl no-underline hover:border-[#e05d44]/30 dark:hover:border-[#e87461]/30 transition-all active:scale-[0.97]"
+            >
+              <span className="text-xl">{link.icon}</span>
+              <span className="text-xs font-medium text-[var(--text)]">{link.label}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

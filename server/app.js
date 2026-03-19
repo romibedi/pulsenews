@@ -135,14 +135,16 @@ app.get('/api/lang-feeds', async (req, res) => {
   res.json({ articles: [], lang });
 });
 
-// Archive — articles for a specific date
+// Archive — articles for a specific date, with optional region/lang filter
 app.get('/api/archive', async (req, res) => {
   const date = req.query.date; // e.g. "2026-03-17"
+  const region = req.query.region || null;
+  const lang = req.query.lang || null;
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return res.status(400).json({ error: 'date required (YYYY-MM-DD)' });
   }
   try {
-    const articles = await queryByDate(date, 100);
+    const articles = await queryByDate(date, 100, { region, lang });
     res.set('Cache-Control', 's-maxage=3600, stale-while-revalidate=7200');
     res.json({ articles, date });
   } catch (err) {

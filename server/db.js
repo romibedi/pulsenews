@@ -98,23 +98,55 @@ export async function queryByLang(lang, limit = 20, before = null) {
 
 /**
  * Query articles for a specific date (archive).
- * Uses SITEMAP partition — SK starts with date prefix.
- * Returns all articles from that date, newest first.
+ * Queries GLOBAL#CAT#, REGION#, and LANG# partitions in parallel so results
+ * include full display fields.  Supports optional region/lang filters.
+ * Deduplicates by articleId and returns newest first.
  */
-export async function queryByDate(date, limit = 50) {
-  const result = await docClient.send(
-    new QueryCommand({
-      TableName: TABLE_NAME,
-      KeyConditionExpression: 'PK = :pk AND begins_with(SK, :datePrefix)',
-      ExpressionAttributeValues: {
-        ':pk': 'SITEMAP',
-        ':datePrefix': date, // e.g. "2026-03-17"
-      },
-      ScanIndexForward: false,
-      Limit: limit,
-    }),
+export async function queryByDate(date, limit = 100, { region, lang } = {}) {
+  const pks = [];
+
+  if (lang && lang !== 'en') {
+    // Language-specific archive
+    pks.push(`LANG#${lang}`);
+  } else if (region && region !== 'world') {
+    // Regional archive — query REGION#<region>#CAT#<cat> for all categories
+    const cats = ['world', 'technology', 'business', 'science', 'sport', 'culture', 'environment', 'politics'];
+    for (const cat of cats) pks.push(`REGION#${region}#CAT#${cat}`);
+    pks.push(`REGION#${region}`);
+  } else {
+    // Global archive — all categories
+    const cats = ['world', 'technology', 'business', 'science', 'sport', 'culture', 'environment', 'politics'];
+    for (const cat of cats) pks.push(`GLOBAL#CAT#${cat}`);
+  }
+
+  const perPk = Math.ceil(limit / pks.length) + 5;
+
+  const results = await Promise.all(
+    pks.map((pk) =>
+      docClient.send(
+        new QueryCommand({
+          TableName: TABLE_NAME,
+          KeyConditionExpression: 'PK = :pk AND begins_with(SK, :datePrefix)',
+          ExpressionAttributeValues: { ':pk': pk, ':datePrefix': date },
+          ScanIndexForward: false,
+          Limit: perPk,
+        }),
+      ),
+    ),
   );
-  return cleanItems(result.Items);
+
+  const seen = new Set();
+  const all = [];
+  for (const result of results) {
+    for (const item of result.Items || []) {
+      if (!seen.has(item.articleId)) {
+        seen.add(item.articleId);
+        all.push(item);
+      }
+    }
+  }
+  all.sort((a, b) => b.SK.localeCompare(a.SK));
+  return cleanItems(all.slice(0, limit));
 }
 
 /**

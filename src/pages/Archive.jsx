@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { fetchArchive } from '../api/newsApi';
+import useRegion from '../hooks/useRegion';
+import useLanguage from '../hooks/useLanguage';
 import NewsCard from '../components/NewsCard';
 import Loader from '../components/Loader';
 
@@ -26,13 +28,15 @@ export default function Archive() {
   const date = searchParams.get('date') || new Date().toISOString().slice(0, 10);
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { region } = useRegion();
+  const { lang } = useLanguage();
 
   useEffect(() => {
     setLoading(true);
-    fetchArchive(date)
+    fetchArchive(date, { region, lang })
       .then((data) => setArticles(data.articles))
       .finally(() => setLoading(false));
-  }, [date]);
+  }, [date, region, lang]);
 
   const dates = getAvailableDates();
 
