@@ -746,7 +746,7 @@ export default defineConfig({
         // --- Shareable News Cards (dev) ---
         server.middlewares.use('/api/card/', async (req, res) => {
           const url = new URL(req.url, 'http://localhost')
-          const id = url.pathname.replace('/api/card/', '')
+          const id = decodeURIComponent(url.pathname.slice(1))
           const format = url.searchParams.get('format') || 'story'
           if (!id) { res.statusCode = 400; res.end('id required'); return }
 
@@ -851,7 +851,7 @@ export default defineConfig({
         // --- Story Threads (dev: title-based similarity from RSS cache) ---
         server.middlewares.use('/api/threads/', async (req, res) => {
           const url = new URL(req.url, 'http://localhost')
-          const id = url.pathname.replace('/api/threads/', '')
+          const id = decodeURIComponent(url.pathname.slice(1))
           if (!id) { res.statusCode = 400; res.end(JSON.stringify({ error: 'id required' })); return }
 
           // In dev, search all cached articles for title similarity
@@ -860,25 +860,25 @@ export default defineConfig({
             if (cached.data && Array.isArray(cached.data)) allArticles.push(...cached.data)
           }
 
-          const target = allArticles.find((a) => a.id === id)
+          let target = allArticles.find((a) => a.id === id)
           if (!target) {
-            // Try to fetch fresh articles and find it
-            const feeds = FEEDS.world
-            const results = await Promise.all(feeds.map((f) => fetchFeed(f.url, f.source)))
+            // Fetch from multiple categories to build a larger pool
+            const allFeeds = [...FEEDS.world, ...(FEEDS.technology || []), ...(FEEDS.business || []), ...(FEEDS.sport || []), ...(FEEDS.science || [])]
+            const results = await Promise.all(allFeeds.map((f) => fetchFeed(f.url, f.source)))
             const fresh = results.flat()
-            const found = fresh.find((a) => a.id === id)
-            if (!found) {
+            target = fresh.find((a) => a.id === id)
+            if (!target) {
               res.setHeader('Content-Type', 'application/json')
               res.statusCode = 200
               res.end(JSON.stringify({ article: null, thread: [], threadSummary: null, count: 0 }))
               return
             }
             allArticles.push(...fresh)
-            Object.assign(target || {}, found)
           }
 
-          // Simple word-based similarity
-          const words = (target?.title || '').toLowerCase().split(/\s+/).filter((w) => w.length > 3)
+          // Word-based similarity — match on significant words (>3 chars), excluding stop words
+          const stopWords = new Set(['this', 'that', 'with', 'from', 'have', 'been', 'will', 'more', 'than', 'were', 'they', 'their', 'what', 'when', 'which', 'about', 'after', 'before', 'could', 'would', 'should', 'over', 'into', 'also', 'some'])
+          const words = (target.title || '').toLowerCase().split(/\s+/).filter((w) => w.length > 3 && !stopWords.has(w))
           const related = allArticles
             .filter((a) => a.id !== id)
             .map((a) => {
@@ -886,7 +886,7 @@ export default defineConfig({
               const score = words.filter((w) => titleWords.some((tw) => tw.includes(w))).length
               return { ...a, score }
             })
-            .filter((a) => a.score >= 2)
+            .filter((a) => a.score >= 1)
             .sort((a, b) => b.score - a.score || new Date(b.date) - new Date(a.date))
             .slice(0, 10)
 
