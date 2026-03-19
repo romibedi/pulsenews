@@ -460,10 +460,24 @@ app.post('/api/voice-query', async (req, res) => {
 // --- Story Threads: find related articles ---
 app.get('/api/threads/:id', async (req, res) => {
   try {
-    const article = await getArticleById(req.params.id);
-    if (!article) return res.status(404).json({ error: 'Article not found' });
+    // Accept article title+category via query params as fallback when article isn't in DynamoDB
+    const title = req.query.title || '';
+    const category = req.query.category || 'world';
 
-    const lang = article.lang || 'en';
+    let article = null;
+    try {
+      article = await getArticleById(req.params.id);
+    } catch {}
+
+    // If article not in DynamoDB, construct a minimal object from query params
+    if (!article && !title) {
+      return res.json({ article: null, thread: [], threadSummary: null, count: 0 });
+    }
+    const articleTitle = article?.title || title;
+    const articleId = article?.articleId || req.params.id;
+    const lang = article?.lang || 'en';
+    const cat = article?.category || category;
+
     let relatedArticles = [];
 
     // Try OpenSearch more_like_this
@@ -477,41 +491,46 @@ app.get('/api/threads/:id', async (req, res) => {
               must: [{
                 more_like_this: {
                   fields: ['title', 'description'],
-                  like: article.title,
+                  like: articleTitle,
                   min_term_freq: 1,
                   min_doc_freq: 1,
-                  minimum_should_match: '30%',
+                  minimum_should_match: '25%',
                   max_query_terms: 25,
                 },
               }],
-              must_not: [{ term: { articleId: article.articleId || article.id } }],
+              must_not: [{ term: { articleId } }],
             },
           },
-          sort: [{ date: 'desc' }],
+          sort: [{ _score: 'desc' }, { date: 'desc' }],
           size: 15,
           _source: ['articleId', 'title', 'description', 'source', 'date', 'image', 'slug', 'category', 'section'],
         },
       });
-      relatedArticles = result.body.hits.hits
-        .filter((h) => h._score > 5)
-        .map((h) => ({ ...h._source, score: h._score }));
-    } catch {
-      // OpenSearch unavailable — try DynamoDB category fallback
-      const cat = article.category || 'world';
-      const catArticles = await queryByGlobalCategory(cat, 20);
-      relatedArticles = catArticles
-        .filter((a) => (a.articleId || a.id) !== (article.articleId || article.id))
-        .slice(0, 10);
+      relatedArticles = result.body.hits.hits.map((h) => ({ ...h._source, score: h._score }));
+    } catch {}
+
+    // Fallback to DynamoDB category if OpenSearch returned nothing
+    if (relatedArticles.length === 0) {
+      try {
+        const catArticles = await queryByGlobalCategory(cat, 20);
+        relatedArticles = catArticles
+          .filter((a) => (a.articleId || a.id) !== articleId)
+          .slice(0, 10);
+      } catch {}
     }
 
-    // Generate thread summary if we have 3+ related articles
+    // Generate thread summary if we have 2+ related articles
     let threadSummary = null;
     if (relatedArticles.length >= 2) {
       const apiKey = process.env.ANTHROPIC_API_KEY;
       if (apiKey) {
         try {
-          const titles = [article, ...relatedArticles.slice(0, 5)]
-            .sort((a, b) => new Date(a.date) - new Date(b.date))
+          const allForSummary = [
+            { title: articleTitle, source: article?.source || '', date: article?.date || '' },
+            ...relatedArticles.slice(0, 5),
+          ];
+          const titles = allForSummary
+            .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0))
             .map((a) => `- "${a.title}" (${a.source || ''}, ${a.date ? new Date(a.date).toLocaleDateString() : ''})`)
             .join('\n');
 
@@ -535,9 +554,9 @@ app.get('/api/threads/:id', async (req, res) => {
     res.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
     res.json({
       article: {
-        id: article.articleId || article.id,
-        title: article.title,
-        date: article.date,
+        id: articleId,
+        title: articleTitle,
+        date: article?.date || '',
       },
       thread: relatedArticles.map((a) => ({
         id: a.articleId || a.id,

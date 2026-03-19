@@ -473,7 +473,7 @@ export default function Article() {
       </div>
 
       {/* Story thread — follow the ongoing story */}
-      <StoryThread articleId={article.articleId || article.id} />
+      <StoryThread articleId={article.articleId || article.id} title={article.title} category={article.sectionId || article.category} />
 
       {/* Related articles */}
       {article.sectionId && <RelatedArticles article={article} />}

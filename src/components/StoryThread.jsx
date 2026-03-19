@@ -12,7 +12,7 @@ function timeAgo(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export default function StoryThread({ articleId }) {
+export default function StoryThread({ articleId, title, category }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
@@ -21,12 +21,16 @@ export default function StoryThread({ articleId }) {
   useEffect(() => {
     if (!articleId) return;
     setLoading(true);
-    fetch(`/api/threads/${encodeURIComponent(articleId)}`)
+    const params = new URLSearchParams();
+    if (title) params.set('title', title);
+    if (category) params.set('category', category);
+    const qs = params.toString() ? `?${params}` : '';
+    fetch(`/api/threads/${encodeURIComponent(articleId)}${qs}`)
       .then((r) => r.json())
       .then((d) => setData(d))
       .catch(() => setData(null))
       .finally(() => setLoading(false));
-  }, [articleId]);
+  }, [articleId, title, category]);
 
   if (loading) return null;
   if (!data || data.count === 0) return null;
