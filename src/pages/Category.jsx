@@ -28,6 +28,8 @@ export default function Category() {
   const [articles, setArticles] = useState([]);
   const [langArticles, setLangArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [langLoading, setLangLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -37,9 +39,13 @@ export default function Category() {
     async function load() {
       setLoading(true);
       setError(null);
+      setHasMore(true);
       try {
         const result = await fetchByCategory(category, { region });
-        if (!ignore) setArticles(result.articles);
+        if (!ignore) {
+          setArticles(result.articles);
+          setHasMore(result.articles.length >= 20);
+        }
       } catch (err) {
         if (!ignore) setError(err.message);
       } finally {
@@ -49,6 +55,19 @@ export default function Category() {
     load();
     return () => { ignore = true; };
   }, [category, region]);
+
+  const loadMore = async () => {
+    const lastArticle = articles[articles.length - 1];
+    if (!lastArticle?.date || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const result = await fetchByCategory(category, { region, before: lastArticle.date });
+      const newArticles = result.articles.filter((a) => !articles.some((e) => e.id === a.id));
+      setArticles((prev) => [...prev, ...newArticles]);
+      setHasMore(newArticles.length >= 10);
+    } catch {}
+    setLoadingMore(false);
+  };
 
   // Fetch language-specific news when non-English
   useEffect(() => {
@@ -151,6 +170,19 @@ export default function Category() {
 
           {displayArticles.length === 0 && !error && (
             <p className="text-center text-sm text-[var(--text-muted)] mt-10">No articles found</p>
+          )}
+
+          {/* Load More */}
+          {hasMore && displayArticles.length >= 20 && lang === 'en' && (
+            <div className="text-center mt-10">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="px-6 py-2.5 text-sm font-medium border border-[var(--border)] rounded-full text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] hover:border-[#e05d44]/30 dark:hover:border-[#e87461]/30 transition-all disabled:opacity-50"
+              >
+                {loadingMore ? 'Loading...' : 'Load older articles'}
+              </button>
+            </div>
           )}
         </div>
       )}

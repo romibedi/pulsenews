@@ -87,15 +87,22 @@ export async function generateAndUpload(article) {
   const voice = VOICES[lang] || VOICES.en;
 
   try {
-    // Generate audio with Edge TTS
-    const comm = new Communicate(text, { voice, rate: '+20%' });
-    const chunks = [];
-    for await (const chunk of comm.stream()) {
-      if (chunk.type === 'audio' && chunk.data) {
-        chunks.push(chunk.data);
-      }
-    }
-    const audioBuffer = Buffer.concat(chunks);
+    // Generate audio with Edge TTS (30s timeout to prevent hung WebSockets)
+    const audioBuffer = await Promise.race([
+      (async () => {
+        const comm = new Communicate(text, { voice, rate: '+20%' });
+        const chunks = [];
+        for await (const chunk of comm.stream()) {
+          if (chunk.type === 'audio' && chunk.data) {
+            chunks.push(chunk.data);
+          }
+        }
+        return Buffer.concat(chunks);
+      })(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('TTS timeout (30s)')), 30_000)
+      ),
+    ]);
 
     if (audioBuffer.length < 100) return null; // Empty/failed generation
 
@@ -119,7 +126,7 @@ export async function generateAndUpload(article) {
  * Generate audio for a batch of articles (with concurrency limit).
  * Returns count of generated files.
  */
-export async function generateBatch(articles, concurrency = 5) {
+export async function generateBatch(articles, concurrency = 20) {
   let generated = 0;
   let skipped = 0;
   let failed = 0;

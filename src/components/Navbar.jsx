@@ -121,6 +121,7 @@ export default function Navbar() {
             <div className="hidden md:flex items-center gap-1">
               {[
                 { to: '/region/india', label: 'Regions' },
+                { to: '/archive', label: 'Archive' },
                 { to: '/feeds', label: 'Feeds' },
                 { to: '/about', label: 'About' },
               ].map((link) => (

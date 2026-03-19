@@ -19,6 +19,7 @@ import Bookmarks from './pages/Bookmarks';
 import Region from './pages/Region';
 import Explore from './pages/Explore';
 import Settings from './pages/Settings';
+import Archive from './pages/Archive';
 
 const CustomFeeds = lazy(() => import('./pages/CustomFeeds'));
 
@@ -49,6 +50,7 @@ export default function App() {
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/bookmarks" element={<Bookmarks />} />
+                  <Route path="/archive" element={<Archive />} />
                   <Route path="/feeds" element={<CustomFeeds />} />
                 </Routes>
               </Suspense>

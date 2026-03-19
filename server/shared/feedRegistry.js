@@ -9,11 +9,15 @@ export const FEEDS = {
     { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
     { url: 'https://feeds.npr.org/1004/rss.xml', source: 'NPR' },
     { url: 'https://abcnews.go.com/abcnews/internationalheadlines', source: 'ABC News' },
+    { url: 'https://www.theguardian.com/world/rss', source: 'The Guardian' },
+    { url: 'https://feedx.net/rss/ap.xml', source: 'AP News' },
+    { url: 'https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en', source: 'Google News' },
   ],
   technology: [
     { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', source: 'BBC Tech' },
     { url: 'https://feeds.npr.org/1019/rss.xml', source: 'NPR Tech' },
     { url: 'https://feeds.arstechnica.com/arstechnica/index', source: 'Ars Technica' },
+    { url: 'https://www.theguardian.com/technology/rss', source: 'The Guardian Tech' },
   ],
   business: [
     { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', source: 'BBC Business' },
@@ -46,16 +50,21 @@ export const REGIONAL_FEEDS = {
     { url: 'https://www.thehindu.com/news/national/feeder/default.rss', source: 'The Hindu' },
     { url: 'https://indianexpress.com/feed/', source: 'Indian Express' },
     { url: 'https://feeds.bbci.co.uk/news/world/asia/india/rss.xml', source: 'BBC India' },
+    { url: 'https://feeds.feedburner.com/ndtvnews-top-stories', source: 'NDTV' },
+    { url: 'https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml', source: 'Hindustan Times' },
+    { url: 'https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News India' },
   ],
   uk: [
     { url: 'https://feeds.bbci.co.uk/news/uk/rss.xml', source: 'BBC UK' },
     { url: 'https://feeds.bbci.co.uk/news/england/rss.xml', source: 'BBC England' },
     { url: 'https://feeds.skynews.com/feeds/rss/uk.xml', source: 'Sky News UK' },
+    { url: 'https://news.google.com/rss?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News UK' },
   ],
   us: [
     { url: 'https://feeds.npr.org/1003/rss.xml', source: 'NPR US' },
     { url: 'https://abcnews.go.com/abcnews/usheadlines', source: 'ABC US' },
     { url: 'https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml', source: 'BBC US' },
+    { url: 'https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en', source: 'Google News US' },
   ],
   australia: [
     { url: 'https://www.abc.net.au/news/feed/2942460/rss.xml', source: 'ABC Australia' },
@@ -90,6 +99,8 @@ export const REGIONAL_CATEGORY_FEEDS = {
       { url: 'https://www.thehindu.com/news/national/feeder/default.rss', source: 'The Hindu' },
       { url: 'https://indianexpress.com/feed/', source: 'Indian Express' },
       { url: 'https://feeds.bbci.co.uk/news/world/asia/india/rss.xml', source: 'BBC India' },
+      { url: 'https://feeds.feedburner.com/ndtvnews-top-stories', source: 'NDTV' },
+      { url: 'https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml', source: 'Hindustan Times' },
     ],
     technology: [
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/66949542.cms', source: 'Times of India Tech' },
@@ -156,6 +167,7 @@ export const REGIONAL_CATEGORY_FEEDS = {
       { url: 'https://feeds.npr.org/1003/rss.xml', source: 'NPR US' },
       { url: 'https://abcnews.go.com/abcnews/usheadlines', source: 'ABC US' },
       { url: 'https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml', source: 'BBC US' },
+      { url: 'https://feedx.net/rss/ap.xml', source: 'AP News' },
     ],
     technology: [
       { url: 'https://feeds.npr.org/1019/rss.xml', source: 'NPR Tech' },

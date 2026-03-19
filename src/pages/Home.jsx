@@ -328,6 +328,7 @@ export default function Home() {
             <h3 className="text-lg text-[var(--text)] mb-3" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>Explore</h3>
             <div className="space-y-2">
               {[
+                { to: '/archive', label: 'Archive', desc: 'Browse articles by date' },
                 { to: '/feeds', label: 'Custom Feeds', desc: 'Add your own RSS sources' },
                 { to: '/bookmarks', label: 'Bookmarks', desc: 'Your saved articles' },
               ].map((link) => (

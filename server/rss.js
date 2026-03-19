@@ -1,4 +1,5 @@
 // Shared RSS parsing utilities used by all feed routes
+import { createHash } from 'crypto';
 
 export function extractTag(xml, tag) {
   const re = new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`);
@@ -47,8 +48,15 @@ export function parseRssFeed(xml, source) {
     const pubDate = extractTag(itemXml, 'pubDate');
     const image = extractImageUrl(itemXml);
     if (title && link) {
+      // Use base64url for short URLs, SHA-256 hash for long ones (Google News
+      // URLs are 500+ chars and their base64url IDs exceed DynamoDB's 1024-byte
+      // sort key limit).
+      const b64 = Buffer.from(link).toString('base64url');
+      const id = b64.length > 800
+        ? `rss-h-${createHash('sha256').update(link).digest('base64url')}`
+        : `rss-${b64}`;
       items.push({
-        id: `rss-${Buffer.from(link).toString('base64url')}`,
+        id,
         title, description, body: bodyText, image,
         author: source,
         date: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),

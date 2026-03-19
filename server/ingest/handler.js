@@ -10,7 +10,7 @@ import { extract } from '@extractus/article-extractor';
 import { buildFeedContextMap } from '../shared/feedRegistry.js';
 import { parseRssFeed, fetchOgImage } from '../rss.js';
 import { articleExists, batchWriteArticles } from '../db.js';
-import { submitUrls, articleUrl } from '../indexnow.js';
+import { submitUrls, articleUrl, pingSitemap } from '../indexnow.js';
 import { generateBatch } from '../tts/generate.js';
 
 // ---------------------------------------------------------------------------
@@ -297,18 +297,24 @@ export async function handler(event) {
   );
 
   // Submit new URLs to IndexNow for instant indexing by Bing/Yandex/etc.
+  // Also ping Google & Bing with updated sitemap.
   if (newArticleUrls.length > 0) {
     try {
       await submitUrls(newArticleUrls);
     } catch (err) {
       console.warn(`[ingest] IndexNow submission failed: ${err.message}`);
     }
+    try {
+      await pingSitemap();
+    } catch (err) {
+      console.warn(`[ingest] Sitemap ping failed: ${err.message}`);
+    }
   }
 
   // Pre-generate TTS audio and upload to S3
   if (newArticlesForTts.length > 0) {
     try {
-      await generateBatch(newArticlesForTts, 5);
+      await generateBatch(newArticlesForTts, 20);
     } catch (err) {
       console.warn(`[ingest] TTS generation failed: ${err.message}`);
     }

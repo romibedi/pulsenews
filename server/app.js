@@ -17,6 +17,7 @@ import {
   queryByGlobalCategory,
   queryByRegionCategory,
   queryByLang,
+  queryByDate,
   querySitemapEntries,
 } from './db.js';
 import { getClient as getSearchClient } from './search/client.js';
@@ -38,21 +39,26 @@ app.use(express.json());
 // --- Routes ---
 
 // Category feeds — DynamoDB first, RSS fallback
+// Supports ?before=<ISO-date> for pagination (load older articles)
 app.get('/api/feeds', async (req, res) => {
   const category = req.query.category || 'world';
+  const before = req.query.before || null;
   try {
-    const dbArticles = await queryByGlobalCategory(category, 20);
+    const dbArticles = await queryByGlobalCategory(category, 20, before);
     if (dbArticles.length > 0) {
-      res.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+      res.set('Cache-Control', before ? 'no-cache' : 's-maxage=300, stale-while-revalidate=600');
       return res.json({ articles: dbArticles });
     }
   } catch {}
-  // Fallback to live RSS
-  const feeds = FEEDS[category] || FEEDS.world;
-  const results = await Promise.all(feeds.map((f) => fetchFeed(f.url, f.source)));
-  const articles = results.flat().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
-  res.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
-  res.json({ articles });
+  // Fallback to live RSS (no pagination for live feeds)
+  if (!before) {
+    const feeds = FEEDS[category] || FEEDS.world;
+    const results = await Promise.all(feeds.map((f) => fetchFeed(f.url, f.source)));
+    const articles = results.flat().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
+    res.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+    return res.json({ articles });
+  }
+  res.json({ articles: [] });
 });
 
 // Regional local news — DynamoDB first, RSS fallback
@@ -75,48 +81,73 @@ app.get('/api/local', async (req, res) => {
 });
 
 // Regional category feeds — DynamoDB first, RSS fallback
+// Supports ?before=<ISO-date> for pagination
 app.get('/api/regional-feeds', async (req, res) => {
   const region = req.query.region || 'india';
   const category = req.query.category || 'world';
+  const before = req.query.before || null;
   try {
-    const dbArticles = await queryByRegionCategory(region, category, 20);
+    const dbArticles = await queryByRegionCategory(region, category, 20, before);
     if (dbArticles.length > 0) {
-      res.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+      res.set('Cache-Control', before ? 'no-cache' : 's-maxage=300, stale-while-revalidate=600');
       return res.json({ articles: dbArticles, region, category });
     }
   } catch {}
-  // Fallback to live RSS
-  let feeds;
-  if (REGIONAL_CATEGORY_FEEDS[region]?.[category]) {
-    feeds = REGIONAL_CATEGORY_FEEDS[region][category];
-  } else if (category === 'world' && REGIONAL_FEEDS[region]) {
-    feeds = REGIONAL_FEEDS[region];
-  } else {
-    feeds = FEEDS[category] || FEEDS.world;
+  // Fallback to live RSS (no pagination for live feeds)
+  if (!before) {
+    let feeds;
+    if (REGIONAL_CATEGORY_FEEDS[region]?.[category]) {
+      feeds = REGIONAL_CATEGORY_FEEDS[region][category];
+    } else if (category === 'world' && REGIONAL_FEEDS[region]) {
+      feeds = REGIONAL_FEEDS[region];
+    } else {
+      feeds = FEEDS[category] || FEEDS.world;
+    }
+    const results = await Promise.all(feeds.map((f) => fetchFeed(f.url, f.source)));
+    const articles = results.flat().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
+    res.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+    return res.json({ articles, region, category });
   }
-  const results = await Promise.all(feeds.map((f) => fetchFeed(f.url, f.source)));
-  const articles = results.flat().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
-  res.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
-  res.json({ articles, region, category });
+  res.json({ articles: [], region, category });
 });
 
 // Language-specific news feeds — DynamoDB first, RSS fallback
+// Supports ?before=<ISO-date> for pagination
 app.get('/api/lang-feeds', async (req, res) => {
   const lang = req.query.lang || 'hi';
+  const before = req.query.before || null;
   try {
-    const dbArticles = await queryByLang(lang, 20);
+    const dbArticles = await queryByLang(lang, 20, before);
     if (dbArticles.length > 0) {
-      res.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+      res.set('Cache-Control', before ? 'no-cache' : 's-maxage=300, stale-while-revalidate=600');
       return res.json({ articles: dbArticles, lang });
     }
   } catch {}
-  // Fallback to live RSS
-  const feeds = LANG_FEEDS[lang];
-  if (!feeds || feeds.length === 0) return res.json({ articles: [], lang });
-  const results = await Promise.all(feeds.map((f) => fetchFeed(f.url, f.source)));
-  const articles = results.flat().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
-  res.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
-  res.json({ articles, lang });
+  // Fallback to live RSS (no pagination for live feeds)
+  if (!before) {
+    const feeds = LANG_FEEDS[lang];
+    if (!feeds || feeds.length === 0) return res.json({ articles: [], lang });
+    const results = await Promise.all(feeds.map((f) => fetchFeed(f.url, f.source)));
+    const articles = results.flat().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
+    res.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+    return res.json({ articles, lang });
+  }
+  res.json({ articles: [], lang });
+});
+
+// Archive — articles for a specific date
+app.get('/api/archive', async (req, res) => {
+  const date = req.query.date; // e.g. "2026-03-17"
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return res.status(400).json({ error: 'date required (YYYY-MM-DD)' });
+  }
+  try {
+    const articles = await queryByDate(date, 100);
+    res.set('Cache-Control', 's-maxage=3600, stale-while-revalidate=7200');
+    res.json({ articles, date });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Custom RSS feed proxy (CORS bypass)

@@ -26,28 +26,40 @@ function setCache(key, data) {
   }
 }
 
-export async function fetchByCategory(category, { region } = {}) {
+export async function fetchByCategory(category, { region, before } = {}) {
   // If region is set, use regional feeds; otherwise global
-  const url = region && region !== 'world'
+  let url = region && region !== 'world'
     ? `/api/regional-feeds?region=${encodeURIComponent(region)}&category=${encodeURIComponent(category)}`
     : `/api/feeds?category=${encodeURIComponent(category)}`;
 
-  const cached = getCached(url);
-  if (cached && cached.articles) return cached;
+  if (before) url += `&before=${encodeURIComponent(before)}`;
+
+  // Don't cache paginated requests
+  if (!before) {
+    const cached = getCached(url);
+    if (cached && cached.articles) return cached;
+  }
 
   try {
     const res = await fetch(url);
-    if (!res.ok) return { articles: [], currentPage: 1, totalPages: 1 };
+    if (!res.ok) return { articles: [] };
     const data = await res.json();
-    const result = {
-      articles: data.articles || [],
-      currentPage: 1,
-      totalPages: 1,
-    };
-    setCache(url, result);
+    const result = { articles: data.articles || [] };
+    if (!before) setCache(url, result);
     return result;
   } catch {
-    return { articles: [], currentPage: 1, totalPages: 1 };
+    return { articles: [] };
+  }
+}
+
+export async function fetchArchive(date) {
+  try {
+    const res = await fetch(`/api/archive?date=${encodeURIComponent(date)}`);
+    if (!res.ok) return { articles: [], date };
+    const data = await res.json();
+    return { articles: data.articles || [], date };
+  } catch {
+    return { articles: [], date };
   }
 }
 

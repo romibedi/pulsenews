@@ -58,3 +58,53 @@ resource "aws_iam_role_policy" "indexer_lambda_opensearch" {
     ]
   })
 }
+
+# ---------------------------------------------------------------------------
+# IAM — Ingestion Lambda role (RSS feeds → DynamoDB + S3 TTS audio)
+# ---------------------------------------------------------------------------
+
+resource "aws_iam_role" "ingest_lambda" {
+  name               = "pulsenews-ingest-lambda-${var.environment}"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
+}
+
+resource "aws_iam_role_policy_attachment" "ingest_lambda_logs" {
+  role       = aws_iam_role.ingest_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# DynamoDB read/write for ingestion
+resource "aws_iam_role_policy" "ingest_lambda_dynamo" {
+  name = "dynamodb-crud"
+  role = aws_iam_role.ingest_lambda.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:Query",
+        "dynamodb:Scan", "dynamodb:BatchWriteItem",
+      ]
+      Resource = [
+        aws_dynamodb_table.articles.arn,
+        "${aws_dynamodb_table.articles.arn}/index/*",
+      ]
+    }]
+  })
+}
+
+# S3 write for TTS audio uploads
+resource "aws_iam_role_policy" "ingest_lambda_s3" {
+  name = "s3-audio-write"
+  role = aws_iam_role.ingest_lambda.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:PutObject", "s3:HeadObject"]
+      Resource = "${aws_s3_bucket.audio.arn}/*"
+    }]
+  })
+}

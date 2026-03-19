@@ -53,4 +53,26 @@ export function articleUrl(slug) {
   return `${SITE_URL}/news/${slug}`;
 }
 
+/**
+ * Ping Google and Bing with the updated sitemap URL.
+ * Google deprecated the Ping API in 2023 but still honours it for News sitemaps.
+ * This is a lightweight nudge — not guaranteed to trigger immediate crawling.
+ */
+export async function pingSitemap() {
+  const sitemapUrl = `${SITE_URL}/api/sitemap.xml`;
+  const endpoints = [
+    `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`,
+    `https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`,
+  ];
+
+  for (const url of endpoints) {
+    try {
+      const res = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(5000) });
+      console.log(`[seo] Sitemap ping ${new URL(url).hostname} — HTTP ${res.status}`);
+    } catch (err) {
+      console.warn(`[seo] Sitemap ping failed: ${err.message}`);
+    }
+  }
+}
+
 export { INDEXNOW_KEY };

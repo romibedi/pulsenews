@@ -33,47 +33,83 @@ function cleanItems(items) {
 /**
  * Query articles by region + category.
  * PK = REGION#<region>#CAT#<category>, SK descending.
+ * @param {string} before - ISO date string to paginate (return articles older than this)
  */
-export async function queryByRegionCategory(region, category, limit = 20) {
-  const result = await docClient.send(
-    new QueryCommand({
-      TableName: TABLE_NAME,
-      KeyConditionExpression: 'PK = :pk',
-      ExpressionAttributeValues: { ':pk': `REGION#${region}#CAT#${category}` },
-      ScanIndexForward: false,
-      Limit: limit,
-    }),
-  );
+export async function queryByRegionCategory(region, category, limit = 20, before = null) {
+  const params = {
+    TableName: TABLE_NAME,
+    KeyConditionExpression: before
+      ? 'PK = :pk AND SK < :before'
+      : 'PK = :pk',
+    ExpressionAttributeValues: {
+      ':pk': `REGION#${region}#CAT#${category}`,
+      ...(before && { ':before': before }),
+    },
+    ScanIndexForward: false,
+    Limit: limit,
+  };
+  const result = await docClient.send(new QueryCommand(params));
   return cleanItems(result.Items);
 }
 
 /**
  * Query articles by global category.
  * PK = GLOBAL#CAT#<category>, SK descending.
+ * @param {string} before - ISO date string to paginate (return articles older than this)
  */
-export async function queryByGlobalCategory(category, limit = 20) {
-  const result = await docClient.send(
-    new QueryCommand({
-      TableName: TABLE_NAME,
-      KeyConditionExpression: 'PK = :pk',
-      ExpressionAttributeValues: { ':pk': `GLOBAL#CAT#${category}` },
-      ScanIndexForward: false,
-      Limit: limit,
-    }),
-  );
+export async function queryByGlobalCategory(category, limit = 20, before = null) {
+  const params = {
+    TableName: TABLE_NAME,
+    KeyConditionExpression: before
+      ? 'PK = :pk AND SK < :before'
+      : 'PK = :pk',
+    ExpressionAttributeValues: {
+      ':pk': `GLOBAL#CAT#${category}`,
+      ...(before && { ':before': before }),
+    },
+    ScanIndexForward: false,
+    Limit: limit,
+  };
+  const result = await docClient.send(new QueryCommand(params));
   return cleanItems(result.Items);
 }
 
 /**
  * Query articles by language.
  * PK = LANG#<lang>, SK descending.
+ * @param {string} before - ISO date string to paginate (return articles older than this)
  */
-export async function queryByLang(lang, limit = 20) {
+export async function queryByLang(lang, limit = 20, before = null) {
+  const params = {
+    TableName: TABLE_NAME,
+    KeyConditionExpression: before
+      ? 'PK = :pk AND SK < :before'
+      : 'PK = :pk',
+    ExpressionAttributeValues: {
+      ':pk': `LANG#${lang}`,
+      ...(before && { ':before': before }),
+    },
+    ScanIndexForward: false,
+    Limit: limit,
+  };
+  const result = await docClient.send(new QueryCommand(params));
+  return cleanItems(result.Items);
+}
+
+/**
+ * Query articles for a specific date (archive).
+ * Uses SITEMAP partition — SK starts with date prefix.
+ * Returns all articles from that date, newest first.
+ */
+export async function queryByDate(date, limit = 50) {
   const result = await docClient.send(
     new QueryCommand({
       TableName: TABLE_NAME,
-      KeyConditionExpression: 'PK = :pk',
-      ExpressionAttributeValues: { ':pk': `LANG#${lang}` },
+      KeyConditionExpression: 'PK = :pk AND begins_with(SK, :datePrefix)',
+      ExpressionAttributeValues: {
+        ':pk': 'SITEMAP',
+        ':datePrefix': date, // e.g. "2026-03-17"
+      },
       ScanIndexForward: false,
       Limit: limit,
     }),
