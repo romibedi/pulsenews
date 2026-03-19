@@ -743,6 +743,46 @@ export default defineConfig({
           }
         })
 
+        // --- Shareable News Cards (dev) ---
+        server.middlewares.use('/api/card/', async (req, res) => {
+          const url = new URL(req.url, 'http://localhost')
+          const id = url.pathname.replace('/api/card/', '')
+          const format = url.searchParams.get('format') || 'story'
+          if (!id) { res.statusCode = 400; res.end('id required'); return }
+
+          // Find article in RSS cache
+          let article = null
+          for (const [, cached] of cache) {
+            if (cached.data && Array.isArray(cached.data)) {
+              article = cached.data.find((a) => a.id === id)
+              if (article) break
+            }
+          }
+          if (!article) {
+            // Try fetching world news to find it
+            const feeds = FEEDS.world
+            const results = await Promise.all(feeds.map((f) => fetchFeed(f.url, f.source)))
+            article = results.flat().find((a) => a.id === id)
+          }
+          if (!article) {
+            // Generate a placeholder card with the ID as title
+            article = { title: 'News Article', section: 'News', source: 'PulseNewsToday', date: new Date().toISOString(), description: '' }
+          }
+
+          try {
+            const { generateCard } = await import('./server/card.js')
+            const png = await generateCard(article, format)
+            res.setHeader('Content-Type', 'image/png')
+            res.setHeader('Cache-Control', 's-maxage=86400')
+            res.statusCode = 200
+            res.end(Buffer.from(png))
+          } catch (err) {
+            res.setHeader('Content-Type', 'application/json')
+            res.statusCode = 500
+            res.end(JSON.stringify({ error: err.message }))
+          }
+        })
+
         // --- Voice-First News Query ---
         server.middlewares.use('/api/voice-query', async (req, res) => {
           if (req.method !== 'POST') { res.statusCode = 405; res.end('Method not allowed'); return }
