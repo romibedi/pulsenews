@@ -256,11 +256,8 @@ const EN_REGION_VOICES = {
   india: 'en-IN-NeerjaNeural',
 };
 
-// Text-to-Speech via Edge TTS
-app.post('/api/tts', express.json(), async (req, res) => {
-  const text = req.body.text;
-  const lang = req.body.lang || 'en';
-  const region = req.body.region || '';
+// Text-to-Speech via Edge TTS (GET for short text / prefetch, POST for longer)
+async function handleTts(text, lang, region, res) {
   if (!text) return res.status(400).json({ error: 'text param required' });
 
   const cleanText = text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 2000);
@@ -282,6 +279,14 @@ app.post('/api/tts', express.json(), async (req, res) => {
       res.end();
     }
   }
+}
+
+app.get('/api/tts', (req, res) => {
+  handleTts(req.query.text, req.query.lang || 'en', req.query.region || '', res);
+});
+
+app.post('/api/tts', express.json(), (req, res) => {
+  handleTts(req.body.text, req.body.lang || 'en', req.body.region || '', res);
 });
 
 // --- DynamoDB-backed article endpoints (SEO / archive) ---
