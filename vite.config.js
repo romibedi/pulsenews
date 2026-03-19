@@ -743,6 +743,143 @@ export default defineConfig({
           }
         })
 
+        // --- Voice-First News Query ---
+        server.middlewares.use('/api/voice-query', async (req, res) => {
+          if (req.method !== 'POST') { res.statusCode = 405; res.end('Method not allowed'); return }
+          const apiKey = process.env.ANTHROPIC_API_KEY
+          if (!apiKey) { res.setHeader('Content-Type', 'application/json'); res.statusCode = 500; res.end(JSON.stringify({ error: 'ANTHROPIC_API_KEY not set' })); return }
+          let body = ''
+          req.on('data', (c) => { body += c })
+          req.on('end', async () => {
+            try {
+              const { query, lang = 'en', region = '' } = JSON.parse(body)
+              if (!query) { res.statusCode = 400; res.end(JSON.stringify({ error: 'query required' })); return }
+
+              // Step 1: Extract intent
+              const intentRes = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+                body: JSON.stringify({
+                  model: 'claude-haiku-4-5-20251001', max_tokens: 150,
+                  messages: [{ role: 'user', content: `Extract the user's news intent from this query. Return ONLY valid JSON with these fields: { "category": "world|technology|business|science|sport|culture|environment|politics|null", "topic": "specific topic or null", "count": 3 }\n\nQuery: "${query}"` }],
+                }),
+              })
+              let intent
+              try {
+                const d = await intentRes.json()
+                const raw = d.content?.[0]?.text || '{}'
+                intent = JSON.parse(raw.replace(/```json\n?|\n?```/g, '').trim())
+              } catch { intent = { category: 'world', count: 3 } }
+
+              // Step 2: Fetch articles from RSS (dev has no DynamoDB/OpenSearch)
+              const cat = intent.category || 'world'
+              const feeds = FEEDS[cat] || FEEDS.world
+              const results = await Promise.all(feeds.map((f) => fetchFeed(f.url, f.source)))
+              let articles = results.flat().sort((a, b) => new Date(b.date) - new Date(a.date))
+              // If there's a topic, filter by title match
+              if (intent.topic) {
+                const topicLower = intent.topic.toLowerCase()
+                const filtered = articles.filter((a) => a.title.toLowerCase().includes(topicLower) || (a.description || '').toLowerCase().includes(topicLower))
+                if (filtered.length > 0) articles = filtered
+              }
+              articles = articles.slice(0, Math.min(intent.count || 3, 5))
+
+              // Step 3: Generate briefing
+              const articleSummaries = articles.map((a, i) => `Article ${i + 1}: "${a.title}" (${a.source}) - ${(a.description || '').slice(0, 200)}`).join('\n')
+              const briefingRes = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+                body: JSON.stringify({
+                  model: 'claude-haiku-4-5-20251001', max_tokens: 500,
+                  messages: [{ role: 'user', content: `You are a friendly news anchor. Summarize these ${articles.length} articles into a conversational ${articles.length > 1 ? '60-second' : '30-second'} audio briefing. Use natural transitions like "Moving on..." or "In other news...". Keep it warm, clear, and spoken-word friendly. Do NOT use bullet points or formatting.\n\n${articleSummaries}` }],
+                }),
+              })
+              const briefingData = await briefingRes.json()
+              const briefing = briefingData.content?.[0]?.text || 'Could not generate briefing.'
+
+              res.setHeader('Content-Type', 'application/json')
+              res.statusCode = 200
+              res.end(JSON.stringify({
+                briefing,
+                articles: articles.map((a) => ({ id: a.id, title: a.title, source: a.source, date: a.date, image: a.image })),
+                intent,
+              }))
+            } catch (err) { res.statusCode = 500; res.end(JSON.stringify({ error: err.message })) }
+          })
+        })
+
+        // --- Story Threads (dev: title-based similarity from RSS cache) ---
+        server.middlewares.use('/api/threads/', async (req, res) => {
+          const url = new URL(req.url, 'http://localhost')
+          const id = url.pathname.replace('/api/threads/', '')
+          if (!id) { res.statusCode = 400; res.end(JSON.stringify({ error: 'id required' })); return }
+
+          // In dev, search all cached articles for title similarity
+          const allArticles = []
+          for (const [, cached] of cache) {
+            if (cached.data && Array.isArray(cached.data)) allArticles.push(...cached.data)
+          }
+
+          const target = allArticles.find((a) => a.id === id)
+          if (!target) {
+            // Try to fetch fresh articles and find it
+            const feeds = FEEDS.world
+            const results = await Promise.all(feeds.map((f) => fetchFeed(f.url, f.source)))
+            const fresh = results.flat()
+            const found = fresh.find((a) => a.id === id)
+            if (!found) {
+              res.setHeader('Content-Type', 'application/json')
+              res.statusCode = 200
+              res.end(JSON.stringify({ article: null, thread: [], threadSummary: null, count: 0 }))
+              return
+            }
+            allArticles.push(...fresh)
+            Object.assign(target || {}, found)
+          }
+
+          // Simple word-based similarity
+          const words = (target?.title || '').toLowerCase().split(/\s+/).filter((w) => w.length > 3)
+          const related = allArticles
+            .filter((a) => a.id !== id)
+            .map((a) => {
+              const titleWords = a.title.toLowerCase().split(/\s+/)
+              const score = words.filter((w) => titleWords.some((tw) => tw.includes(w))).length
+              return { ...a, score }
+            })
+            .filter((a) => a.score >= 2)
+            .sort((a, b) => b.score - a.score || new Date(b.date) - new Date(a.date))
+            .slice(0, 10)
+
+          let threadSummary = null
+          const apiKey = process.env.ANTHROPIC_API_KEY
+          if (related.length >= 2 && apiKey) {
+            try {
+              const titles = [target, ...related.slice(0, 5)]
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+                .map((a) => `- "${a.title}" (${a.source || ''})`)
+                .join('\n')
+              const r = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+                body: JSON.stringify({
+                  model: 'claude-haiku-4-5-20251001', max_tokens: 200,
+                  messages: [{ role: 'user', content: `These articles are about the same ongoing story. Write a 2-3 sentence catch-up summary for someone who just discovered this story. Be concise and factual. Write for spoken delivery.\n\n${titles}` }],
+                }),
+              })
+              if (r.ok) { const d = await r.json(); threadSummary = d.content?.[0]?.text || null }
+            } catch {}
+          }
+
+          res.setHeader('Content-Type', 'application/json')
+          res.statusCode = 200
+          res.end(JSON.stringify({
+            article: target ? { id: target.id, title: target.title, date: target.date } : null,
+            thread: related.map((a) => ({ id: a.id, title: a.title, description: a.description, source: a.source, date: a.date, image: a.image, section: a.section })),
+            threadSummary,
+            count: related.length,
+          }))
+        })
+
         // CoinGecko proxy
         server.middlewares.use('/api/stocks', async (req, res) => {
           const cacheKey = 'stocks'

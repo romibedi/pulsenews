@@ -5,7 +5,9 @@ import { fetchByCategory } from '../api/newsApi';
 import { useBookmarks } from '../contexts/BookmarkContext';
 import { estimateReadingTime } from '../utils/readingTime';
 import ShareButtons from '../components/ShareButtons';
+import ShareCardButton from '../components/ShareCardButton';
 import RelatedArticles from '../components/RelatedArticles';
+import StoryThread from '../components/StoryThread';
 import AISummary from '../components/AISummary';
 import TextToSpeech from '../components/TextToSpeech';
 import Reactions from '../components/Reactions';
@@ -70,22 +72,21 @@ export default function Article() {
   const [extracting, setExtracting] = useState(false);
   const [error, setError] = useState(null);
   const { isBookmarked, addBookmark, removeBookmark } = useBookmarks();
-  const { playArticle, prefetchArticle, playing, paused, currentArticle, pause, resume } = useAudio();
+  const { playArticle, prefetchArticle, playing, paused, currentArticle, pause, resume, autoplay } = useAudio();
   const isListening = (playing || paused) && currentArticle?.id === article?.id;
 
   const lookupKey = slug || articleId;
 
-  // Auto-start TTS when article loads — shows player at bottom to encourage listening
+  // Auto-start TTS when article loads (if autoplay is enabled)
   const autoPlayedRef = useRef(false);
   useEffect(() => {
-    if (article && !autoPlayedRef.current && !playing) {
+    if (article && !autoPlayedRef.current && !playing && autoplay) {
       autoPlayedRef.current = true;
-      // Small delay to let the page render first
       const timer = setTimeout(() => prefetchArticle(article), 300);
       const playTimer = setTimeout(() => playArticle(article), 800);
       return () => { clearTimeout(timer); clearTimeout(playTimer); };
     }
-  }, [article?.id]);
+  }, [article?.id, autoplay]);
 
   useEffect(() => {
     let ignore = false;
@@ -342,6 +343,7 @@ export default function Article() {
       {/* Share + Listen */}
       <div className="flex flex-wrap items-center gap-4 mb-6">
         <ShareButtons url={shareUrl} title={article.title} />
+        <ShareCardButton article={article} />
         <div className="border-l border-[var(--border)] pl-4 flex items-center gap-2">
           <button
             onMouseEnter={() => !isListening && article && prefetchArticle(article)}
@@ -469,6 +471,9 @@ export default function Article() {
       <div className="mt-6 pt-6 border-t border-[var(--border)]">
         <ShareButtons url={shareUrl} title={article.title} />
       </div>
+
+      {/* Story thread — follow the ongoing story */}
+      <StoryThread articleId={article.articleId || article.id} />
 
       {/* Related articles */}
       {article.sectionId && <RelatedArticles article={article} />}

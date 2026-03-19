@@ -10,6 +10,7 @@ import BottomTabBar from './components/BottomTabBar';
 import BreakingNewsTicker from './components/BreakingNewsTicker';
 import ReadingListWidget from './components/ReadingListWidget';
 import AudioPlayer from './components/AudioPlayer';
+import VoiceMode from './components/VoiceMode';
 import Home from './pages/Home';
 import Category from './pages/Category';
 import Article from './pages/Article';
@@ -61,6 +62,7 @@ export default function App() {
             <div className="hidden md:block">
               <ReadingListWidget />
             </div>
+            <VoiceMode />
             <AudioPlayer />
             <BottomTabBar />
           </div>

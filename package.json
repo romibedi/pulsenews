@@ -21,13 +21,15 @@
     "@capacitor/core": "^8.2.0",
     "@capacitor/ios": "^8.2.0",
     "@extractus/article-extractor": "^8.0.20",
+    "@resvg/resvg-js": "^2.6.2",
     "edge-tts-universal": "^1.4.0",
     "leaflet": "^1.9.4",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-helmet-async": "^3.0.0",
     "react-leaflet": "^5.0.0",
-    "react-router-dom": "^6.30.3"
+    "react-router-dom": "^6.30.3",
+    "satori": "^0.25.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

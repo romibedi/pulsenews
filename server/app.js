@@ -29,6 +29,7 @@ import {
   renderCategoryPage,
 } from './ssr.js';
 import { INDEXNOW_KEY } from './indexnow.js';
+import { generateCard } from './card.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -343,6 +344,214 @@ app.get('/api/article/:id', async (req, res) => {
     if (!article) return res.status(404).json({ error: 'Article not found' });
     res.set('Cache-Control', 's-maxage=3600, stale-while-revalidate=86400');
     res.json(article);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Shareable News Cards ---
+app.get('/api/card/:id', async (req, res) => {
+  const format = req.query.format || 'story'; // story | square | wide
+  try {
+    const article = await getArticleById(req.params.id);
+    if (!article) return res.status(404).json({ error: 'Article not found' });
+    const png = await generateCard(article, format);
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800');
+    res.send(Buffer.from(png));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Voice-First News Query ---
+app.post('/api/voice-query', async (req, res) => {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
+  const { query, lang = 'en', region = '' } = req.body;
+  if (!query) return res.status(400).json({ error: 'query required' });
+
+  try {
+    // Step 1: Extract intent from user query
+    const intentRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 150,
+        messages: [{ role: 'user', content: `Extract the user's news intent from this query. Return ONLY valid JSON with these fields: { "category": "world|technology|business|science|sport|culture|environment|politics|null", "topic": "specific topic or null", "count": 3 }\n\nQuery: "${query}"` }],
+      }),
+    });
+    if (!intentRes.ok) throw new Error('Intent detection failed');
+    const intentData = await intentRes.json();
+    let intent;
+    try {
+      const raw = intentData.content?.[0]?.text || '{}';
+      intent = JSON.parse(raw.replace(/```json\n?|\n?```/g, '').trim());
+    } catch { intent = { category: 'world', count: 3 }; }
+
+    const count = Math.min(intent.count || 3, 5);
+
+    // Step 2: Fetch relevant articles
+    let articles = [];
+    if (intent.topic) {
+      // Search by topic using OpenSearch
+      try {
+        const client = getSearchClient();
+        const idx = lang === 'all' ? 'articles-*' : `articles-${lang}`;
+        const result = await client.search({
+          index: idx,
+          body: {
+            query: { multi_match: { query: intent.topic, fields: ['title^3', 'description^2', 'body'], fuzziness: 'AUTO' } },
+            sort: [{ _score: 'desc' }, { date: 'desc' }],
+            size: count,
+            _source: { excludes: ['body'] },
+          },
+        });
+        articles = result.body.hits.hits.map((h) => h._source);
+      } catch {
+        // Fallback to category-based fetch
+      }
+    }
+    if (articles.length === 0) {
+      const cat = intent.category || 'world';
+      articles = await queryByGlobalCategory(cat, count);
+    }
+
+    if (articles.length === 0) {
+      return res.json({ briefing: 'No news articles found for your query.', articles: [] });
+    }
+
+    // Step 3: Generate conversational briefing
+    const articleSummaries = articles.map((a, i) =>
+      `Article ${i + 1}: "${a.title}" (${a.source || a.author || 'Unknown'}) - ${(a.description || '').slice(0, 200)}`
+    ).join('\n');
+
+    const briefingRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 500,
+        messages: [{ role: 'user', content: `You are a friendly news anchor. Summarize these ${articles.length} articles into a conversational ${articles.length > 1 ? '60-second' : '30-second'} audio briefing. Use natural transitions like "Moving on..." or "In other news...". Keep it warm, clear, and spoken-word friendly. Do NOT use bullet points or formatting.\n\n${articleSummaries}` }],
+      }),
+    });
+    if (!briefingRes.ok) throw new Error('Briefing generation failed');
+    const briefingData = await briefingRes.json();
+    const briefing = briefingData.content?.[0]?.text || 'Could not generate briefing.';
+
+    res.json({
+      briefing,
+      articles: articles.map((a) => ({
+        id: a.articleId || a.id,
+        title: a.title,
+        source: a.source,
+        date: a.date,
+        image: a.image,
+        slug: a.slug,
+      })),
+      intent,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Story Threads: find related articles ---
+app.get('/api/threads/:id', async (req, res) => {
+  try {
+    const article = await getArticleById(req.params.id);
+    if (!article) return res.status(404).json({ error: 'Article not found' });
+
+    const lang = article.lang || 'en';
+    let relatedArticles = [];
+
+    // Try OpenSearch more_like_this
+    try {
+      const client = getSearchClient();
+      const result = await client.search({
+        index: `articles-${lang}`,
+        body: {
+          query: {
+            bool: {
+              must: [{
+                more_like_this: {
+                  fields: ['title', 'description'],
+                  like: article.title,
+                  min_term_freq: 1,
+                  min_doc_freq: 1,
+                  minimum_should_match: '30%',
+                  max_query_terms: 25,
+                },
+              }],
+              must_not: [{ term: { articleId: article.articleId || article.id } }],
+            },
+          },
+          sort: [{ date: 'desc' }],
+          size: 15,
+          _source: ['articleId', 'title', 'description', 'source', 'date', 'image', 'slug', 'category', 'section'],
+        },
+      });
+      relatedArticles = result.body.hits.hits
+        .filter((h) => h._score > 5)
+        .map((h) => ({ ...h._source, score: h._score }));
+    } catch {
+      // OpenSearch unavailable — try DynamoDB category fallback
+      const cat = article.category || 'world';
+      const catArticles = await queryByGlobalCategory(cat, 20);
+      relatedArticles = catArticles
+        .filter((a) => (a.articleId || a.id) !== (article.articleId || article.id))
+        .slice(0, 10);
+    }
+
+    // Generate thread summary if we have 3+ related articles
+    let threadSummary = null;
+    if (relatedArticles.length >= 2) {
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      if (apiKey) {
+        try {
+          const titles = [article, ...relatedArticles.slice(0, 5)]
+            .sort((a, b) => new Date(a.date) - new Date(b.date))
+            .map((a) => `- "${a.title}" (${a.source || ''}, ${a.date ? new Date(a.date).toLocaleDateString() : ''})`)
+            .join('\n');
+
+          const summaryRes = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+            body: JSON.stringify({
+              model: 'claude-haiku-4-5-20251001',
+              max_tokens: 200,
+              messages: [{ role: 'user', content: `These articles are about the same ongoing story. Write a 2-3 sentence catch-up summary for someone who just discovered this story. Be concise and factual. Write for spoken delivery.\n\n${titles}` }],
+            }),
+          });
+          if (summaryRes.ok) {
+            const d = await summaryRes.json();
+            threadSummary = d.content?.[0]?.text || null;
+          }
+        } catch {}
+      }
+    }
+
+    res.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+    res.json({
+      article: {
+        id: article.articleId || article.id,
+        title: article.title,
+        date: article.date,
+      },
+      thread: relatedArticles.map((a) => ({
+        id: a.articleId || a.id,
+        title: a.title,
+        description: a.description,
+        source: a.source,
+        date: a.date,
+        image: a.image,
+        slug: a.slug,
+        section: a.section,
+      })),
+      threadSummary,
+      count: relatedArticles.length,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
