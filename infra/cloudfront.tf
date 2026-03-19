@@ -91,7 +91,7 @@ resource "aws_cloudfront_distribution" "website" {
     }
   }
 
-  # Single origin: App Runner
+  # Origin: App Runner (API + SSR + frontend)
   origin {
     domain_name = local.apprunner_domain
     origin_id   = "apprunner"
@@ -104,6 +104,13 @@ resource "aws_cloudfront_distribution" "website" {
     }
   }
 
+  # Origin: S3 for pre-generated TTS audio
+  origin {
+    domain_name              = aws_s3_bucket.audio.bucket_regional_domain_name
+    origin_id                = "audio-s3"
+    origin_access_control_id = aws_cloudfront_origin_access_control.audio.id
+  }
+
   # Default behavior: pass through to App Runner (API + SSR + SPA fallback)
   default_cache_behavior {
     target_origin_id         = "apprunner"
@@ -113,6 +120,17 @@ resource "aws_cloudfront_distribution" "website" {
     cache_policy_id          = aws_cloudfront_cache_policy.dynamic.id
     origin_request_policy_id = aws_cloudfront_origin_request_policy.apprunner.id
     compress                 = true
+  }
+
+  # Pre-generated TTS audio: long cache from S3
+  ordered_cache_behavior {
+    path_pattern           = "/audio/*"
+    target_origin_id       = "audio-s3"
+    viewer_protocol_policy = "redirect-to-https"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    cache_policy_id        = aws_cloudfront_cache_policy.static_assets.id
+    compress               = false # audio/mpeg doesn't benefit from compression
   }
 
   # Static assets: long cache (Vite content-hashes filenames)

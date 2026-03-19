@@ -11,6 +11,7 @@ import { buildFeedContextMap } from '../shared/feedRegistry.js';
 import { parseRssFeed, fetchOgImage } from '../rss.js';
 import { articleExists, batchWriteArticles } from '../db.js';
 import { submitUrls, articleUrl } from '../indexnow.js';
+import { generateBatch } from '../tts/generate.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -162,6 +163,7 @@ export async function handler(event) {
   let totalSkipped = 0;
   let feedErrors = 0;
   const newArticleUrls = []; // Collect URLs for IndexNow submission
+  const newArticlesForTts = []; // Collect articles for TTS generation
 
   // 2. Fetch all feeds concurrently (max 10 at a time)
   const feedEntries = [...feedMap.entries()];
@@ -274,6 +276,15 @@ export async function handler(event) {
             await batchWriteArticles(items);
             totalIngested++;
             newArticleUrls.push(articleUrl(slug));
+            // Collect for TTS generation (use first context's lang)
+            const ttsLang = contexts[0] ? contextFields(contexts[0]).lang : 'en';
+            newArticlesForTts.push({
+              title: article.title,
+              body,
+              description: article.description,
+              lang: ttsLang,
+              slug,
+            });
           } catch (err) {
             console.warn(
               `[ingest] Article processing failed: ${article.url} - ${err.message}`,
@@ -291,6 +302,15 @@ export async function handler(event) {
       await submitUrls(newArticleUrls);
     } catch (err) {
       console.warn(`[ingest] IndexNow submission failed: ${err.message}`);
+    }
+  }
+
+  // Pre-generate TTS audio and upload to S3
+  if (newArticlesForTts.length > 0) {
+    try {
+      await generateBatch(newArticlesForTts, 5);
+    } catch (err) {
+      console.warn(`[ingest] TTS generation failed: ${err.message}`);
     }
   }
 

@@ -61,6 +61,21 @@ resource "aws_iam_role_policy" "apprunner_dynamo" {
   })
 }
 
+# S3 write access for TTS audio uploads
+resource "aws_iam_role_policy" "apprunner_s3_audio" {
+  name = "s3-audio-write"
+  role = aws_iam_role.apprunner_instance.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:PutObject", "s3:GetObject", "s3:HeadObject"]
+      Resource = "${aws_s3_bucket.audio.arn}/*"
+    }]
+  })
+}
+
 # OpenSearch read access (search queries)
 resource "aws_iam_role_policy" "apprunner_opensearch" {
   name = "opensearch-search"
@@ -106,6 +121,7 @@ resource "aws_apprunner_service" "app" {
           NODE_ENV            = "production"
           SITE_URL            = "https://${var.domain_name}"
           AWS_REGION          = var.aws_region
+          AUDIO_BUCKET        = aws_s3_bucket.audio.id
         }
       }
     }

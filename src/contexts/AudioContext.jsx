@@ -58,15 +58,21 @@ export function AudioProvider({ children }) {
     try { return JSON.parse(localStorage.getItem('pulsenews-region')) || ''; } catch { return ''; }
   };
 
-  // Build TTS URL for an article
+  // Build TTS URL for an article — try pre-generated S3 audio first, fallback to live API
   const buildTtsUrl = useCallback((article, lang) => {
     const body = (article.body || article.description || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
     const text = `${article.title}. ${body}`.slice(0, 2000);
+
+    // Pre-generated audio URL (from S3 via CloudFront)
+    const pregenUrl = article.slug ? `/audio/${lang || 'en'}/${article.slug}.mp3` : null;
+
+    // Fallback: live TTS API
     const encoded = encodeURIComponent(text);
     const region = getRegion();
     const regionParam = lang === 'en' && region ? `&region=${region}` : '';
-    if (encoded.length < 8000) return { url: `/api/tts?text=${encoded}&lang=${lang}${regionParam}`, text };
-    return { url: null, text, region };
+    const apiUrl = encoded.length < 8000 ? `/api/tts?text=${encoded}&lang=${lang}${regionParam}` : null;
+
+    return { url: pregenUrl, fallbackUrl: apiUrl, text, region };
   }, []);
 
   // Pre-warm TTS audio on hover — starts buffering before user clicks
@@ -75,11 +81,16 @@ export function AudioProvider({ children }) {
     const lang = (() => {
       try { return JSON.parse(localStorage.getItem('pulsenews-lang')) || 'en'; } catch { return 'en'; }
     })();
-    const { url } = buildTtsUrl(article, lang);
-    if (!url) return;
+    const { url, fallbackUrl } = buildTtsUrl(article, lang);
+    const src = url || fallbackUrl;
+    if (!src) return;
     const audio = new Audio();
     audio.preload = 'auto';
-    audio.src = url;
+    audio.src = src;
+    // If pre-generated audio 404s, try fallback
+    if (url && fallbackUrl) {
+      audio.onerror = () => { audio.onerror = null; audio.src = fallbackUrl; };
+    }
     prefetchCache.current.set(article.id, audio);
     // Discard if not used within 30s
     setTimeout(() => {
@@ -153,17 +164,34 @@ export function AudioProvider({ children }) {
       return;
     }
 
-    const { url, text } = buildTtsUrl(article, lang);
+    const { url, fallbackUrl, text } = buildTtsUrl(article, lang);
 
-    // Use GET URL so Audio element streams natively (starts playing as chunks arrive)
-    // Fall back to POST+blob for very long texts that would exceed URL limits
-    if (url) {
-      const audio = new Audio(url);
+    // Try pre-generated audio first, fall back to live API, then browser TTS
+    const tryPlay = (src) => {
+      const audio = new Audio(src);
       setupAudioElement(audio);
       audio.play().catch(() => {
-        if (HAS_SPEECH) playWithBrowserTTS(text, lang);
+        // Pre-generated audio failed — try fallback API URL
+        if (src === url && fallbackUrl) {
+          tryPlay(fallbackUrl);
+        } else if (HAS_SPEECH) {
+          playWithBrowserTTS(text, lang);
+        }
       });
+      // Also handle 404/network errors on pre-generated audio
+      if (src === url && fallbackUrl) {
+        const origError = audio.onerror;
+        audio.onerror = () => {
+          audio.onerror = origError;
+          tryPlay(fallbackUrl);
+        };
+      }
+    };
+
+    if (url || fallbackUrl) {
+      tryPlay(url || fallbackUrl);
     } else {
+      // Very long text — use POST
       fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
