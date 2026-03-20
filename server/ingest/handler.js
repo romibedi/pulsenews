@@ -47,6 +47,10 @@ function createLimiter(concurrency) {
 function htmlToText(html) {
   if (!html) return '';
   return html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<picture[\s\S]*?<\/picture>/gi, '')
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, '')
     .replace(/<\/?(p|div|br|h[1-6]|li|blockquote|section|article)[^>]*>/gi, '\n\n')
     .replace(/<[^>]*>/g, '')
     .replace(/&nbsp;/g, ' ')
@@ -221,6 +225,28 @@ export async function handler(event) {
             const now = new Date().toISOString();
             const ttl = Math.floor(Date.now() / 1000) + (90 * 24 * 60 * 60);
 
+            // 5b. Classify article mood via Claude Haiku
+            let mood = 'neutral';
+            const moodApiKey = process.env.ANTHROPIC_API_KEY;
+            if (moodApiKey) {
+              try {
+                const moodRes = await fetch('https://api.anthropic.com/v1/messages', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'x-api-key': moodApiKey, 'anthropic-version': '2023-06-01' },
+                  body: JSON.stringify({
+                    model: 'claude-haiku-4-5-20251001',
+                    max_tokens: 10,
+                    messages: [{ role: 'user', content: `Classify this news article tone into exactly one of: uplifting, neutral, investigative, breaking. Return ONLY the single word.\n\nTitle: ${article.title}\n\n${(article.description || '').slice(0, 500)}` }],
+                  }),
+                });
+                if (moodRes.ok) {
+                  const moodData = await moodRes.json();
+                  const raw = (moodData.content?.[0]?.text || '').trim().toLowerCase();
+                  if (['uplifting', 'neutral', 'investigative', 'breaking'].includes(raw)) mood = raw;
+                }
+              } catch {}
+            }
+
             // 6. Build DynamoDB items for ALL relevant PK partitions
             const items = [];
             const seenPKs = new Set();
@@ -252,6 +278,7 @@ export async function handler(event) {
                 category: fields.category,
                 lang: fields.lang,
                 tags: article.tags || [],
+                mood,
                 isExternal: true,
                 ttl,
                 createdAt: now,
@@ -272,6 +299,7 @@ export async function handler(event) {
               source,
               category: primaryCtx.category,
               lang: primaryCtx.lang,
+              mood,
               slug,
               date,
               ttl,
@@ -282,13 +310,14 @@ export async function handler(event) {
             await batchWriteArticles(items);
             totalIngested++;
             newArticleUrls.push(articleUrl(slug));
-            // Collect for TTS generation (use first context's lang)
-            const ttsLang = contexts[0] ? contextFields(contexts[0]).lang : 'en';
+            // Collect for TTS generation (use first context's lang + region)
+            const ttsCtx = contexts[0] ? contextFields(contexts[0]) : { lang: 'en', region: 'global' };
             newArticlesForTts.push({
               title: article.title,
               body,
               description: article.description,
-              lang: ttsLang,
+              lang: ttsCtx.lang,
+              region: ttsCtx.region,
               slug,
             });
           } catch (err) {

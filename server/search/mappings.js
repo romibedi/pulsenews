@@ -106,6 +106,7 @@ export function buildIndexSettings(lang) {
         author: { type: 'keyword' },
         sectionId: { type: 'keyword' },
         tags: { type: 'keyword' },
+        mood: { type: 'keyword' },
 
         // --- Date and numeric fields ---
         date: { type: 'date' },

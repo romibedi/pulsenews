@@ -1,7 +1,27 @@
 import { useState, useRef, useCallback } from 'react';
 import useAudio from '../contexts/AudioContext';
+import useLanguage from '../hooks/useLanguage';
 
 const SpeechRecognition = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
+
+const VOICE_CHIPS = {
+  en: ['What happened in tech today?', 'Top world news', 'Latest in sports', 'Business headlines'],
+  hi: ['आज टेक में क्या हुआ?', 'शीर्ष विश्व समाचार', 'खेल की ताज़ा ख़बरें', 'बिज़नेस हेडलाइंस'],
+  ta: ['இன்று தொழில்நுட்பத்தில் என்ன நடந்தது?', 'உலக செய்திகள்', 'விளையாட்டு செய்திகள்', 'வணிக செய்திகள்'],
+  te: ['ఈరోజు టెక్‌లో ఏం జరిగింది?', 'ప్రపంచ వార్తలు', 'క్రీడా వార్తలు', 'వ్యాపార వార్తలు'],
+  bn: ['আজ প্রযুক্তিতে কী ঘটেছে?', 'শীর্ষ বিশ্ব সংবাদ', 'খেলার খবর', 'ব্যবসায়িক শিরোনাম'],
+  mr: ['आज टेकमध्ये काय घडले?', 'जगातील बातम्या', 'क्रीडा बातम्या', 'व्यापार बातम्या'],
+  ur: ['آج ٹیک میں کیا ہوا؟', 'اہم عالمی خبریں', 'کھیلوں کی خبریں', 'کاروباری سرخیاں'],
+  ar: ['ماذا حدث في التقنية اليوم؟', 'أهم أخبار العالم', 'آخر أخبار الرياضة', 'عناوين الأعمال'],
+  fr: ["Quoi de neuf en tech aujourd'hui ?", 'Actualités mondiales', 'Dernières nouvelles sportives', 'Actualités économiques'],
+  de: ['Was gibt es Neues in der Technik?', 'Top-Weltnachrichten', 'Sport-Nachrichten', 'Wirtschafts-Schlagzeilen'],
+  es: ['¿Qué pasó en tecnología hoy?', 'Noticias del mundo', 'Últimas noticias deportivas', 'Titulares de negocios'],
+  pt: ['O que aconteceu em tecnologia hoje?', 'Notícias do mundo', 'Últimas notícias esportivas', 'Manchetes de negócios'],
+  zh: ['今天科技有什么新闻？', '全球要闻', '体育最新消息', '商业头条'],
+  ja: ['今日のテクニュースは？', '世界のトップニュース', 'スポーツ最新情報', 'ビジネスヘッドライン'],
+  ko: ['오늘 기술 뉴스는?', '세계 주요 뉴스', '스포츠 최신 뉴스', '비즈니스 헤드라인'],
+  sw: ['Nini kimetokea katika teknolojia leo?', 'Habari kuu za dunia', 'Habari za michezo', 'Vichwa vya biashara'],
+};
 
 export default function VoiceMode() {
   const [open, setOpen] = useState(false);
@@ -13,13 +33,13 @@ export default function VoiceMode() {
   const [error, setError] = useState(null);
   const recognitionRef = useRef(null);
   const { playArticle } = useAudio();
+  const { lang: currentLang } = useLanguage();
 
-  const getLang = () => {
-    try { return JSON.parse(localStorage.getItem('pulsenews-lang')) || 'en'; } catch { return 'en'; }
-  };
+  const getLang = () => currentLang || 'en';
   const getRegion = () => {
     try { return JSON.parse(localStorage.getItem('pulsenews-region')) || ''; } catch { return ''; }
   };
+  const chips = VOICE_CHIPS[currentLang] || VOICE_CHIPS.en;
 
   const startListening = useCallback(() => {
     if (!SpeechRecognition) {
@@ -192,12 +212,7 @@ export default function VoiceMode() {
           {/* Suggestion chips */}
           {!briefing && !loading && (
             <div className="flex flex-wrap gap-2">
-              {[
-                'What happened in tech today?',
-                'Top world news',
-                'Latest in sports',
-                'Business headlines',
-              ].map((q) => (
+              {chips.map((q) => (
                 <button
                   key={q}
                   onClick={() => { setTranscript(q); submitQuery(q); }}

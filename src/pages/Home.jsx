@@ -24,6 +24,7 @@ export default function Home() {
   const [langArticles, setLangArticles] = useState([]);
   const [langLoading, setLangLoading] = useState(false);
   const [showRegionPicker, setShowRegionPicker] = useState(false);
+  const [mood, setMood] = useState('all');
   const { playArticle, prefetchArticle, addToQueue } = useAudio();
 
   const activeSections = savedSections
@@ -65,7 +66,8 @@ export default function Home() {
   const englishArticles = sections[firstSection] || [];
   const isNonEnglish = lang !== 'en';
   const hasLangContent = isNonEnglish && langArticles.length > 0;
-  const mainArticles = hasLangContent ? langArticles : englishArticles;
+  const rawArticles = hasLangContent ? langArticles : englishArticles;
+  const mainArticles = filterByMood(rawArticles);
   const isLangSwitching = isNonEnglish && langLoading && !hasLangContent;
   const featured = mainArticles[0];
   const latest = mainArticles.slice(1, 7);
@@ -73,6 +75,21 @@ export default function Home() {
   const more = isNonEnglish ? mainArticles.slice(7, 19) : mainArticles.slice(7, 13);
 
   const regionLabel = region && region !== 'world' ? regionInfo.label : 'World';
+
+  // Mood filter: map UI labels to data values
+  const MOOD_OPTIONS = [
+    { key: 'all', label: 'All', emoji: '📰' },
+    { key: 'uplifting', label: 'Uplifting', emoji: '☀️' },
+    { key: 'neutral', label: 'Just Facts', emoji: '📋' },
+    { key: 'investigative', label: 'Deep Reads', emoji: '🔍' },
+    { key: 'breaking', label: 'Breaking', emoji: '🔴' },
+  ];
+
+  // Apply mood filter — articles without mood field are treated as 'neutral'
+  const filterByMood = (articles) => {
+    if (mood === 'all') return articles;
+    return articles.filter((a) => (a.mood || 'neutral') === mood);
+  };
 
   if (error && !featured) {
     return (
@@ -198,6 +215,31 @@ export default function Home() {
             </button>
           </div>
         </div>
+
+        {/* Mood filter */}
+        <div className="flex items-center gap-2 mb-4 overflow-x-auto scrollbar-hide pb-1">
+          {MOOD_OPTIONS.map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setMood(opt.key)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border whitespace-nowrap transition-all ${
+                mood === opt.key
+                  ? 'border-[#e05d44]/40 dark:border-[#e87461]/40 bg-[#fef0ed] dark:bg-[#e87461]/10 text-[#e05d44] dark:text-[#e87461]'
+                  : 'border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)] hover:border-[var(--text-muted)]'
+              }`}
+            >
+              <span>{opt.emoji}</span>
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        {mood !== 'all' && mainArticles.length === 0 && !loading && (
+          <div className="text-center py-12 text-[var(--text-muted)]">
+            <p className="text-sm">No {MOOD_OPTIONS.find((o) => o.key === mood)?.label.toLowerCase()} articles right now.</p>
+            <button onClick={() => setMood('all')} className="text-[#e05d44] dark:text-[#e87461] text-sm mt-2 hover:underline">Show all articles</button>
+          </div>
+        )}
 
         {loading && !featured ? (
           <HeroLoader />

@@ -35,20 +35,27 @@ function handleImgError(e) {
   e.target.src = PLACEHOLDER;
 }
 
-function decodeEntities(str) {
+function stripHtml(str) {
   if (!str) return '';
   return str
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<picture[\s\S]*?<\/picture>/gi, '')
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, '')
+    .replace(/<\/?(p|div|br|h[1-6]|li|blockquote|section|article)[^>]*>/gi, '\n\n')
+    .replace(/<[^>]*>/g, '')
     .replace(/&ldquo;/g, '\u201C').replace(/&rdquo;/g, '\u201D')
     .replace(/&lsquo;/g, '\u2018').replace(/&rsquo;/g, '\u2019')
     .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/&nbsp;/g, ' ').replace(/&mdash;/g, '\u2014').replace(/&ndash;/g, '\u2013')
     .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
-    .replace(/&[a-z]+;/gi, ' ');
+    .replace(/&[a-z]+;/gi, ' ')
+    .replace(/\n{3,}/g, '\n\n');
 }
 
 function splitIntoParagraphs(text) {
   if (!text) return [];
-  const decoded = decodeEntities(text);
+  const decoded = stripHtml(text);
   // First try splitting on existing newlines
   const byNewlines = decoded.split(/\n\n+/).map((p) => p.trim()).filter((p) => p.length > 20);
   if (byNewlines.length > 1) return byNewlines;
@@ -186,7 +193,8 @@ export default function Article() {
   }
 
   const isExternal = article.isExternal;
-  const bodyText = article.body || '';
+  // If body is empty but description is long, use description as body
+  const bodyText = article.body || (article.description && article.description.length > 500 ? article.description : '');
   const allParagraphs = splitIntoParagraphs(bodyText);
   const MAX_PREVIEW = isExternal ? 8 : allParagraphs.length;
   const paragraphs = allParagraphs.slice(0, MAX_PREVIEW);
@@ -388,10 +396,10 @@ export default function Article() {
         <AISummary title={article.title} body={bodyText || article.description || ''} />
       </div>
 
-      {/* Description / lead */}
-      {article.description && (
+      {/* Description / lead — only show as a short intro, not when it's the full article */}
+      {article.description && article.description.length < 500 && article.body && (
         <div className="text-lg text-[var(--text-secondary)] leading-relaxed mb-8 pl-4 border-l-2 border-[#e05d44] dark:border-[#e87461]">
-          {decodeEntities(article.description)}
+          {stripHtml(article.description)}
         </div>
       )}
 

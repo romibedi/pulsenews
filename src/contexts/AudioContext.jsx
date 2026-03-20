@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useRef, useCallback } from 'react';
+import useAutoplayHook from '../hooks/useAutoplay';
 
 const AudioCtx = createContext(null);
 
 const HAS_SPEECH = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
 export function AudioProvider({ children }) {
+  const { autoplay, toggleAutoplay } = useAutoplayHook();
   const [currentArticle, setCurrentArticle] = useState(null);
   const [queue, setQueue] = useState([]);
   const [playing, setPlaying] = useState(false);
@@ -325,6 +327,8 @@ export function AudioProvider({ children }) {
     speed,
     progress,
     duration,
+    autoplay,
+    toggleAutoplay,
     playArticle,
     prefetchArticle,
     pause,

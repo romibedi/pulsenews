@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import useAudio from '../contexts/AudioContext';
+import useLanguage from '../hooks/useLanguage';
 
 function timeAgo(dateStr) {
   if (!dateStr) return '';
@@ -17,6 +18,7 @@ export default function StoryThread({ articleId, title, category }) {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const { playArticle } = useAudio();
+  const { lang } = useLanguage();
 
   useEffect(() => {
     if (!articleId) return;
@@ -24,13 +26,14 @@ export default function StoryThread({ articleId, title, category }) {
     const params = new URLSearchParams();
     if (title) params.set('title', title);
     if (category) params.set('category', category);
+    if (lang) params.set('lang', lang);
     const qs = params.toString() ? `?${params}` : '';
     fetch(`/api/threads/${encodeURIComponent(articleId)}${qs}`)
       .then((r) => r.json())
       .then((d) => setData(d))
       .catch(() => setData(null))
       .finally(() => setLoading(false));
-  }, [articleId, title, category]);
+  }, [articleId, title, category, lang]);
 
   if (loading) return null;
   if (!data || data.count === 0) return null;

@@ -624,6 +624,10 @@ export default defineConfig({
               title: article?.title || '',
               content: article?.content || '',
               text: (article?.content || '')
+                .replace(/<script[\s\S]*?<\/script>/gi, '')
+                .replace(/<style[\s\S]*?<\/style>/gi, '')
+                .replace(/<picture[\s\S]*?<\/picture>/gi, '')
+                .replace(/<noscript[\s\S]*?<\/noscript>/gi, '')
                 .replace(/<\/?(p|div|br|h[1-6]|li|blockquote|section|article)[^>]*>/gi, '\n\n')
                 .replace(/<[^>]*>/g, '')
                 .replace(/&nbsp;/g, ' ')
@@ -661,16 +665,50 @@ export default defineConfig({
           req.on('data', (c) => { body += c })
           req.on('end', async () => {
             try {
-              const { title, body: articleBody } = JSON.parse(body)
+              const { title, body: articleBody, lang = 'en' } = JSON.parse(body)
+              const LANG_NAMES = { en:'English',hi:'Hindi',ta:'Tamil',te:'Telugu',bn:'Bengali',mr:'Marathi',ur:'Urdu',ar:'Arabic',fr:'French',de:'German',es:'Spanish',pt:'Portuguese',zh:'Chinese',ja:'Japanese',ko:'Korean',sw:'Swahili' }
+              const langHint = lang && lang !== 'en' ? ` Respond entirely in ${LANG_NAMES[lang] || 'English'}.` : ''
               const response = await fetch('https://api.anthropic.com/v1/messages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-                body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 200, messages: [{ role: 'user', content: `Summarize this news article in 2-3 concise sentences. Focus on the key facts.\n\nTitle: ${title}\n\n${(articleBody || '').slice(0, 3000)}` }] }),
+                body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 200, messages: [{ role: 'user', content: `Summarize this news article in 2-3 concise sentences. Focus on the key facts.${langHint}\n\nTitle: ${title}\n\n${(articleBody || '').slice(0, 3000)}` }] }),
               })
               const data = await response.json()
               res.setHeader('Content-Type', 'application/json')
               res.statusCode = response.ok ? 200 : response.status
               res.end(JSON.stringify(response.ok ? { summary: data.content?.[0]?.text } : { error: JSON.stringify(data) }))
+            } catch (err) { res.statusCode = 500; res.end(JSON.stringify({ error: err.message })) }
+          })
+        })
+
+        // ELI5 / Expert rewrite
+        server.middlewares.use('/api/rewrite', async (req, res) => {
+          if (req.method === 'OPTIONS') { res.statusCode = 200; res.end(); return }
+          if (req.method !== 'POST') { res.statusCode = 405; res.end('Method not allowed'); return }
+          const apiKey = process.env.ANTHROPIC_API_KEY
+          if (!apiKey) { res.setHeader('Content-Type', 'application/json'); res.statusCode = 500; res.end(JSON.stringify({ error: 'ANTHROPIC_API_KEY not set' })); return }
+          let body = ''
+          req.on('data', (c) => { body += c })
+          req.on('end', async () => {
+            try {
+              const { title, body: articleBody, mode = 'summary', lang = 'en' } = JSON.parse(body)
+              const LANG_NAMES = { en:'English',hi:'Hindi',ta:'Tamil',te:'Telugu',bn:'Bengali',mr:'Marathi',ur:'Urdu',ar:'Arabic',fr:'French',de:'German',es:'Spanish',pt:'Portuguese',zh:'Chinese',ja:'Japanese',ko:'Korean',sw:'Swahili' }
+              const langHint = lang && lang !== 'en' ? ` Respond entirely in ${LANG_NAMES[lang] || 'English'}.` : ''
+              const prompts = {
+                simple: `Explain this news article in very simple terms, as if explaining to a 10-year-old. Use short sentences and everyday words. 3-4 sentences max.${langHint}`,
+                summary: `Summarize this news article in 2-3 concise sentences. Focus on the key facts.${langHint}`,
+                expert: `Provide a detailed, technical analysis of this news article. Include context, broader implications, and relevant background. 4-6 sentences.${langHint}`,
+              }
+              const maxTokens = { simple: 250, summary: 200, expert: 500 }
+              const response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+                body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: maxTokens[mode] || 200, messages: [{ role: 'user', content: `${prompts[mode] || prompts.summary}\n\nTitle: ${title}\n\n${(articleBody || '').slice(0, 3000)}` }] }),
+              })
+              const data = await response.json()
+              res.setHeader('Content-Type', 'application/json')
+              res.statusCode = response.ok ? 200 : response.status
+              res.end(JSON.stringify(response.ok ? { text: data.content?.[0]?.text, mode } : { error: JSON.stringify(data) }))
             } catch (err) { res.statusCode = 500; res.end(JSON.stringify({ error: err.message })) }
           })
         })

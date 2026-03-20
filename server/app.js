@@ -188,6 +188,10 @@ app.get('/api/extract', async (req, res) => {
       title: article?.title || '',
       content: article?.content || '',
       text: (article?.content || '')
+        .replace(/<script[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[\s\S]*?<\/style>/gi, '')
+        .replace(/<picture[\s\S]*?<\/picture>/gi, '')
+        .replace(/<noscript[\s\S]*?<\/noscript>/gi, '')
         .replace(/<\/?(p|div|br|h[1-6]|li|blockquote|section|article)[^>]*>/gi, '\n\n')
         .replace(/<[^>]*>/g, '')
         .replace(/&nbsp;/g, ' ')
@@ -213,7 +217,7 @@ app.get('/api/extract', async (req, res) => {
 app.post('/api/summarize', async (req, res) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
-  const { title, body } = req.body;
+  const { title, body, lang = 'en' } = req.body;
   if (!title || !body) return res.status(400).json({ error: 'title and body required' });
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -226,7 +230,7 @@ app.post('/api/summarize', async (req, res) => {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 200,
-        messages: [{ role: 'user', content: `Summarize this news article in 2-3 concise sentences. Focus on the key facts.\n\nTitle: ${title}\n\n${body.slice(0, 3000)}` }],
+        messages: [{ role: 'user', content: `Summarize this news article in 2-3 concise sentences. Focus on the key facts.${langInstruction(lang)}\n\nTitle: ${title}\n\n${body.slice(0, 3000)}` }],
       }),
     });
     if (!response.ok) {
@@ -235,6 +239,46 @@ app.post('/api/summarize', async (req, res) => {
     }
     const data = await response.json();
     res.json({ summary: data.content?.[0]?.text || 'Could not generate summary.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- ELI5 / Expert rewrite ---
+app.post('/api/rewrite', async (req, res) => {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
+  const { title, body, mode = 'summary', lang = 'en' } = req.body;
+  if (!title || !body) return res.status(400).json({ error: 'title and body required' });
+
+  const prompts = {
+    simple: `Explain this news article in very simple terms, as if explaining to a 10-year-old. Use short sentences and everyday words. 3-4 sentences max.${langInstruction(lang)}`,
+    summary: `Summarize this news article in 2-3 concise sentences. Focus on the key facts.${langInstruction(lang)}`,
+    expert: `Provide a detailed, technical analysis of this news article. Include context, broader implications, and relevant background. Use domain-specific terminology where appropriate. 4-6 sentences.${langInstruction(lang)}`,
+  };
+
+  const maxTokens = { simple: 250, summary: 200, expert: 500 };
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: maxTokens[mode] || 200,
+        messages: [{ role: 'user', content: `${prompts[mode] || prompts.summary}\n\nTitle: ${title}\n\n${body.slice(0, 3000)}` }],
+      }),
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      return res.status(response.status).json({ error: err });
+    }
+    const data = await response.json();
+    res.json({ text: data.content?.[0]?.text || 'Could not generate rewrite.', mode });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -264,7 +308,22 @@ app.get('/api/stocks', async (req, res) => {
   }
 });
 
-// TTS voice map
+// Language display names (used in AI prompts)
+const LANG_NAMES = {
+  en: 'English', hi: 'Hindi', ta: 'Tamil', te: 'Telugu', bn: 'Bengali',
+  mr: 'Marathi', ur: 'Urdu', ar: 'Arabic', fr: 'French', de: 'German',
+  es: 'Spanish', pt: 'Portuguese', zh: 'Chinese', ja: 'Japanese',
+  ko: 'Korean', sw: 'Swahili',
+};
+
+// Helper: build language instruction for AI prompts
+function langInstruction(lang) {
+  if (!lang || lang === 'en') return '';
+  const name = LANG_NAMES[lang] || 'English';
+  return ` Respond entirely in ${name}.`;
+}
+
+// TTS voice map — defaults per language
 const TTS_VOICES = {
   en: 'en-IN-NeerjaNeural',
   hi: 'hi-IN-SwaraNeural',
@@ -283,19 +342,53 @@ const TTS_VOICES = {
   ko: 'ko-KR-SunHiNeural',
   sw: 'sw-KE-ZuriNeural',
 };
-const EN_REGION_VOICES = {
-  us: 'en-US-JennyNeural',
-  uk: 'en-GB-SoniaNeural',
-  australia: 'en-AU-NatashaNeural',
-  india: 'en-IN-NeerjaNeural',
+
+// Regional accent voices — keyed by lang, then region
+const REGIONAL_VOICES = {
+  en: {
+    us: 'en-US-JennyNeural',
+    uk: 'en-GB-SoniaNeural',
+    australia: 'en-AU-NatashaNeural',
+    india: 'en-IN-NeerjaNeural',
+  },
+  es: {
+    latam: 'es-MX-DaliaNeural',
+    europe: 'es-ES-ElviraNeural',
+    us: 'es-MX-DaliaNeural',
+  },
+  pt: {
+    latam: 'pt-BR-FranciscaNeural',
+    europe: 'pt-PT-RaquelNeural',
+  },
+  fr: {
+    europe: 'fr-FR-DeniseNeural',
+    africa: 'fr-FR-DeniseNeural',
+  },
+  ar: {
+    'middle-east': 'ar-SA-ZariyahNeural',
+    africa: 'ar-EG-SalmaNeural',
+  },
+  zh: {
+    asia: 'zh-CN-XiaoxiaoNeural',
+  },
 };
+
+// Resolve the best TTS voice for a lang+region combo
+function resolveVoice(lang, region) {
+  const regionalMap = REGIONAL_VOICES[lang];
+  if (regionalMap && region && regionalMap[region]) return regionalMap[region];
+  return TTS_VOICES[lang] || TTS_VOICES.en;
+}
+
+// Keep backward compat alias
+const EN_REGION_VOICES = REGIONAL_VOICES.en;
 
 // Text-to-Speech via Edge TTS (GET for short text / prefetch, POST for longer)
 async function handleTts(text, lang, region, res) {
   if (!text) return res.status(400).json({ error: 'text param required' });
 
   const cleanText = text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 2000);
-  const voice = (lang === 'en' && EN_REGION_VOICES[region]) || TTS_VOICES[lang] || TTS_VOICES.en;
+  const voice = resolveVoice(lang, region);
 
   try {
     const comm = new Communicate(cleanText, { voice, rate: '+20%' });
@@ -379,7 +472,7 @@ app.post('/api/voice-query', async (req, res) => {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 150,
-        messages: [{ role: 'user', content: `Extract the user's news intent from this query. Return ONLY valid JSON with these fields: { "category": "world|technology|business|science|sport|culture|environment|politics|null", "topic": "specific topic or null", "count": 3 }\n\nQuery: "${query}"` }],
+        messages: [{ role: 'user', content: `Extract the user's news intent from this query. The query may be in any language — always return the JSON fields in English. Return ONLY valid JSON with these fields: { "category": "world|technology|business|science|sport|culture|environment|politics|null", "topic": "specific topic in English or null", "count": 3 }\n\nQuery: "${query}"` }],
       }),
     });
     if (!intentRes.ok) throw new Error('Intent detection failed');
@@ -433,7 +526,7 @@ app.post('/api/voice-query', async (req, res) => {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 500,
-        messages: [{ role: 'user', content: `You are a friendly news anchor. Summarize these ${articles.length} articles into a conversational ${articles.length > 1 ? '60-second' : '30-second'} audio briefing. Use natural transitions like "Moving on..." or "In other news...". Keep it warm, clear, and spoken-word friendly. Do NOT use bullet points or formatting.\n\n${articleSummaries}` }],
+        messages: [{ role: 'user', content: `You are a friendly news anchor. Summarize these ${articles.length} articles into a conversational ${articles.length > 1 ? '60-second' : '30-second'} audio briefing. Use natural transitions like "Moving on..." or "In other news...". Keep it warm, clear, and spoken-word friendly. Do NOT use bullet points or formatting.${langInstruction(lang)}\n\n${articleSummaries}` }],
       }),
     });
     if (!briefingRes.ok) throw new Error('Briefing generation failed');
@@ -460,9 +553,10 @@ app.post('/api/voice-query', async (req, res) => {
 // --- Story Threads: find related articles ---
 app.get('/api/threads/:id', async (req, res) => {
   try {
-    // Accept article title+category via query params as fallback when article isn't in DynamoDB
+    // Accept article title+category+lang via query params as fallback when article isn't in DynamoDB
     const title = req.query.title || '';
     const category = req.query.category || 'world';
+    const userLang = req.query.lang || 'en';
 
     let article = null;
     try {
@@ -540,7 +634,7 @@ app.get('/api/threads/:id', async (req, res) => {
             body: JSON.stringify({
               model: 'claude-haiku-4-5-20251001',
               max_tokens: 200,
-              messages: [{ role: 'user', content: `These articles are about the same ongoing story. Write a 2-3 sentence catch-up summary for someone who just discovered this story. Be concise and factual. Write for spoken delivery.\n\n${titles}` }],
+              messages: [{ role: 'user', content: `These articles are about the same ongoing story. Write a 2-3 sentence catch-up summary for someone who just discovered this story. Be concise and factual. Write for spoken delivery.${langInstruction(userLang)}\n\n${titles}` }],
             }),
           });
           if (summaryRes.ok) {

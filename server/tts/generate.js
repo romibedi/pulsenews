@@ -13,7 +13,7 @@ const REGION = process.env.AWS_REGION || 'eu-west-1';
 
 const s3 = new S3Client({ region: REGION });
 
-// Voice map — must match server/app.js TTS_VOICES
+// Language voice map — must match server/app.js TTS_VOICES
 const VOICES = {
   en: 'en-IN-NeerjaNeural',
   hi: 'hi-IN-SwaraNeural',
@@ -31,6 +31,15 @@ const VOICES = {
   ja: 'ja-JP-NanamiNeural',
   ko: 'ko-KR-SunHiNeural',
   sw: 'sw-KE-ZuriNeural',
+};
+
+// Regional English accent voices — must match server/app.js EN_REGION_VOICES
+const EN_REGION_VOICES = {
+  us: 'en-US-JennyNeural',
+  uk: 'en-GB-SoniaNeural',
+  australia: 'en-AU-NatashaNeural',
+  india: 'en-IN-NeerjaNeural',
+  europe: 'en-GB-SoniaNeural',
 };
 
 /**
@@ -84,7 +93,8 @@ export async function generateAndUpload(article) {
   const text = `${article.title}. ${body}`.slice(0, 2000);
   if (text.length < 10) return null;
 
-  const voice = VOICES[lang] || VOICES.en;
+  // Use regional English accent if available, otherwise fall back to language voice
+  const voice = (lang === 'en' && EN_REGION_VOICES[article.region]) || VOICES[lang] || VOICES.en;
 
   try {
     // Generate audio with Edge TTS (30s timeout to prevent hung WebSockets)

@@ -4,6 +4,11 @@ import useAudio from '../contexts/AudioContext';
 import useLanguage from '../hooks/useLanguage';
 import { estimateReadingTime } from '../utils/readingTime';
 
+function stripHtml(str) {
+  if (!str) return '';
+  return str.replace(/<[^>]*>/g, '').replace(/&[a-z]+;/gi, ' ').trim();
+}
+
 function timeAgo(dateStr) {
   const seconds = Math.floor((Date.now() - new Date(dateStr)) / 1000);
   if (seconds < 60) return 'just now';
@@ -774,7 +779,7 @@ export default function NewsCard({ article, featured = false }) {
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-normal text-white mb-2 leading-tight">
               {article.title}
             </h2>
-            <p className="text-white/90 text-sm md:text-base line-clamp-2 mb-3 leading-relaxed">{article.description}</p>
+            <p className="text-white/90 text-sm md:text-base line-clamp-2 mb-3 leading-relaxed">{stripHtml(article.description)}</p>
             <div className="flex items-center gap-3 text-xs text-white/60">
               <span>{article.author}</span>
               <span>&middot;</span>
@@ -817,7 +822,7 @@ export default function NewsCard({ article, featured = false }) {
           <h3 className="text-lg font-normal text-[var(--text)] mb-2 line-clamp-2 group-hover:text-[#e05d44] dark:group-hover:text-[#e87461] transition-colors leading-snug" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>
             {article.title}
           </h3>
-          <p className="text-[13px] text-[var(--text-secondary)] line-clamp-2 leading-relaxed flex-1">{article.description}</p>
+          <p className="text-[13px] text-[var(--text-secondary)] line-clamp-2 leading-relaxed flex-1">{stripHtml(article.description)}</p>
           <div className="mt-auto pt-4 flex items-center justify-between text-xs text-[var(--text-secondary)] border-t border-[var(--border)]">
             <span className="truncate max-w-[50%]">{article.author}</span>
             <div className="flex items-center gap-1">

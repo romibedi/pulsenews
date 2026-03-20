@@ -37,8 +37,8 @@ async function main() {
   const articles = [];
   let totalScanned = 0;
 
-  // Scan both GLOBAL#CAT# (English) and LANG# (non-English) partitions
-  const prefixes = ['GLOBAL#CAT#', 'LANG#'];
+  // Scan GLOBAL#CAT# (English), REGION# (regional English), and LANG# (non-English) partitions
+  const prefixes = ['GLOBAL#CAT#', 'REGION#', 'LANG#'];
 
   for (const prefix of prefixes) {
     let lastKey = undefined;
@@ -58,11 +58,19 @@ async function main() {
         const lang = item.lang || 'en';
         if (FILTER_LANG && lang !== FILTER_LANG) continue;
 
+        // Extract region from PK (e.g. REGION#us#CAT#world -> us) or item.region
+        let region = item.region || 'global';
+        if (item.PK && item.PK.startsWith('REGION#')) {
+          const parts = item.PK.split('#');
+          if (parts.length >= 2) region = parts[1];
+        }
+
         articles.push({
           title: item.title || '',
           body: item.body || '',
           description: item.description || '',
           lang,
+          region,
           slug: item.slug,
         });
       }

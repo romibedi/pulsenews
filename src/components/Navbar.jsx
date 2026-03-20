@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { CATEGORIES } from '../api/newsApi';
 import { useTheme } from '../contexts/ThemeContext';
 import { useBookmarks } from '../contexts/BookmarkContext';
+import useAudio from '../contexts/AudioContext';
 import useLanguage from '../hooks/useLanguage';
 import useRegion from '../hooks/useRegion';
 import LanguageSelector from './LanguageSelector';
@@ -14,6 +15,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
   const { bookmarks } = useBookmarks();
+  const { autoplay, toggleAutoplay } = useAudio();
   const { t } = useLanguage();
   const { region, regionInfo } = useRegion();
 
@@ -98,6 +100,31 @@ export default function Navbar() {
             <div className="hidden md:block">
               <LanguageSelector />
             </div>
+
+            {/* Autoplay toggle */}
+            <button
+              onClick={toggleAutoplay}
+              className={`p-2 rounded-lg transition-colors ${
+                autoplay
+                  ? 'text-[#e05d44] dark:text-[#e87461] bg-[#fef0ed] dark:bg-[#e87461]/10'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg)]'
+              }`}
+              title={autoplay ? 'Autoplay is on — click to turn off' : 'Autoplay is off — click to turn on'}
+            >
+              {autoplay ? (
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                </svg>
+              ) : (
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                  <line x1="23" y1="9" x2="17" y2="15" />
+                  <line x1="17" y1="9" x2="23" y2="15" />
+                </svg>
+              )}
+            </button>
 
             {/* Dark mode toggle - desktop */}
             <button
