@@ -741,11 +741,43 @@ function Wrapper({ article, children }) {
   );
 }
 
-export default function NewsCard({ article, featured = false }) {
+export default function NewsCard({ article, featured = false, compact = false }) {
   const sourceBadgeColor = article.source ? getSourceColor(article.source) : getSourceColor(article.author);
   const readTime = estimateReadingTime(article.body || article.description);
 
   const placeholder = getArticlePlaceholder(article);
+
+  if (compact) {
+    return (
+      <Wrapper article={article}>
+        <div className="flex gap-3 rounded-xl overflow-hidden card-hover border border-[var(--border)] bg-[var(--surface)] h-full shadow-sm hover:shadow-md p-2.5">
+          <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden">
+            <img
+              src={article.image || placeholder}
+              alt={article.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
+              onError={(e) => { e.target.onerror = null; e.target.src = placeholder; }}
+            />
+          </div>
+          <div className="flex-1 min-w-0 flex flex-col justify-center py-0.5">
+            <div className="flex items-center gap-1.5 mb-1">
+              {article.source && (
+                <span className={`px-1.5 py-0.5 text-[9px] font-semibold rounded-full ${sourceBadgeColor}`}>
+                  {article.source}
+                </span>
+              )}
+              <span className="text-[9px] text-[var(--text-muted)]">{readTime}m</span>
+            </div>
+            <h3 className="text-sm font-medium text-[var(--text)] line-clamp-2 group-hover:text-[#e05d44] dark:group-hover:text-[#e87461] transition-colors leading-snug" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>
+              {article.title}
+            </h3>
+            <p className="text-[11px] text-[var(--text-muted)] mt-1 truncate">{article.author} · {timeAgo(article.date)}</p>
+          </div>
+        </div>
+      </Wrapper>
+    );
+  }
 
   if (featured) {
     return (

@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { fetchByCategory, CATEGORIES } from '../api/newsApi';
 import useRegion, { REGIONS } from '../hooks/useRegion';
 import useLanguage from '../hooks/useLanguage';
+import useIsMobile from '../hooks/useIsMobile';
 import useAudio from '../contexts/AudioContext';
 import NewsCard from '../components/NewsCard';
 import Loader from '../components/Loader';
@@ -115,6 +116,7 @@ export default function Category() {
   const { region, regionInfo } = useRegion();
   const { lang } = useLanguage();
   const { playArticle, addToQueue } = useAudio();
+  const isMobile = useIsMobile();
   const [articles, setArticles] = useState([]);
   const [langArticles, setLangArticles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -273,7 +275,7 @@ export default function Category() {
 
           {/* ── Audio briefing ─────────────────────────────────────── */}
           {displayArticles.length >= 3 && (
-            <div className="bg-gradient-to-r from-[#fef0ed] to-[#fef8f6] dark:from-[#e87461]/10 dark:to-[#e87461]/5 rounded-2xl p-5 flex items-center gap-4 border border-[#e05d44]/10 dark:border-[#e87461]/20">
+            <div className="bg-gradient-to-r from-[#fef0ed] to-[#fef8f6] dark:from-[#e87461]/10 dark:to-[#e87461]/5 rounded-2xl p-3 sm:p-5 flex items-center gap-3 sm:gap-4 border border-[#e05d44]/10 dark:border-[#e87461]/20">
               <button
                 onClick={() => {
                   playArticle({
@@ -284,13 +286,13 @@ export default function Category() {
                     date: new Date().toISOString(),
                   });
                 }}
-                className="shrink-0 w-12 h-12 bg-[#e05d44] dark:bg-[#e87461] text-white rounded-full flex items-center justify-center hover:bg-[#c94e38] transition-colors shadow-md"
+                className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-[#e05d44] dark:bg-[#e87461] text-white rounded-full flex items-center justify-center hover:bg-[#c94e38] transition-colors shadow-md"
               >
-                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" /></svg>
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" /></svg>
               </button>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-[#e05d44] dark:text-[#e87461]">Today's {catMeta.title} Briefing</p>
-                <p className="text-xs text-[var(--text-muted)] mt-0.5">Listen to a 60-second audio summary of the top stories</p>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5 hidden sm:block">Listen to a 60-second audio summary of the top stories</p>
               </div>
               <button
                 onClick={() => {
@@ -303,7 +305,7 @@ export default function Category() {
                   });
                   displayArticles.slice(0, 5).forEach((a) => addToQueue(a));
                 }}
-                className="shrink-0 text-xs text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors whitespace-nowrap"
+                className="shrink-0 text-xs text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors whitespace-nowrap hidden sm:block"
               >
                 + Queue all
               </button>
@@ -325,12 +327,12 @@ export default function Category() {
               breaks.push({ type: 'pullquote', key: 'pullquote' });
             }
 
-            // Related topics strip (single card, not a 3-col row)
+            // Related topics strip
             if (gridArticles.length > 3) {
               breaks.push({ type: 'related', key: 'related' });
             }
 
-            // Sources + Trending chips
+            // Sources chips
             if (sources.length > 0) {
               breaks.push({ type: 'sources', key: 'sources' });
             }
@@ -348,37 +350,36 @@ export default function Category() {
             // Explore links
             breaks.push({ type: 'explore', key: 'explore' });
 
-            // Split articles into chunks of 3 (one grid row each)
+            // Mobile: chunks of 3 articles, break every 1 chunk (every 3 articles)
+            // Desktop: chunks of 3 articles, break every 2 chunks (every 6 articles)
             const CHUNK_SIZE = 3;
+            const BREAK_INTERVAL = isMobile ? 1 : 2;
+            const MID_FEATURE_INTERVAL = isMobile ? 3 : 4;
             const chunks = [];
             for (let i = 0; i < gridArticles.length; i += CHUNK_SIZE) {
               chunks.push(gridArticles.slice(i, i + CHUNK_SIZE));
             }
 
-            // Interleave: 2 grid chunks, 1 break, 2 grid chunks, 1 break, ...
-            // First mid-feature at chunk 4 (article ~13), then every 4 chunks
             const elements = [];
             let breakIdx = 0;
-            let midFeatureCount = 0;
 
             chunks.forEach((chunk, ci) => {
-              // Mid-story wide feature every 4 chunks (starting at chunk 4)
-              if (ci > 0 && ci % 4 === 0 && chunk[0]) {
-                midFeatureCount++;
+              // Mid-story wide feature at intervals
+              if (ci > 0 && ci % MID_FEATURE_INTERVAL === 0 && chunk[0]) {
                 const a = chunk[0];
                 const rest = chunk.slice(1);
                 elements.push(
                   <div key={`mid-${a.id}`} className="animate-fade-in">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-0 bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
-                      {a.image && <img src={a.image} alt="" className="w-full h-56 md:h-full object-cover" loading="lazy" />}
-                      <div className="p-6 flex flex-col justify-center">
+                      {a.image && <img src={a.image} alt="" className="w-full h-40 sm:h-56 md:h-full object-cover" loading="lazy" />}
+                      <div className="p-4 sm:p-6 flex flex-col justify-center">
                         <span className="text-[10px] font-semibold text-[#e05d44] dark:text-[#e87461] uppercase tracking-wider mb-2">Featured</span>
                         <Link
                           to={a.slug ? `/news/${a.slug}` : `/article/${encodeURIComponent(a.id)}`}
-                          className="text-xl font-medium text-[var(--text)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline leading-snug"
+                          className="text-lg sm:text-xl font-medium text-[var(--text)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline leading-snug"
                           style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
                         >{a.title}</Link>
-                        <p className="text-sm text-[var(--text-muted)] mt-2 line-clamp-3 leading-relaxed">
+                        <p className="text-sm text-[var(--text-muted)] mt-2 line-clamp-2 sm:line-clamp-3 leading-relaxed">
                           {(a.description || '').replace(/<[^>]*>/g, '').slice(0, 250)}
                         </p>
                         <p className="text-xs text-[var(--text-muted)] mt-3">{a.source}{a.date ? ` · ${timeAgo(a.date)}` : ''}</p>
@@ -386,18 +387,31 @@ export default function Category() {
                     </div>
                   </div>
                 );
-                // Render remaining articles from this chunk
+                // Remaining articles from this chunk
                 if (rest.length > 0) {
                   elements.push(
-                    <div key={`chunk-rest-${ci}`} className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div key={`chunk-rest-${ci}`} className={isMobile ? 'space-y-3' : 'grid grid-cols-1 sm:grid-cols-2 gap-5'}>
                       {rest.map((article) => (
-                        <div key={article.id} className="animate-fade-in h-full"><NewsCard article={article} /></div>
+                        <div key={article.id} className="animate-fade-in h-full">
+                          <NewsCard article={article} compact={isMobile} />
+                        </div>
                       ))}
                     </div>
                   );
                 }
+              } else if (isMobile) {
+                // Mobile: first article full-width, rest compact horizontal
+                elements.push(
+                  <div key={`chunk-${ci}`} className="space-y-3">
+                    {chunk.map((article, i) => (
+                      <div key={article.id} className="animate-fade-in" style={ci === 0 ? { animationDelay: `${Math.min(i, 3) * 60}ms` } : undefined}>
+                        <NewsCard article={article} compact={i > 0} />
+                      </div>
+                    ))}
+                  </div>
+                );
               } else {
-                // Normal 3-col grid chunk
+                // Desktop: normal 3-col grid chunk
                 elements.push(
                   <div key={`chunk-${ci}`} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     {chunk.map((article, i) => (
@@ -409,10 +423,9 @@ export default function Category() {
                 );
               }
 
-              // Insert a break after every 2 grid chunks (if we have breaks left)
-              if ((ci + 1) % 2 === 0 && breakIdx < breaks.length) {
-                const br = breaks[breakIdx++];
-                elements.push(renderBreak(br));
+              // Insert a break at the configured interval
+              if ((ci + 1) % BREAK_INTERVAL === 0 && breakIdx < breaks.length) {
+                elements.push(renderBreak(breaks[breakIdx++]));
               }
             });
 
@@ -426,16 +439,16 @@ export default function Category() {
               switch (br.type) {
                 case 'cluster':
                   return (
-                    <div key={br.key} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
-                      <div className="flex items-center gap-2 mb-4">
+                    <div key={br.key} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 sm:p-5">
+                      <div className="flex items-center gap-2 mb-3 sm:mb-4">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#e05d44] dark:bg-[#e87461]" />
-                        <h3 className="text-sm font-semibold text-[var(--text)] uppercase tracking-wider">Trending: {br.cluster.topic}</h3>
-                        <span className="text-xs text-[var(--text-muted)]">{br.cluster.articles.length} stories</span>
+                        <h3 className="text-xs sm:text-sm font-semibold text-[var(--text)] uppercase tracking-wider">Trending: {br.cluster.topic}</h3>
+                        <span className="text-[10px] sm:text-xs text-[var(--text-muted)]">{br.cluster.articles.length} stories</span>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                         {br.cluster.articles.map((article) => (
                           <Link key={article.id} to={article.slug ? `/news/${article.slug}` : `/article/${encodeURIComponent(article.id)}`} className="flex gap-3 p-2 rounded-lg hover:bg-[var(--bg)] transition-colors no-underline group">
-                            {article.image && <img src={article.image} alt="" className="w-14 h-14 rounded-lg object-cover shrink-0" loading="lazy" />}
+                            {article.image && <img src={article.image} alt="" className="w-16 h-16 sm:w-14 sm:h-14 rounded-lg object-cover shrink-0" loading="lazy" />}
                             <div className="flex-1 min-w-0">
                               <p className="text-sm text-[var(--text)] group-hover:text-[#e05d44] dark:group-hover:text-[#e87461] transition-colors line-clamp-2 leading-snug font-medium">{article.title}</p>
                               <p className="text-[10px] text-[var(--text-muted)] mt-1">{article.source}</p>
@@ -448,15 +461,15 @@ export default function Category() {
 
                 case 'pullquote':
                   return (
-                    <div key={br.key} className="relative py-4">
+                    <div key={br.key} className="relative py-3 sm:py-4">
                       <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[var(--border)]" /></div>
-                      <div className="relative bg-[var(--bg)] mx-auto max-w-2xl px-6 py-5 rounded-xl border border-[var(--border)]">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-[#e05d44]/20 dark:text-[#e87461]/20 mb-2">
+                      <div className="relative bg-[var(--bg)] mx-auto max-w-2xl px-4 sm:px-6 py-4 sm:py-5 rounded-xl border border-[var(--border)]">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-[#e05d44]/20 dark:text-[#e87461]/20 mb-2">
                           <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
                         </svg>
-                        <p className="text-base text-[var(--text)] leading-relaxed italic" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>{pullquote}</p>
-                        <p className="text-xs text-[var(--text-muted)] mt-2">
-                          — {pullquoteArticle.source || 'Source'}{pullquoteArticle.title ? `, "${pullquoteArticle.title.slice(0, 60)}${pullquoteArticle.title.length > 60 ? '...' : ''}"` : ''}
+                        <p className="text-sm sm:text-base text-[var(--text)] leading-relaxed italic" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>{pullquote}</p>
+                        <p className="text-[10px] sm:text-xs text-[var(--text-muted)] mt-2">
+                          — {pullquoteArticle.source || 'Source'}{pullquoteArticle.title ? `, "${pullquoteArticle.title.slice(0, 50)}${pullquoteArticle.title.length > 50 ? '...' : ''}"` : ''}
                         </p>
                       </div>
                     </div>
@@ -464,12 +477,12 @@ export default function Category() {
 
                 case 'related':
                   return (
-                    <div key={br.key} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
+                    <div key={br.key} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 sm:p-5">
                       <h4 className="text-xs font-semibold text-[var(--text)] uppercase tracking-wider mb-3">Related Topics</h4>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex gap-2 overflow-x-auto sm:overflow-visible sm:flex-wrap pb-1 sm:pb-0 -mx-1 px-1 scrollbar-hide">
                         {related.map((cat) => (
-                          <Link key={cat} to={`/category/${cat}`} className="flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] hover:border-[#e05d44]/30 dark:hover:border-[#e87461]/30 hover:bg-[var(--bg)] transition-colors no-underline group">
-                            <span className="text-sm text-[var(--text)] group-hover:text-[#e05d44] dark:group-hover:text-[#e87461] transition-colors capitalize">{cat}</span>
+                          <Link key={cat} to={`/category/${cat}`} className="flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] hover:border-[#e05d44]/30 dark:hover:border-[#e87461]/30 hover:bg-[var(--bg)] transition-colors no-underline group shrink-0">
+                            <span className="text-sm text-[var(--text)] group-hover:text-[#e05d44] dark:group-hover:text-[#e87461] transition-colors capitalize whitespace-nowrap">{cat}</span>
                             <svg className="w-3.5 h-3.5 text-[var(--text-muted)] group-hover:text-[#e05d44] dark:group-hover:text-[#e87461]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
                           </Link>
                         ))}
@@ -479,11 +492,11 @@ export default function Category() {
 
                 case 'sources':
                   return (
-                    <div key={br.key} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
+                    <div key={br.key} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 sm:p-5">
                       <h4 className="text-xs font-semibold text-[var(--text)] uppercase tracking-wider mb-3">Sources</h4>
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex gap-1.5 overflow-x-auto sm:overflow-visible sm:flex-wrap pb-1 sm:pb-0 -mx-1 px-1 scrollbar-hide">
                         {sources.map((s) => (
-                          <span key={s} className="px-3 py-1.5 text-xs bg-[var(--bg)] rounded-full text-[var(--text-muted)] border border-[var(--border)]">{s}</span>
+                          <span key={s} className="px-3 py-1.5 text-xs bg-[var(--bg)] rounded-full text-[var(--text-muted)] border border-[var(--border)] shrink-0 whitespace-nowrap">{s}</span>
                         ))}
                       </div>
                     </div>
@@ -491,11 +504,11 @@ export default function Category() {
 
                 case 'regions':
                   return (
-                    <div key={br.key} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
+                    <div key={br.key} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 sm:p-5">
                       <h4 className="text-xs font-semibold text-[var(--text)] uppercase tracking-wider mb-3">Explore Regions</h4>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex gap-2 overflow-x-auto sm:overflow-visible sm:flex-wrap pb-1 sm:pb-0 -mx-1 px-1 scrollbar-hide">
                         {Object.entries(REGIONS).map(([key, info]) => (
-                          <Link key={key} to={`/region/${key}`} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs no-underline transition-colors ${key === region ? 'bg-[#fef0ed] dark:bg-[#e87461]/10 text-[#e05d44] dark:text-[#e87461] font-semibold' : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg)]'}`}>
+                          <Link key={key} to={`/region/${key}`} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs no-underline transition-colors shrink-0 whitespace-nowrap ${key === region ? 'bg-[#fef0ed] dark:bg-[#e87461]/10 text-[#e05d44] dark:text-[#e87461] font-semibold' : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg)]'}`}>
                             <span>{info.flag}</span><span>{info.label}</span>
                           </Link>
                         ))}
@@ -508,19 +521,19 @@ export default function Category() {
 
                 case 'explore':
                   return (
-                    <div key={br.key} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
-                      <div className="flex flex-wrap gap-3">
+                    <div key={br.key} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 sm:p-5">
+                      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
                         {[
                           { to: '/archive', label: 'Archive', desc: 'Browse by date', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
                           { to: '/bookmarks', label: 'Bookmarks', desc: 'Saved articles', icon: 'M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z' },
                           { to: '/feeds', label: 'Custom Feeds', desc: 'Your RSS sources', icon: 'M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 100-2 1 1 0 000 2z' },
                           { to: '/about', label: 'About', desc: 'PulseNewsToday', icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
                         ].map((link) => (
-                          <Link key={link.to} to={link.to} className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-[var(--border)] hover:bg-[var(--bg)] hover:border-[#e05d44]/20 dark:hover:border-[#e87461]/20 transition-colors no-underline group">
+                          <Link key={link.to} to={link.to} className="flex items-center gap-2 sm:gap-2.5 px-3 sm:px-4 py-2.5 rounded-xl border border-[var(--border)] hover:bg-[var(--bg)] hover:border-[#e05d44]/20 dark:hover:border-[#e87461]/20 transition-colors no-underline group">
                             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" className="text-[var(--text-muted)] group-hover:text-[#e05d44] dark:group-hover:text-[#e87461] shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d={link.icon} /></svg>
-                            <div>
-                              <p className="text-sm text-[var(--text)] group-hover:text-[#e05d44] dark:group-hover:text-[#e87461] transition-colors leading-tight">{link.label}</p>
-                              <p className="text-[10px] text-[var(--text-muted)] leading-tight">{link.desc}</p>
+                            <div className="min-w-0">
+                              <p className="text-xs sm:text-sm text-[var(--text)] group-hover:text-[#e05d44] dark:group-hover:text-[#e87461] transition-colors leading-tight truncate">{link.label}</p>
+                              <p className="text-[9px] sm:text-[10px] text-[var(--text-muted)] leading-tight truncate">{link.desc}</p>
                             </div>
                           </Link>
                         ))}
