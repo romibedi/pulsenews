@@ -1,7 +1,8 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useBookmarks } from '../contexts/BookmarkContext';
+import useCity from '../hooks/useCity';
 
-const TABS = [
+const BASE_TABS = [
   {
     key: 'home',
     label: 'Home',
@@ -12,6 +13,18 @@ const TABS = [
         <polyline points="9 22 9 12 15 12 15 22" />
       </svg>
     ),
+  },
+  {
+    key: 'local',
+    label: 'Local',
+    path: '/city/',
+    icon: (
+      <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+        <circle cx="12" cy="10" r="3" />
+      </svg>
+    ),
+    requiresCity: true,
   },
   {
     key: 'explore',
@@ -62,9 +75,13 @@ export default function BottomTabBar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { bookmarks } = useBookmarks();
+  const { city: detectedCity } = useCity();
+
+  const TABS = BASE_TABS.filter((tab) => !tab.requiresCity || detectedCity);
 
   const isActive = (tab) => {
     if (tab.key === 'home') return location.pathname === '/';
+    if (tab.key === 'local') return location.pathname.startsWith('/city/');
     if (tab.key === 'explore') return location.pathname === '/explore' || location.pathname.startsWith('/category/') || location.pathname.startsWith('/region/');
     return location.pathname === tab.path || location.pathname.startsWith(tab.path + '/');
   };
@@ -74,7 +91,8 @@ export default function BottomTabBar() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-    navigate(tab.path);
+    const path = tab.key === 'local' ? `/city/${detectedCity}` : tab.path;
+    navigate(path);
   };
 
   return (

@@ -510,10 +510,9 @@ export const CITY_FEEDS = {
     label: 'Delhi', region: 'india', country: 'IN',
     lang: 'hi', lat: 28.6139, lng: 77.209,
     feeds: [
-      { url: 'https://news.google.com/rss/headlines/section/geo/Delhi?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Delhi' },
-      { url: 'https://news.google.com/rss/headlines/section/geo/Delhi?hl=hi-IN&gl=IN&ceid=IN:hi', source: 'Google News Delhi Hindi' },
-      { url: 'https://timesofindia.indiatimes.com/rssfeeds/2951551.cms', source: 'TOI Delhi' },
-      { url: 'https://www.hindustantimes.com/feeds/rss/delhi-news/rssfeed.xml', source: 'HT Delhi' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/New%20Delhi?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Delhi' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/New%20Delhi?hl=hi-IN&gl=IN&ceid=IN:hi', source: 'Google News Delhi Hindi' },
+      { url: 'https://www.hindustantimes.com/feeds/rss/cities/delhi-news/rssfeed.xml', source: 'HT Delhi' },
     ],
   },
   bangalore: {
