@@ -520,7 +520,7 @@ export const CITY_FEEDS = {
     lang: 'kn', lat: 12.9716, lng: 77.5946,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Bangalore?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Bangalore' },
-      { url: 'https://news.google.com/rss?hl=kn-IN&gl=IN&ceid=IN:kn', source: 'Google News Kannada' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Bengaluru?hl=kn-IN&gl=IN&ceid=IN:kn', source: 'Google News Bangalore Kannada' },
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/3214351.cms', source: 'TOI Bangalore' },
     ],
   },
@@ -643,7 +643,7 @@ export const CITY_FEEDS = {
     lang: 'as', lat: 26.1445, lng: 91.7362,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Guwahati?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Guwahati' },
-      { url: 'https://news.google.com/rss?hl=as-IN&gl=IN&ceid=IN:as', source: 'Google News Assamese' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Guwahati?hl=as-IN&gl=IN&ceid=IN:as', source: 'Google News Guwahati Assamese' },
     ],
   },
   indore: {
