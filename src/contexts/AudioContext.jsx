@@ -123,7 +123,7 @@ export function AudioProvider({ children }) {
     const pregenUrl = article.slug ? `/audio/${lang || 'en'}/${article.slug}.mp3` : null;
     const encoded = encodeURIComponent(text);
     const region = getRegion();
-    const regionParam = lang === 'en' && region ? `&region=${region}` : '';
+    const regionParam = region ? `&region=${region}` : '';
     const apiUrl = encoded.length < 8000 ? `/api/tts?text=${encoded}&lang=${lang}${regionParam}` : null;
     return { url: pregenUrl, fallbackUrl: apiUrl, text, region };
   }, []);
@@ -328,9 +328,19 @@ export function AudioProvider({ children }) {
     setTimeout(() => {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = speed;
-      utterance.lang = lang;
+      // Use region-aware BCP-47 locale for better voice matching
+      const region = getRegion();
+      const localeMap = {
+        'en:india': 'en-IN', 'en:us': 'en-US', 'en:uk': 'en-GB', 'en:australia': 'en-AU',
+        'es:latam': 'es-MX', 'es:us': 'es-MX', 'pt:latam': 'pt-BR', 'pt:europe': 'pt-PT',
+        'ar:middle-east': 'ar-SA', 'ar:africa': 'ar-EG', 'zh:asia': 'zh-CN',
+      };
+      const locale = localeMap[`${lang}:${region}`] || lang;
+      utterance.lang = locale;
       const voices = speechSynthesis.getVoices();
-      const matching = voices.filter((v) => v.lang.startsWith(lang));
+      // Prefer exact locale match first, then language prefix
+      const exactMatch = voices.filter((v) => v.lang === locale || v.lang.replace('_', '-') === locale);
+      const matching = exactMatch.length > 0 ? exactMatch : voices.filter((v) => v.lang.startsWith(lang));
       const preferred = matching.find((v) => /google|neural|enhanced|samantha/i.test(v.name));
       if (preferred || matching[0]) utterance.voice = preferred || matching[0];
       utterance.onstart = () => setLoading(false);

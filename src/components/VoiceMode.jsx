@@ -52,7 +52,19 @@ export default function VoiceMode() {
     setTranscript('');
 
     const recognition = new SpeechRecognition();
-    recognition.lang = getLang() === 'en' ? 'en-US' : getLang();
+    // Map region to BCP-47 locale for better speech recognition accuracy
+    const speechLangMap = {
+      'en:india': 'en-IN', 'en:us': 'en-US', 'en:uk': 'en-GB', 'en:australia': 'en-AU',
+      'es:latam': 'es-MX', 'es:us': 'es-MX', 'es:europe': 'es-ES',
+      'pt:latam': 'pt-BR', 'pt:europe': 'pt-PT',
+      'fr:africa': 'fr-FR', 'fr:europe': 'fr-FR',
+      'ar:middle-east': 'ar-SA', 'ar:africa': 'ar-EG',
+      'zh:asia': 'zh-CN',
+    };
+    const currentRegion = getRegion();
+    const langKey = `${getLang()}:${currentRegion}`;
+    const defaultLangMap = { en: 'en-US', hi: 'hi-IN', ta: 'ta-IN', te: 'te-IN', bn: 'bn-IN', mr: 'mr-IN', ur: 'ur-PK', ar: 'ar-SA', fr: 'fr-FR', de: 'de-DE', es: 'es-ES', pt: 'pt-BR', zh: 'zh-CN', ja: 'ja-JP', ko: 'ko-KR', sw: 'sw-KE' };
+    recognition.lang = speechLangMap[langKey] || defaultLangMap[getLang()] || getLang();
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
     recognitionRef.current = recognition;

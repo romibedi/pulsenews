@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 import { CATEGORIES } from '../api/newsApi';
+import useLanguage from '../hooks/useLanguage';
 
 export default function Footer() {
+  const { t, tCat } = useLanguage();
   return (
     <footer className="border-t border-[var(--border)] mt-auto bg-[var(--surface)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
@@ -26,7 +28,7 @@ export default function Footer() {
                   to={`/category/${cat}`}
                   className="text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors capitalize no-underline"
                 >
-                  {cat}
+                  {tCat(cat)}
                 </Link>
               ))}
             </div>
@@ -37,26 +39,19 @@ export default function Footer() {
               Links
             </h4>
             <div className="space-y-1">
-              <Link to="/" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">Home</Link>
-              <Link to="/bookmarks" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">Bookmarks</Link>
-              <Link to="/region/india" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">Regions</Link>
-              <Link to="/archive" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">Archive</Link>
-              <Link to="/feeds" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">Custom Feeds</Link>
-              <Link to="/about" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">About</Link>
+              <Link to="/" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">{t('backHome')}</Link>
+              <Link to="/bookmarks" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">{t('bookmarks')}</Link>
+              <Link to="/region/india" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">{t('regions')}</Link>
+              <Link to="/archive" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">{t('archive')}</Link>
+              <Link to="/feeds" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">{t('feeds')}</Link>
+              <Link to="/about" className="block text-sm text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline">{t('about')}</Link>
             </div>
           </div>
         </div>
 
         <div className="border-t border-[var(--border)] mt-8 pt-6 text-center">
           <p className="text-xs text-[var(--text-muted)]">
-            &copy; 2026 PulseNewsToday. A product of{' '}
-            <a href="mailto:info@veyrictech.com" className="hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline text-[var(--text-muted)] font-medium">VeyricTech</a>.
-            AI-powered news from 99+ sources across 9 regions and 16 languages.
-          </p>
-          <p className="text-xs text-[var(--text-muted)] mt-1">
-            <a href="https://www.pulsenewstoday.com" className="hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline text-[var(--text-muted)]">www.pulsenewstoday.com</a>
-            <span className="mx-2">&middot;</span>
-            <a href="mailto:info@veyrictech.com" className="hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline text-[var(--text-muted)]">info@veyrictech.com</a>
+            &copy; 2026 PulseNewsToday. A product of VeyricTech.
           </p>
         </div>
       </div>
