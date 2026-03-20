@@ -94,17 +94,29 @@ resource "aws_iam_role_policy" "ingest_lambda_dynamo" {
   })
 }
 
-# S3 write for TTS audio uploads
+# S3 read/write for TTS audio uploads + sitemap generation
 resource "aws_iam_role_policy" "ingest_lambda_s3" {
-  name = "s3-audio-write"
+  name = "s3-audio-sitemap"
   role = aws_iam_role.ingest_lambda.id
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect   = "Allow"
-      Action   = ["s3:PutObject", "s3:HeadObject"]
-      Resource = "${aws_s3_bucket.audio.arn}/*"
-    }]
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["s3:PutObject", "s3:HeadObject", "s3:GetObject"]
+        Resource = "${aws_s3_bucket.audio.arn}/*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["s3:ListBucket"]
+        Resource = aws_s3_bucket.audio.arn
+        Condition = {
+          StringLike = {
+            "s3:prefix" = ["sitemaps/*"]
+          }
+        }
+      }
+    ]
   })
 }

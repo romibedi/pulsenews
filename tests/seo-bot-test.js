@@ -139,8 +139,10 @@ async function testSitemap() {
   assert(res.status === 200, 'Index returns 200');
   assert(res.headers.get('content-type').includes('xml'), 'Content-Type is XML');
   assert(xml.includes('<sitemapindex'), 'Is a sitemap index');
-  assert(xml.includes('sitemap-static.xml'), 'References static sitemap');
-  assert(xml.includes('sitemap-news.xml'), 'References news sitemap');
+  assert(xml.includes('static.xml'), 'References static sitemap');
+  assert(xml.includes('news.xml'), 'References news sitemap');
+  // Daily sitemaps: sitemaps/daily/{date}.xml
+  assert(xml.includes('/sitemaps/daily/'), 'References daily article sitemaps');
 
   // Static sitemap
   console.log('\n\x1b[1m== Static Sitemap ==\x1b[0m');
@@ -175,6 +177,20 @@ async function testSitemap() {
 
   const urlCount = (newsXml.match(/<url>/g) || []).length;
   assert(urlCount >= 20, `Has ${urlCount} article URLs (expected 20+)`);
+
+  // Daily articles sitemap (today)
+  console.log('\n\x1b[1m== Daily Articles Sitemap ==\x1b[0m');
+  const today = new Date().toISOString().slice(0, 10);
+  const artRes = await fetch(`${BASE_URL}/api/sitemap-articles-${today}.xml`);
+  const artXml = await artRes.text();
+
+  assert(artRes.status === 200, `Daily sitemap for ${today} returns 200`);
+  assert(artXml.includes('xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"'), 'Has Image namespace');
+  assert(artXml.includes('/news/'), 'Includes article URLs');
+
+  const artCount = (artXml.match(/<url>/g) || []).length;
+  console.log(`  Total articles for ${today}: ${artCount}`);
+  assert(artCount >= 10, `Has ${artCount} article URLs (expected 10+)`);
 }
 
 async function testRobotsTxt() {

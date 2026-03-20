@@ -133,6 +133,17 @@ resource "aws_cloudfront_distribution" "website" {
     compress               = false # audio/mpeg doesn't benefit from compression
   }
 
+  # Pre-built sitemaps: served from S3 with 1h cache
+  ordered_cache_behavior {
+    path_pattern           = "/sitemaps/*"
+    target_origin_id       = "audio-s3"
+    viewer_protocol_policy = "redirect-to-https"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    cache_policy_id        = aws_cloudfront_cache_policy.dynamic.id
+    compress               = true
+  }
+
   # Static assets: long cache (Vite content-hashes filenames)
   ordered_cache_behavior {
     path_pattern           = "/assets/*"

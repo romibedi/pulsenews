@@ -12,6 +12,7 @@ import { parseRssFeed, fetchOgImage } from '../rss.js';
 import { articleExists, batchWriteArticles } from '../db.js';
 import { submitUrls, articleUrl, pingSitemap } from '../indexnow.js';
 import { generateBatch } from '../tts/generate.js';
+import { updateSitemaps } from '../sitemap/generate.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -168,6 +169,7 @@ export async function handler(event) {
   let feedErrors = 0;
   const newArticleUrls = []; // Collect URLs for IndexNow submission
   const newArticlesForTts = []; // Collect articles for TTS generation
+  const newArticlesForSitemap = []; // Collect articles for sitemap generation
 
   // 2. Fetch all feeds concurrently (max 10 at a time)
   const feedEntries = [...feedMap.entries()];
@@ -320,6 +322,18 @@ export async function handler(event) {
               region: ttsCtx.region,
               slug,
             });
+            newArticlesForSitemap.push({
+              articleId: article.id,
+              slug,
+              title: article.title,
+              description: article.description,
+              image,
+              date,
+              source,
+              category: primaryCtx.category,
+              lang: primaryCtx.lang,
+              mood,
+            });
           } catch (err) {
             console.warn(
               `[ingest] Article processing failed: ${article.url} - ${err.message}`,
@@ -353,6 +367,13 @@ export async function handler(event) {
     } catch (err) {
       console.warn(`[ingest] TTS generation failed: ${err.message}`);
     }
+  }
+
+  // Update S3 sitemaps (daily + news + index)
+  try {
+    await updateSitemaps(newArticlesForSitemap);
+  } catch (err) {
+    console.warn(`[ingest] Sitemap generation failed: ${err.message}`);
   }
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

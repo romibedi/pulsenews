@@ -242,3 +242,36 @@ export async function querySitemapEntries(limit = 1000) {
   );
   return cleanItems(result.Items);
 }
+
+/**
+ * Query ALL sitemap entries — paginates through every DynamoDB page.
+ * Returns chunked arrays of up to `chunkSize` items for splitting into
+ * multiple sitemap files (50k URL limit per file).
+ */
+export async function querySitemapAll(chunkSize = 45000) {
+  const items = [];
+  let lastKey = undefined;
+
+  do {
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: 'PK = :pk',
+        ExpressionAttributeValues: { ':pk': 'SITEMAP' },
+        ScanIndexForward: false,
+        ...(lastKey && { ExclusiveStartKey: lastKey }),
+      }),
+    );
+    items.push(...(result.Items || []));
+    lastKey = result.LastEvaluatedKey;
+  } while (lastKey);
+
+  const cleaned = cleanItems(items);
+
+  // Split into chunks for sitemap files (max 50k URLs per file)
+  const chunks = [];
+  for (let i = 0; i < cleaned.length; i += chunkSize) {
+    chunks.push(cleaned.slice(i, i + chunkSize));
+  }
+  return chunks;
+}

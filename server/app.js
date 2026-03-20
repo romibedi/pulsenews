@@ -18,7 +18,6 @@ import {
   queryByRegionCategory,
   queryByLang,
   queryByDate,
-  querySitemapEntries,
 } from './db.js';
 import { getClient as getSearchClient } from './search/client.js';
 import { indexName, supportedLanguages } from './search/mappings.js';
@@ -670,105 +669,50 @@ app.get('/api/threads/:id', async (req, res) => {
   }
 });
 
-// Sitemap index — splits into news sitemap (recent articles) and static sitemap (pages)
-app.get('/api/sitemap.xml', (req, res) => {
-  const baseUrl = process.env.SITE_URL || 'https://pulsenewstoday.com';
-  const now = new Date().toISOString();
-  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-  xml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-  xml += `  <sitemap>\n    <loc>${baseUrl}/api/sitemap-static.xml</loc>\n    <lastmod>${now.slice(0, 10)}</lastmod>\n  </sitemap>\n`;
-  xml += `  <sitemap>\n    <loc>${baseUrl}/api/sitemap-news.xml</loc>\n    <lastmod>${now.slice(0, 10)}</lastmod>\n  </sitemap>\n`;
-  xml += '</sitemapindex>';
-  res.set('Content-Type', 'application/xml');
-  res.set('Cache-Control', 's-maxage=3600, stale-while-revalidate=7200');
-  res.send(xml);
-});
+// ---------------------------------------------------------------------------
+// Sitemaps — served from pre-built XML files in S3 (written during ingestion)
+// ---------------------------------------------------------------------------
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 
-// Static sitemap — homepage, categories, regions, static pages
-app.get('/api/sitemap-static.xml', (req, res) => {
-  const baseUrl = process.env.SITE_URL || 'https://pulsenewstoday.com';
-  const categories = ['world', 'technology', 'business', 'science', 'sport', 'culture', 'environment', 'politics', 'ai', 'entertainment', 'gaming', 'cricket', 'startups', 'space', 'crypto'];
-  const regions = ['india', 'uk', 'us', 'australia', 'middle-east', 'europe', 'africa', 'asia', 'latam'];
-  const staticPages = ['about', 'archive', 'search', 'explore', 'feeds', 'bookmarks'];
+const _sitemapS3 = new S3Client({ region: process.env.AWS_REGION || 'eu-west-1' });
+const _sitemapBucket = process.env.AUDIO_BUCKET || 'pulsenews-audio-prod';
 
-  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-
-  // Homepage
-  xml += `  <url>\n    <loc>${baseUrl}/</loc>\n    <changefreq>hourly</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
-
-  // Category pages
-  for (const cat of categories) {
-    xml += `  <url>\n    <loc>${baseUrl}/category/${cat}</loc>\n    <changefreq>hourly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
-  }
-
-  // Region pages
-  for (const r of regions) {
-    xml += `  <url>\n    <loc>${baseUrl}/region/${r}</loc>\n    <changefreq>hourly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
-  }
-
-  // Static pages
-  for (const page of staticPages) {
-    xml += `  <url>\n    <loc>${baseUrl}/${page}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.4</priority>\n  </url>\n`;
-  }
-
-  xml += '</urlset>';
-  res.set('Content-Type', 'application/xml');
-  res.set('Cache-Control', 's-maxage=86400, stale-while-revalidate=172800');
-  res.send(xml);
-});
-
-// News sitemap — recent articles with Google News + image metadata
-app.get('/api/sitemap-news.xml', async (req, res) => {
+async function serveSitemapFromS3(key, res) {
   try {
-    const entries = await querySitemapEntries(1000);
-    const baseUrl = process.env.SITE_URL || 'https://pulsenewstoday.com';
-    const escXml = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
-
-    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"';
-    xml += ' xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"';
-    xml += ' xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n';
-
-    for (const entry of entries) {
-      const loc = entry.slug ? `${baseUrl}/news/${entry.slug}` : `${baseUrl}/article/${encodeURIComponent(entry.id)}`;
-      const pubDate = entry.date || new Date().toISOString();
-      const lang = entry.lang || 'en';
-
-      // Build keywords from category + source
-      const keywords = [entry.category, entry.source, entry.mood].filter(Boolean).join(', ');
-
-      xml += `  <url>\n`;
-      xml += `    <loc>${escXml(loc)}</loc>\n`;
-      if (entry.date) xml += `    <lastmod>${entry.date.slice(0, 10)}</lastmod>\n`;
-      xml += `    <priority>0.6</priority>\n`;
-      xml += `    <news:news>\n`;
-      xml += `      <news:publication>\n`;
-      xml += `        <news:name>PulseNewsToday</news:name>\n`;
-      xml += `        <news:language>${escXml(lang)}</news:language>\n`;
-      xml += `      </news:publication>\n`;
-      xml += `      <news:publication_date>${escXml(pubDate)}</news:publication_date>\n`;
-      xml += `      <news:title>${escXml(entry.title || 'News')}</news:title>\n`;
-      if (keywords) xml += `      <news:keywords>${escXml(keywords)}</news:keywords>\n`;
-      xml += `    </news:news>\n`;
-
-      // Image metadata for Google Images
-      if (entry.image) {
-        xml += `    <image:image>\n`;
-        xml += `      <image:loc>${escXml(entry.image)}</image:loc>\n`;
-        xml += `      <image:title>${escXml(entry.title || 'News')}</image:title>\n`;
-        xml += `    </image:image>\n`;
-      }
-
-      xml += `  </url>\n`;
-    }
-    xml += '</urlset>';
+    const result = await _sitemapS3.send(
+      new GetObjectCommand({ Bucket: _sitemapBucket, Key: key }),
+    );
+    const xml = await result.Body.transformToString();
     res.set('Content-Type', 'application/xml');
     res.set('Cache-Control', 's-maxage=3600, stale-while-revalidate=7200');
     res.send(xml);
   } catch (err) {
+    if (err.name === 'NoSuchKey' || err.$metadata?.httpStatusCode === 404) {
+      return res.status(404).send('Sitemap not found');
+    }
     res.status(500).json({ error: err.message });
   }
+}
+
+app.get('/api/sitemap.xml', (req, res) => serveSitemapFromS3('sitemaps/index.xml', res));
+app.get('/api/sitemap-static.xml', (req, res) => serveSitemapFromS3('sitemaps/static.xml', res));
+app.get('/api/sitemap-news.xml', (req, res) => serveSitemapFromS3('sitemaps/news.xml', res));
+
+// Serve daily article sitemaps: /api/sitemap-articles-2026-03-20.xml → sitemaps/daily/2026-03-20.xml
+app.get('/api/sitemap-articles-:date.xml', (req, res) => {
+  const date = req.params.date;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).send('Invalid date');
+  serveSitemapFromS3(`sitemaps/daily/${date}.xml`, res);
+});
+
+// Also serve via /sitemaps/* path (for future CloudFront direct-to-S3 routing)
+app.get('/sitemaps/index.xml', (req, res) => serveSitemapFromS3('sitemaps/index.xml', res));
+app.get('/sitemaps/static.xml', (req, res) => serveSitemapFromS3('sitemaps/static.xml', res));
+app.get('/sitemaps/news.xml', (req, res) => serveSitemapFromS3('sitemaps/news.xml', res));
+app.get('/sitemaps/daily/:date.xml', (req, res) => {
+  const date = req.params.date;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).send('Invalid date');
+  serveSitemapFromS3(`sitemaps/daily/${date}.xml`, res);
 });
 
 // --- Full-text search via OpenSearch ---
@@ -897,7 +841,7 @@ app.get('/robots.txt', (req, res) => {
 User-agent: *
 Allow: /
 Disallow: /api/
-Allow: /api/sitemap.xml
+Allow: /api/sitemap*.xml
 
 # Search engine bots
 User-agent: Googlebot
@@ -906,18 +850,21 @@ Allow: /
 User-agent: Bingbot
 Allow: /
 
-# AI crawlers — allowed so our content gets cited
+# Block AI training crawlers
 User-agent: GPTBot
-Allow: /
+Disallow: /
 
 User-agent: ClaudeBot
-Allow: /
+Disallow: /
 
 User-agent: PerplexityBot
-Allow: /
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
 
 User-agent: Google-Extended
-Allow: /
+Disallow: /
 
 Sitemap: ${siteUrl}/api/sitemap.xml
 Sitemap: ${siteUrl}/api/sitemap-news.xml
@@ -936,7 +883,7 @@ PulseNewsToday aggregates breaking news from trusted sources including BBC, Guar
 
 ## Content
 - /news/{slug} — Individual news articles with full text
-- /category/{category} — Category pages (world, technology, business, science, sport, culture, environment, politics)
+- /category/{category} — Category pages (world, technology, business, science, sport, culture, environment, politics, ai, entertainment, gaming, cricket, startups, space, crypto)
 - /api/sitemap.xml — Full sitemap with all article URLs
 - /api/search?q={query}&lang={lang} — Search articles by keyword
 

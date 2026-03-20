@@ -24,6 +24,22 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+/** Strip HTML tags, decode entities, and collapse whitespace */
+function stripHtml(str) {
+  if (!str) return '';
+  return str
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&apos;/gi, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function escapeJsonLd(obj) {
   return JSON.stringify(obj).replace(/<\/script/gi, '<\\/script');
 }
@@ -89,13 +105,14 @@ export function renderArticlePage(article) {
   const canonicalUrl = article.slug
     ? `${SITE_URL}/news/${article.slug}`
     : `${SITE_URL}/article/${encodeURIComponent(article.id)}`;
-  const description = (article.description || article.title || '').slice(0, 160);
+  const cleanDesc = stripHtml(article.description || article.title || '');
+  const description = cleanDesc.slice(0, 160);
 
   const newsArticleLd = {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
-    "headline": article.title,
-    "description": description,
+    "headline": stripHtml(article.title),
+    "description": cleanDesc.slice(0, 200),
     "datePublished": article.date,
     "dateModified": article.date,
     "author": {
@@ -136,8 +153,9 @@ export function renderArticlePage(article) {
     article.section ? `<meta property="article:section" content="${escapeHtml(article.section)}">` : '',
   ].filter(Boolean).join('\n  ');
 
-  // Build semantic article body
-  const bodyParagraphs = (article.body || article.description || '')
+  // Build semantic article body — strip HTML from RSS content
+  const cleanBody = stripHtml(article.body || article.description || '');
+  const bodyParagraphs = cleanBody
     .split(/\n\n+/)
     .map((p) => p.trim())
     .filter((p) => p.length > 0);
@@ -155,7 +173,7 @@ export function renderArticlePage(article) {
       <time itemprop="datePublished" datetime="${escapeHtml(article.date || '')}">${article.date ? new Date(article.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}</time>
     </div>
     ${article.image ? `<img itemprop="image" src="${escapeHtml(article.image)}" alt="${escapeHtml(article.title)}" style="width:100%;border-radius:8px;margin-bottom:1em;">` : ''}
-    ${article.description ? `<p itemprop="description" style="font-size:1.1em;color:#555;border-left:3px solid #e05d44;padding-left:1em;margin-bottom:1em;">${escapeHtml(article.description)}</p>` : ''}
+    ${cleanDesc ? `<p itemprop="description" style="font-size:1.1em;color:#555;border-left:3px solid #e05d44;padding-left:1em;margin-bottom:1em;">${escapeHtml(cleanDesc.slice(0, 300))}</p>` : ''}
     <div itemprop="articleBody">
       ${bodyParagraphs.map((p) => `<p style="line-height:1.7;color:#333;margin-bottom:1em;">${escapeHtml(p)}</p>`).join('\n      ')}
     </div>
@@ -185,7 +203,7 @@ function renderArticleCard(article) {
     <article style="margin-bottom:1.5em;padding-bottom:1.5em;border-bottom:1px solid #eee;">
       ${article.image ? `<a href="${escapeHtml(href)}"><img src="${escapeHtml(article.image)}" alt="${escapeHtml(article.title)}" loading="lazy" style="width:100%;border-radius:8px;margin-bottom:0.5em;"></a>` : ''}
       <h3 style="margin:0 0 0.3em;"><a href="${escapeHtml(href)}" style="color:#111;text-decoration:none;">${escapeHtml(article.title)}</a></h3>
-      <p style="margin:0 0 0.3em;color:#555;font-size:0.9em;">${escapeHtml((article.description || '').slice(0, 160))}</p>
+      <p style="margin:0 0 0.3em;color:#555;font-size:0.9em;">${escapeHtml(stripHtml(article.description || '').slice(0, 160))}</p>
       <span style="font-size:0.8em;color:#888;">${escapeHtml(article.source || '')}${date ? ` &middot; ${date}` : ''}</span>
     </article>`;
 }
