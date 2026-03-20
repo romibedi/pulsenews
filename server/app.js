@@ -1344,6 +1344,31 @@ app.get('/category/:cat', async (req, res, next) => {
   res.send(renderCategoryPage(req.params.cat, articles));
 });
 
+// Cities index page for bots — list all cities for crawl discovery
+app.get('/cities', (req, res, next) => {
+  if (!isBot(req.headers['user-agent'])) return next();
+  const regions = {};
+  for (const [key, meta] of Object.entries(CITY_FEEDS)) {
+    if (!regions[meta.region]) regions[meta.region] = [];
+    regions[meta.region].push({ key, label: meta.label, lang: LANG_NAMES[meta.lang] || null });
+  }
+  let html = '<!DOCTYPE html><html><head><title>City News - PulseNewsToday</title>';
+  html += '<meta name="description" content="Browse local news from 31 cities across India, UK, US and Australia." />';
+  html += '<link rel="canonical" href="https://pulsenewstoday.com/cities" /></head><body>';
+  html += '<h1>City News</h1>';
+  for (const [region, cities] of Object.entries(regions)) {
+    html += `<h2>${region}</h2><ul>`;
+    for (const c of cities) {
+      html += `<li><a href="/city/${c.key}">${c.label}</a>${c.lang ? ` (${c.lang})` : ''}</li>`;
+    }
+    html += '</ul>';
+  }
+  html += '</body></html>';
+  res.set('Content-Type', 'text/html');
+  res.set('Cache-Control', 's-maxage=86400');
+  res.send(html);
+});
+
 // City page for bots — fetch city articles so crawlers see local content
 app.get('/city/:city', async (req, res, next) => {
   if (!isBot(req.headers['user-agent'])) return next();

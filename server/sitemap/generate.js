@@ -111,6 +111,7 @@ function buildStaticSitemapXml() {
   for (const page of staticPages) {
     xml += `  <url>\n    <loc>${SITE_URL}/${page}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.4</priority>\n  </url>\n`;
   }
+  xml += `  <url>\n    <loc>${SITE_URL}/cities</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
   for (const city of Object.keys(CITY_FEEDS)) {
     xml += `  <url>\n    <loc>${SITE_URL}/city/${city}</loc>\n    <changefreq>hourly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
   }
