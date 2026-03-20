@@ -19,6 +19,13 @@ const CATEGORY_META = {
   culture: { title: 'Culture & Entertainment', description: 'Arts, entertainment, movies, music, and cultural news from across the globe.' },
   environment: { title: 'Environment News', description: 'Climate change, sustainability, wildlife, and environmental news and analysis.' },
   politics: { title: 'Politics News', description: 'Political news, elections, policy analysis, and government coverage.' },
+  ai: { title: 'AI News', description: 'Artificial intelligence breakthroughs, machine learning research, and AI industry news from leading tech sources.' },
+  entertainment: { title: 'Entertainment News', description: 'Movies, TV shows, music, celebrities, and pop culture news from top entertainment sources.' },
+  gaming: { title: 'Gaming News', description: 'Video game releases, reviews, esports, and gaming industry news from trusted sources.' },
+  cricket: { title: 'Cricket News', description: 'Live cricket scores, match updates, player news, and tournament coverage from around the world.' },
+  startups: { title: 'Startup & VC News', description: 'Startup funding, venture capital deals, founder stories, and entrepreneurship news.' },
+  space: { title: 'Space News', description: 'Space exploration, rocket launches, astronomy discoveries, and NASA updates.' },
+  crypto: { title: 'Crypto News', description: 'Cryptocurrency prices, blockchain technology, DeFi, and digital asset news from top crypto sources.' },
 };
 
 export default function Category() {

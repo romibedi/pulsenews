@@ -9,6 +9,13 @@ const DEFAULT_SECTIONS = [
   { key: 'culture', label: 'Culture' },
   { key: 'environment', label: 'Environment' },
   { key: 'politics', label: 'Politics' },
+  { key: 'ai', label: 'AI' },
+  { key: 'entertainment', label: 'Entertainment' },
+  { key: 'gaming', label: 'Gaming' },
+  { key: 'cricket', label: 'Cricket' },
+  { key: 'startups', label: 'Startups' },
+  { key: 'space', label: 'Space' },
+  { key: 'crypto', label: 'Crypto' },
 ];
 
 export default function CategoryCustomizer({ sections, onSave, onClose }) {

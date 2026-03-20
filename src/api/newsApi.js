@@ -1,5 +1,13 @@
 // Categories available in the app
-export const CATEGORIES = ['world', 'technology', 'business', 'sport', 'science', 'culture', 'environment', 'politics'];
+export const CATEGORIES = ['world', 'technology', 'business', 'sport', 'science', 'culture', 'environment', 'politics', 'ai', 'entertainment', 'gaming', 'cricket', 'startups', 'space', 'crypto'];
+
+// Display labels for categories (used in Navbar, etc.)
+export const CATEGORY_LABELS = {
+  world: 'World', technology: 'Technology', business: 'Business', sport: 'Sport',
+  science: 'Science', culture: 'Culture', environment: 'Environment', politics: 'Politics',
+  ai: 'AI', entertainment: 'Entertainment', gaming: 'Gaming', cricket: 'Cricket',
+  startups: 'Startups', space: 'Space', crypto: 'Crypto',
+};
 
 const CACHE_TTL = 5 * 60 * 1000;
 

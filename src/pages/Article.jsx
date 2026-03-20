@@ -139,7 +139,7 @@ export default function Article() {
 
         // Fall back to searching RSS feeds
         if (!found && articleId) {
-          const categories = ['world', 'technology', 'business', 'sport', 'science', 'culture', 'environment', 'politics'];
+          const categories = ['world', 'technology', 'business', 'sport', 'science', 'culture', 'environment', 'politics', 'ai', 'entertainment', 'gaming', 'cricket', 'startups', 'space', 'crypto'];
           for (const cat of categories) {
             const result = await fetchByCategory(cat);
             found = (result.articles || []).find((a) => a.id === articleId);

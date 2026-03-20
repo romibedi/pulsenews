@@ -48,6 +48,36 @@ const FEEDS = {
     { url: 'https://feeds.bbci.co.uk/news/politics/rss.xml', source: 'BBC Politics' },
     { url: 'https://feeds.npr.org/1014/rss.xml', source: 'NPR Politics' },
   ],
+  ai: [
+    { url: 'https://techcrunch.com/category/artificial-intelligence/feed/', source: 'TechCrunch AI' },
+    { url: 'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml', source: 'The Verge AI' },
+    { url: 'https://www.technologyreview.com/feed/', source: 'MIT Tech Review' },
+  ],
+  entertainment: [
+    { url: 'https://variety.com/feed/', source: 'Variety' },
+    { url: 'https://deadline.com/feed/', source: 'Deadline' },
+    { url: 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml', source: 'BBC Entertainment' },
+  ],
+  gaming: [
+    { url: 'https://feeds.feedburner.com/ign/all', source: 'IGN' },
+    { url: 'https://kotaku.com/rss', source: 'Kotaku' },
+    { url: 'https://www.polygon.com/rss/index.xml', source: 'Polygon' },
+  ],
+  cricket: [
+    { url: 'https://feeds.bbci.co.uk/sport/cricket/rss.xml', source: 'BBC Cricket' },
+  ],
+  startups: [
+    { url: 'https://techcrunch.com/feed/', source: 'TechCrunch' },
+    { url: 'https://news.crunchbase.com/feed/', source: 'Crunchbase News' },
+  ],
+  space: [
+    { url: 'https://spacenews.com/feed/', source: 'SpaceNews' },
+    { url: 'https://www.space.com/feeds/all', source: 'Space.com' },
+  ],
+  crypto: [
+    { url: 'https://www.coindesk.com/arc/outboundfeeds/rss/', source: 'CoinDesk' },
+    { url: 'https://cointelegraph.com/rss', source: 'CoinTelegraph' },
+  ],
 }
 
 // Regional feeds for geo-localized news

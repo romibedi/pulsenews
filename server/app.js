@@ -670,32 +670,78 @@ app.get('/api/threads/:id', async (req, res) => {
   }
 });
 
-// Sitemap.xml for SEO + Google News
-app.get('/api/sitemap.xml', async (req, res) => {
+// Sitemap index — splits into news sitemap (recent articles) and static sitemap (pages)
+app.get('/api/sitemap.xml', (req, res) => {
+  const baseUrl = process.env.SITE_URL || 'https://pulsenewstoday.com';
+  const now = new Date().toISOString();
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+  xml += `  <sitemap>\n    <loc>${baseUrl}/api/sitemap-static.xml</loc>\n    <lastmod>${now.slice(0, 10)}</lastmod>\n  </sitemap>\n`;
+  xml += `  <sitemap>\n    <loc>${baseUrl}/api/sitemap-news.xml</loc>\n    <lastmod>${now.slice(0, 10)}</lastmod>\n  </sitemap>\n`;
+  xml += '</sitemapindex>';
+  res.set('Content-Type', 'application/xml');
+  res.set('Cache-Control', 's-maxage=3600, stale-while-revalidate=7200');
+  res.send(xml);
+});
+
+// Static sitemap — homepage, categories, regions, static pages
+app.get('/api/sitemap-static.xml', (req, res) => {
+  const baseUrl = process.env.SITE_URL || 'https://pulsenewstoday.com';
+  const categories = ['world', 'technology', 'business', 'science', 'sport', 'culture', 'environment', 'politics', 'ai', 'entertainment', 'gaming', 'cricket', 'startups', 'space', 'crypto'];
+  const regions = ['india', 'uk', 'us', 'australia', 'middle-east', 'europe', 'africa', 'asia', 'latam'];
+  const staticPages = ['about', 'archive', 'search', 'explore', 'feeds', 'bookmarks'];
+
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+  // Homepage
+  xml += `  <url>\n    <loc>${baseUrl}/</loc>\n    <changefreq>hourly</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
+
+  // Category pages
+  for (const cat of categories) {
+    xml += `  <url>\n    <loc>${baseUrl}/category/${cat}</loc>\n    <changefreq>hourly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+  }
+
+  // Region pages
+  for (const r of regions) {
+    xml += `  <url>\n    <loc>${baseUrl}/region/${r}</loc>\n    <changefreq>hourly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
+  }
+
+  // Static pages
+  for (const page of staticPages) {
+    xml += `  <url>\n    <loc>${baseUrl}/${page}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.4</priority>\n  </url>\n`;
+  }
+
+  xml += '</urlset>';
+  res.set('Content-Type', 'application/xml');
+  res.set('Cache-Control', 's-maxage=86400, stale-while-revalidate=172800');
+  res.send(xml);
+});
+
+// News sitemap — recent articles with Google News + image metadata
+app.get('/api/sitemap-news.xml', async (req, res) => {
   try {
     const entries = await querySitemapEntries(1000);
     const baseUrl = process.env.SITE_URL || 'https://pulsenewstoday.com';
-    const escXml = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const escXml = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">\n';
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"';
+    xml += ' xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"';
+    xml += ' xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n';
 
-    // Homepage
-    xml += `  <url>\n    <loc>${baseUrl}/</loc>\n    <changefreq>hourly</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
-
-    // Category pages
-    for (const cat of ['world', 'technology', 'business', 'science', 'sport', 'culture', 'environment', 'politics']) {
-      xml += `  <url>\n    <loc>${baseUrl}/category/${cat}</loc>\n    <changefreq>hourly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
-    }
-
-    // Article pages with Google News metadata
     for (const entry of entries) {
       const loc = entry.slug ? `${baseUrl}/news/${entry.slug}` : `${baseUrl}/article/${encodeURIComponent(entry.id)}`;
       const pubDate = entry.date || new Date().toISOString();
       const lang = entry.lang || 'en';
+
+      // Build keywords from category + source
+      const keywords = [entry.category, entry.source, entry.mood].filter(Boolean).join(', ');
+
       xml += `  <url>\n`;
       xml += `    <loc>${escXml(loc)}</loc>\n`;
       if (entry.date) xml += `    <lastmod>${entry.date.slice(0, 10)}</lastmod>\n`;
+      xml += `    <priority>0.6</priority>\n`;
       xml += `    <news:news>\n`;
       xml += `      <news:publication>\n`;
       xml += `        <news:name>PulseNewsToday</news:name>\n`;
@@ -703,7 +749,17 @@ app.get('/api/sitemap.xml', async (req, res) => {
       xml += `      </news:publication>\n`;
       xml += `      <news:publication_date>${escXml(pubDate)}</news:publication_date>\n`;
       xml += `      <news:title>${escXml(entry.title || 'News')}</news:title>\n`;
+      if (keywords) xml += `      <news:keywords>${escXml(keywords)}</news:keywords>\n`;
       xml += `    </news:news>\n`;
+
+      // Image metadata for Google Images
+      if (entry.image) {
+        xml += `    <image:image>\n`;
+        xml += `      <image:loc>${escXml(entry.image)}</image:loc>\n`;
+        xml += `      <image:title>${escXml(entry.title || 'News')}</image:title>\n`;
+        xml += `    </image:image>\n`;
+      }
+
       xml += `  </url>\n`;
     }
     xml += '</urlset>';
@@ -864,6 +920,8 @@ User-agent: Google-Extended
 Allow: /
 
 Sitemap: ${siteUrl}/api/sitemap.xml
+Sitemap: ${siteUrl}/api/sitemap-news.xml
+Sitemap: ${siteUrl}/api/sitemap-static.xml
 `);
 });
 

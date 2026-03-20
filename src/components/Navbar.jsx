@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CATEGORIES } from '../api/newsApi';
+import { CATEGORIES, CATEGORY_LABELS } from '../api/newsApi';
 import { useTheme } from '../contexts/ThemeContext';
 import { useBookmarks } from '../contexts/BookmarkContext';
 import useAudio from '../contexts/AudioContext';
@@ -174,9 +174,9 @@ export default function Navbar() {
             <Link
               key={cat}
               to={`/category/${cat}`}
-              className="px-3 py-1 text-xs font-medium text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] hover:bg-[#fef0ed] dark:hover:bg-[#e87461]/10 rounded-full transition-all capitalize no-underline whitespace-nowrap"
+              className="px-3 py-1 text-xs font-medium text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] hover:bg-[#fef0ed] dark:hover:bg-[#e87461]/10 rounded-full transition-all no-underline whitespace-nowrap"
             >
-              {cat}
+              {CATEGORY_LABELS[cat] || cat}
             </Link>
           ))}
         </div>

@@ -41,6 +41,43 @@ export const FEEDS = {
     { url: 'https://feeds.bbci.co.uk/news/politics/rss.xml', source: 'BBC Politics' },
     { url: 'https://feeds.npr.org/1014/rss.xml', source: 'NPR Politics' },
   ],
+  ai: [
+    { url: 'https://techcrunch.com/category/artificial-intelligence/feed/', source: 'TechCrunch AI' },
+    { url: 'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml', source: 'The Verge AI' },
+    { url: 'https://www.technologyreview.com/feed/', source: 'MIT Tech Review' },
+    { url: 'https://venturebeat.com/category/ai/feed/', source: 'VentureBeat AI' },
+  ],
+  entertainment: [
+    { url: 'https://variety.com/feed/', source: 'Variety' },
+    { url: 'https://deadline.com/feed/', source: 'Deadline' },
+    { url: 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml', source: 'BBC Entertainment' },
+    { url: 'https://www.theguardian.com/culture/rss', source: 'The Guardian Culture' },
+  ],
+  gaming: [
+    { url: 'https://feeds.feedburner.com/ign/all', source: 'IGN' },
+    { url: 'https://kotaku.com/rss', source: 'Kotaku' },
+    { url: 'https://www.polygon.com/rss/index.xml', source: 'Polygon' },
+    { url: 'https://www.gamespot.com/feeds/mashup/', source: 'GameSpot' },
+  ],
+  cricket: [
+    { url: 'https://feeds.bbci.co.uk/sport/cricket/rss.xml', source: 'BBC Cricket' },
+    { url: 'https://www.espncricinfo.com/rss/content/story/feeds/0.xml', source: 'ESPNcricinfo' },
+  ],
+  startups: [
+    { url: 'https://techcrunch.com/feed/', source: 'TechCrunch' },
+    { url: 'https://news.crunchbase.com/feed/', source: 'Crunchbase News' },
+    { url: 'https://feeds.feedburner.com/venturebeat/SZYF', source: 'VentureBeat' },
+  ],
+  space: [
+    { url: 'https://spacenews.com/feed/', source: 'SpaceNews' },
+    { url: 'https://www.space.com/feeds/all', source: 'Space.com' },
+    { url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss', source: 'NASA' },
+  ],
+  crypto: [
+    { url: 'https://www.coindesk.com/arc/outboundfeeds/rss/', source: 'CoinDesk' },
+    { url: 'https://cointelegraph.com/rss', source: 'CoinTelegraph' },
+    { url: 'https://decrypt.co/feed', source: 'Decrypt' },
+  ],
 };
 
 // --- Regional general feeds (9 regions) ---
@@ -130,6 +167,22 @@ export const REGIONAL_CATEGORY_FEEDS = {
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/7630538.cms', source: 'Times of India Politics' },
       { url: 'https://indianexpress.com/section/political-pulse/feed/', source: 'Indian Express Politics' },
     ],
+    cricket: [
+      { url: 'https://feeds.bbci.co.uk/sport/cricket/rss.xml', source: 'BBC Cricket' },
+      { url: 'https://www.espncricinfo.com/rss/content/story/feeds/0.xml', source: 'ESPNcricinfo' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/54829575.cms', source: 'Times of India Cricket' },
+      { url: 'https://indianexpress.com/section/sports/cricket/feed/', source: 'Indian Express Cricket' },
+    ],
+    entertainment: [
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/1081479906.cms', source: 'Times of India Entertainment' },
+      { url: 'https://indianexpress.com/section/entertainment/feed/', source: 'Indian Express Entertainment' },
+      { url: 'https://www.thehindu.com/entertainment/feeder/default.rss', source: 'The Hindu Entertainment' },
+    ],
+    startups: [
+      { url: 'https://inc42.com/feed/', source: 'Inc42' },
+      { url: 'https://yourstory.com/feed', source: 'YourStory' },
+      { url: 'https://techcrunch.com/feed/', source: 'TechCrunch' },
+    ],
   },
   uk: {
     world: [
@@ -160,6 +213,10 @@ export const REGIONAL_CATEGORY_FEEDS = {
     politics: [
       { url: 'https://feeds.bbci.co.uk/news/politics/rss.xml', source: 'BBC Politics' },
       { url: 'https://www.theguardian.com/politics/rss', source: 'Guardian Politics' },
+    ],
+    cricket: [
+      { url: 'https://feeds.bbci.co.uk/sport/cricket/rss.xml', source: 'BBC Cricket' },
+      { url: 'https://www.theguardian.com/sport/cricket/rss', source: 'Guardian Cricket' },
     ],
   },
   us: {
@@ -220,6 +277,10 @@ export const REGIONAL_CATEGORY_FEEDS = {
     ],
     politics: [
       { url: 'https://www.theguardian.com/australia-news/rss', source: 'Guardian AU News' },
+    ],
+    cricket: [
+      { url: 'https://feeds.bbci.co.uk/sport/cricket/rss.xml', source: 'BBC Cricket' },
+      { url: 'https://www.theguardian.com/sport/cricket/rss', source: 'Guardian Cricket' },
     ],
   },
   'middle-east': {

@@ -62,20 +62,6 @@ export default function Home() {
       .finally(() => setLangLoading(false));
   }, [lang]);
 
-  const firstSection = activeSections[0]?.key || 'world';
-  const englishArticles = sections[firstSection] || [];
-  const isNonEnglish = lang !== 'en';
-  const hasLangContent = isNonEnglish && langArticles.length > 0;
-  const rawArticles = hasLangContent ? langArticles : englishArticles;
-  const mainArticles = filterByMood(rawArticles);
-  const isLangSwitching = isNonEnglish && langLoading && !hasLangContent;
-  const featured = mainArticles[0];
-  const latest = mainArticles.slice(1, 7);
-  // For non-English: use more of the language articles since we won't show category sections
-  const more = isNonEnglish ? mainArticles.slice(7, 19) : mainArticles.slice(7, 13);
-
-  const regionLabel = region && region !== 'world' ? regionInfo.label : 'World';
-
   // Mood filter: map UI labels to data values
   const MOOD_OPTIONS = [
     { key: 'all', label: 'All', emoji: '📰' },
@@ -90,6 +76,20 @@ export default function Home() {
     if (mood === 'all') return articles;
     return articles.filter((a) => (a.mood || 'neutral') === mood);
   };
+
+  const firstSection = activeSections[0]?.key || 'world';
+  const englishArticles = sections[firstSection] || [];
+  const isNonEnglish = lang !== 'en';
+  const hasLangContent = isNonEnglish && langArticles.length > 0;
+  const rawArticles = hasLangContent ? langArticles : englishArticles;
+  const mainArticles = filterByMood(rawArticles);
+  const isLangSwitching = isNonEnglish && langLoading && !hasLangContent;
+  const featured = mainArticles[0];
+  const latest = mainArticles.slice(1, 7);
+  // For non-English: use more of the language articles since we won't show category sections
+  const more = isNonEnglish ? mainArticles.slice(7, 19) : mainArticles.slice(7, 13);
+
+  const regionLabel = region && region !== 'world' ? regionInfo.label : 'World';
 
   if (error && !featured) {
     return (

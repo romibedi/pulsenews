@@ -59,11 +59,14 @@ export function articleUrl(slug) {
  * This is a lightweight nudge — not guaranteed to trigger immediate crawling.
  */
 export async function pingSitemap() {
-  const sitemapUrl = `${SITE_URL}/api/sitemap.xml`;
-  const endpoints = [
+  const sitemapUrls = [
+    `${SITE_URL}/api/sitemap.xml`,
+    `${SITE_URL}/api/sitemap-news.xml`,
+  ];
+  const endpoints = sitemapUrls.flatMap((sitemapUrl) => [
     `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`,
     `https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`,
-  ];
+  ]);
 
   for (const url of endpoints) {
     try {

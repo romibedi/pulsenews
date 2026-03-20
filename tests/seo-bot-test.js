@@ -132,29 +132,49 @@ async function testCategoryPage() {
 }
 
 async function testSitemap() {
-  console.log('\n\x1b[1m== Sitemap ==\x1b[0m');
+  console.log('\n\x1b[1m== Sitemap Index ==\x1b[0m');
   const res = await fetch(`${BASE_URL}/api/sitemap.xml`);
   const xml = await res.text();
 
-  assert(res.status === 200, 'Returns 200');
+  assert(res.status === 200, 'Index returns 200');
   assert(res.headers.get('content-type').includes('xml'), 'Content-Type is XML');
+  assert(xml.includes('<sitemapindex'), 'Is a sitemap index');
+  assert(xml.includes('sitemap-static.xml'), 'References static sitemap');
+  assert(xml.includes('sitemap-news.xml'), 'References news sitemap');
 
-  // Google News namespace
-  assert(xml.includes('xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"'), 'Has Google News namespace');
-  assert(xml.includes('<news:publication>'), 'Has news:publication');
-  assert(xml.includes('<news:name>PulseNewsToday</news:name>'), 'Publication name is PulseNewsToday');
-  assert(xml.includes('<news:language>'), 'Has news:language');
-  assert(xml.includes('<news:publication_date>'), 'Has news:publication_date');
-  assert(xml.includes('<news:title>'), 'Has news:title');
+  // Static sitemap
+  console.log('\n\x1b[1m== Static Sitemap ==\x1b[0m');
+  const staticRes = await fetch(`${BASE_URL}/api/sitemap-static.xml`);
+  const staticXml = await staticRes.text();
 
-  // Structure
-  assert(xml.includes('pulsenewstoday.com/</loc>'), 'Includes homepage');
-  assert(xml.includes('/category/world'), 'Includes category pages');
-  assert(xml.includes('/category/technology'), 'Includes technology category');
-  assert(xml.includes('/news/'), 'Includes article URLs');
+  assert(staticRes.status === 200, 'Static sitemap returns 200');
+  assert(staticXml.includes('pulsenewstoday.com/</loc>'), 'Includes homepage');
+  assert(staticXml.includes('/category/world'), 'Includes world category');
+  assert(staticXml.includes('/category/ai'), 'Includes AI category');
+  assert(staticXml.includes('/category/cricket'), 'Includes cricket category');
+  assert(staticXml.includes('/region/india'), 'Includes India region');
+  assert(staticXml.includes('/region/uk'), 'Includes UK region');
+  assert(staticXml.includes('/about'), 'Includes about page');
+  assert(staticXml.includes('/archive'), 'Includes archive page');
 
-  const urlCount = (xml.match(/<url>/g) || []).length;
-  assert(urlCount >= 20, `Has ${urlCount} URLs (expected 20+)`);
+  // News sitemap
+  console.log('\n\x1b[1m== News Sitemap ==\x1b[0m');
+  const newsRes = await fetch(`${BASE_URL}/api/sitemap-news.xml`);
+  const newsXml = await newsRes.text();
+
+  assert(newsRes.status === 200, 'News sitemap returns 200');
+  assert(newsXml.includes('xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"'), 'Has Google News namespace');
+  assert(newsXml.includes('xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"'), 'Has Image namespace');
+  assert(newsXml.includes('<news:publication>'), 'Has news:publication');
+  assert(newsXml.includes('<news:name>PulseNewsToday</news:name>'), 'Publication name is PulseNewsToday');
+  assert(newsXml.includes('<news:language>'), 'Has news:language');
+  assert(newsXml.includes('<news:publication_date>'), 'Has news:publication_date');
+  assert(newsXml.includes('<news:title>'), 'Has news:title');
+  assert(newsXml.includes('<news:keywords>'), 'Has news:keywords');
+  assert(newsXml.includes('/news/'), 'Includes article URLs');
+
+  const urlCount = (newsXml.match(/<url>/g) || []).length;
+  assert(urlCount >= 20, `Has ${urlCount} article URLs (expected 20+)`);
 }
 
 async function testRobotsTxt() {

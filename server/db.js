@@ -110,12 +110,12 @@ export async function queryByDate(date, limit = 100, { region, lang } = {}) {
     pks.push(`LANG#${lang}`);
   } else if (region && region !== 'world') {
     // Regional archive — query REGION#<region>#CAT#<cat> for all categories
-    const cats = ['world', 'technology', 'business', 'science', 'sport', 'culture', 'environment', 'politics'];
+    const cats = ['world', 'technology', 'business', 'science', 'sport', 'culture', 'environment', 'politics', 'ai', 'entertainment', 'gaming', 'cricket', 'startups', 'space', 'crypto'];
     for (const cat of cats) pks.push(`REGION#${region}#CAT#${cat}`);
     pks.push(`REGION#${region}`);
   } else {
     // Global archive — all categories
-    const cats = ['world', 'technology', 'business', 'science', 'sport', 'culture', 'environment', 'politics'];
+    const cats = ['world', 'technology', 'business', 'science', 'sport', 'culture', 'environment', 'politics', 'ai', 'entertainment', 'gaming', 'cricket', 'startups', 'space', 'crypto'];
     for (const cat of cats) pks.push(`GLOBAL#CAT#${cat}`);
   }
 

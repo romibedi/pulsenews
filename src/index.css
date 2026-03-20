@@ -134,3 +134,13 @@ body {
 .ticker-scroll:hover {
   animation-play-state: paused;
 }
+
+/* Full-screen player slide up */
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
