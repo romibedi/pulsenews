@@ -138,28 +138,43 @@ app.get('/api/lang-feeds', async (req, res) => {
   res.json({ articles: [], lang });
 });
 
+// Detect feed language from URL (Google News hl= param) or default to 'en'
+function detectFeedLang(feedUrl) {
+  const m = feedUrl.match(/[?&]hl=([a-z]{2})/);
+  return m ? m[1] : 'en';
+}
+
 // City-level local news — DynamoDB first, RSS fallback
 // Supports ?before=<ISO-date> for pagination
+// Returns articles tagged with lang, plus cityLang metadata
 app.get('/api/city-feeds', async (req, res) => {
   const city = req.query.city;
   const before = req.query.before || null;
   if (!city || !CITY_FEEDS[city]) return res.status(400).json({ error: 'Invalid city' });
+  const meta = CITY_FEEDS[city];
+  const cityLang = meta.lang || null;
+  const cityLangLabel = cityLang ? (LANG_NAMES[cityLang] || cityLang) : null;
   try {
-    const dbArticles = await queryByCity(city, 20, before);
+    const dbArticles = await queryByCity(city, 40, before);
     if (dbArticles.length > 0) {
       res.set('Cache-Control', before ? 'no-cache' : 's-maxage=300, stale-while-revalidate=600');
-      return res.json({ articles: dbArticles, city });
+      return res.json({ articles: dbArticles, city, cityLang, cityLangLabel });
     }
   } catch {}
   // Fallback to live RSS (no pagination for live feeds)
   if (!before) {
-    const feeds = CITY_FEEDS[city].feeds;
-    const results = await Promise.all(feeds.map((f) => fetchFeed(f.url, f.source)));
-    const articles = results.flat().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
+    const feeds = meta.feeds;
+    const results = await Promise.all(feeds.map((f) => {
+      const lang = detectFeedLang(f.url);
+      return fetchFeed(f.url, f.source).then((items) =>
+        items.map((a) => ({ ...a, lang }))
+      );
+    }));
+    const articles = results.flat().sort((a, b) => new Date(b.date) - new Date(a.date));
     res.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
-    return res.json({ articles, city });
+    return res.json({ articles, city, cityLang, cityLangLabel });
   }
-  res.json({ articles: [], city });
+  res.json({ articles: [], city, cityLang, cityLangLabel });
 });
 
 // List all available cities
@@ -172,6 +187,7 @@ app.get('/api/cities', (req, res) => {
       label: meta.label,
       region: meta.region,
       country: meta.country,
+      lang: meta.lang || null,
       lat: meta.lat,
       lng: meta.lng,
     }));

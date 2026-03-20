@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { fetchByCity, fetchCities } from '../api/newsApi';
 import useCity from '../hooks/useCity';
+import { LANGUAGES } from '../hooks/useLanguage';
 import NewsCard from '../components/NewsCard';
 import Loader, { HeroLoader } from '../components/Loader';
 
@@ -12,6 +13,8 @@ export default function City() {
   const { city: cityKey } = useParams();
   const { city: currentCity, setCity } = useCity();
   const [articles, setArticles] = useState([]);
+  const [cityLang, setCityLang] = useState(null);
+  const [cityLangLabel, setCityLangLabel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cityMeta, setCityMeta] = useState(null);
   const [allCities, setAllCities] = useState([]);
@@ -31,7 +34,11 @@ export default function City() {
 
     fetchByCity(cityKey)
       .then((data) => {
-        if (!ignore) setArticles(data.articles || []);
+        if (!ignore) {
+          setArticles(data.articles || []);
+          setCityLang(data.cityLang || null);
+          setCityLangLabel(data.cityLangLabel || null);
+        }
       })
       .catch(() => {
         if (!ignore) setArticles([]);
@@ -46,15 +53,18 @@ export default function City() {
   const isCurrentCity = cityKey === currentCity;
   const label = cityMeta?.label || cityKey;
   const regionCities = allCities.filter((c) => c.region === cityMeta?.region);
-  const featured = articles[0];
-  const latest = articles.slice(1, 7);
-  const more = articles.slice(7);
+
+  // Split articles by language: local language first, then English
+  const localLangArticles = cityLang ? articles.filter((a) => a.lang === cityLang) : [];
+  const englishArticles = articles.filter((a) => !a.lang || a.lang === 'en');
+  const hasLocalLang = cityLang && cityLang !== 'en' && localLangArticles.length > 0;
+  const nativeLangLabel = LANGUAGES[cityLang]?.nativeLabel || cityLangLabel;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-10">
       <Helmet>
         <title>{label} News - PulseNewsToday</title>
-        <meta name="description" content={`Latest local news from ${label}. Breaking stories, updates, and headlines.`} />
+        <meta name="description" content={`Latest local news from ${label} in ${cityLangLabel || 'English'} and English. Breaking stories, updates, and headlines.`} />
         <link rel="canonical" href={`${SITE_URL}/city/${cityKey}`} />
         <meta property="og:title" content={`${label} News - PulseNewsToday`} />
         <meta property="og:url" content={`${SITE_URL}/city/${cityKey}`} />
@@ -87,7 +97,10 @@ export default function City() {
             </button>
           )}
         </div>
-        <p className="text-[var(--text-muted)] mt-1 text-sm">Latest news and updates from {label}</p>
+        <p className="text-[var(--text-muted)] mt-1 text-sm">
+          Latest news from {label}
+          {hasLocalLang && <> in {nativeLangLabel} &amp; English</>}
+        </p>
 
         {/* City switcher — same region */}
         {regionCities.length > 1 && (
@@ -109,51 +122,52 @@ export default function City() {
         )}
       </div>
 
-      {/* Hero */}
-      <section>
-        {loading && !featured ? (
-          <HeroLoader />
-        ) : featured ? (
-          <div className="animate-fade-in">
-            <NewsCard article={featured} featured />
-          </div>
-        ) : !loading ? (
-          <div className="text-center py-12 text-[var(--text-muted)]">
-            <p className="text-sm">No local news available yet. Articles will appear after the next ingestion run.</p>
-          </div>
-        ) : null}
-      </section>
-
-      {/* Latest */}
-      {latest.length > 0 && (
-        <section>
-          <h2 className="text-2xl font-normal text-[var(--text)] mb-5">Latest from {label}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {latest.map((article, i) => (
-              <div key={article.id} className="animate-fade-in h-full" style={{ animationDelay: `${i * 80}ms` }}>
-                <NewsCard article={article} />
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* More */}
-      {more.length > 0 && (
-        <section>
-          <h2 className="text-2xl font-normal text-[var(--text)] mb-5">More Stories</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {more.map((article, i) => (
-              <div key={article.id} className="animate-fade-in h-full" style={{ animationDelay: `${i * 80}ms` }}>
-                <NewsCard article={article} />
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       {loading && articles.length === 0 && (
-        <Loader count={12} />
+        <>
+          <HeroLoader />
+          <Loader count={8} />
+        </>
+      )}
+
+      {!loading && articles.length === 0 && (
+        <div className="text-center py-12 text-[var(--text-muted)]">
+          <p className="text-sm">No local news available yet. Articles will appear after the next ingestion run.</p>
+        </div>
+      )}
+
+      {/* Local language section — shown first when available */}
+      {hasLocalLang && (
+        <section>
+          <div className="flex items-center gap-3 mb-5">
+            <h2 className="text-2xl font-normal text-[var(--text)]">{nativeLangLabel}</h2>
+            <span className="px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#e05d44] dark:text-[#e87461] bg-[#fef0ed] dark:bg-[#e87461]/10 rounded-full">
+              {cityLangLabel}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {localLangArticles.slice(0, 12).map((article, i) => (
+              <div key={article.id} className="animate-fade-in h-full" style={{ animationDelay: `${i * 60}ms` }}>
+                <NewsCard article={article} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* English section */}
+      {englishArticles.length > 0 && (
+        <section>
+          <h2 className="text-2xl font-normal text-[var(--text)] mb-5">
+            {hasLocalLang ? 'English' : `Latest from ${label}`}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {englishArticles.slice(0, 12).map((article, i) => (
+              <div key={article.id} className="animate-fade-in h-full" style={{ animationDelay: `${i * 60}ms` }}>
+                <NewsCard article={article} />
+              </div>
+            ))}
+          </div>
+        </section>
       )}
     </div>
   );
