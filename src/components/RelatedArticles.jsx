@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { fetchByCategory } from '../api/newsApi';
 import NewsCard from './NewsCard';
 
 export default function RelatedArticles({ article }) {
@@ -7,16 +6,23 @@ export default function RelatedArticles({ article }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!article?.sectionId) return;
+    if (!article?.id) return;
     setLoading(true);
-    fetchByCategory(article.sectionId)
+
+    const params = new URLSearchParams();
+    if (article.title) params.set('title', article.title);
+    if (article.description) params.set('description', (article.description || '').slice(0, 500));
+    if (article.sectionId || article.category) params.set('category', article.sectionId || article.category);
+    params.set('size', '4');
+
+    fetch(`/api/related/${encodeURIComponent(article.id)}?${params}`)
+      .then((r) => r.json())
       .then((data) => {
-        const candidates = (data.articles || []).filter((a) => a.id !== article.id);
-        setRelated(candidates.slice(0, 4));
+        setRelated((data.articles || []).slice(0, 4));
       })
-      .catch(() => {})
+      .catch(() => setRelated([]))
       .finally(() => setLoading(false));
-  }, [article?.id, article?.sectionId]);
+  }, [article?.id]);
 
   if (loading) {
     return (

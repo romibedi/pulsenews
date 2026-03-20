@@ -8,12 +8,13 @@
 
 import { getClient } from './client.js';
 import { supportedLanguages, indexName, buildIndexSettings } from './mappings.js';
+import { createHybridPipeline } from './pipeline.js';
 
 async function main() {
   const client = getClient();
   const languages = supportedLanguages();
 
-  console.log(`Creating indexes for ${languages.length} languages...\n`);
+  console.log(`Creating indexes for ${languages.length} languages (with kNN enabled)...\n`);
 
   for (const lang of languages) {
     const idx = indexName(lang);
@@ -29,11 +30,14 @@ async function main() {
         index: idx,
         body: settings,
       });
-      console.log(`  ${idx} — created`);
+      console.log(`  ${idx} — created (kNN + BM25)`);
     } catch (err) {
       console.error(`  ${idx} — ERROR: ${err.message}`);
     }
   }
+
+  console.log('\nCreating hybrid search pipeline...');
+  await createHybridPipeline();
 
   console.log('\nDone.');
 }

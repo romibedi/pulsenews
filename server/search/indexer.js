@@ -9,6 +9,7 @@
 import { createHash } from 'crypto';
 import { getClient } from './client.js';
 import { indexName, supportedLanguages, buildIndexSettings } from './mappings.js';
+import { generateEmbedding, buildEmbeddingText } from './embeddings.js';
 
 function safeId(id) {
   if (Buffer.byteLength(id, 'utf8') <= 512) return id;
@@ -159,9 +160,17 @@ export async function handler(event) {
         sectionId: doc.sectionId || '',
         tags: doc.tags || [],
         slug: doc.slug || '',
+        mood: doc.mood || '',
         date: doc.date || new Date().toISOString(),
         createdAt: doc.createdAt || new Date().toISOString(),
       };
+
+      // Generate vector embedding from title + description
+      const embeddingText = buildEmbeddingText(doc.title, doc.description);
+      const embedding = await generateEmbedding(embeddingText);
+      if (embedding) {
+        searchDoc.embedding = embedding;
+      }
 
       await client.index({
         index: indexName(safeLang),

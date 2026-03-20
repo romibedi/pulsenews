@@ -23,6 +23,8 @@ import {
 } from './db.js';
 import { getClient as getSearchClient } from './search/client.js';
 import { indexName, supportedLanguages } from './search/mappings.js';
+import { generateEmbedding, buildEmbeddingText } from './search/embeddings.js';
+import { HYBRID_PIPELINE_NAME } from './search/pipeline.js';
 import {
   isBot,
   renderArticlePage,
@@ -579,26 +581,53 @@ app.post('/api/voice-query', async (req, res) => {
 
     const count = Math.min(intent.count || 3, 5);
 
-    // Step 2: Fetch relevant articles — use region-aware search
+    // Step 2: Fetch relevant articles — hybrid BM25 + kNN search
     let articles = [];
     if (intent.topic) {
-      // Search by topic using OpenSearch — try region-specific index first
       try {
         const client = getSearchClient();
         const idx = lang === 'all' ? 'articles-*' : `articles-${lang}`;
-        const searchQuery = region
-          ? { bool: { must: [{ multi_match: { query: intent.topic, fields: ['title^3', 'description^2', 'body'], fuzziness: 'AUTO' } }], should: [{ term: { region: { value: region, boost: 3 } } }] } }
-          : { multi_match: { query: intent.topic, fields: ['title^3', 'description^2', 'body'], fuzziness: 'AUTO' } };
-        const result = await client.search({
-          index: idx,
-          body: {
-            query: searchQuery,
-            sort: [{ _score: 'desc' }, { date: 'desc' }],
-            size: count,
-            _source: { excludes: ['body'] },
-          },
-        });
-        articles = result.body.hits.hits.map((h) => h._source);
+        const topicEmbedding = await generateEmbedding(intent.topic);
+
+        if (topicEmbedding) {
+          // Hybrid: BM25 + kNN for voice queries
+          const bm25Query = region
+            ? { bool: { must: [{ multi_match: { query: intent.topic, fields: ['title^3', 'description^2', 'body'], fuzziness: 'AUTO' } }], should: [{ term: { region: { value: region, boost: 3 } } }] } }
+            : { multi_match: { query: intent.topic, fields: ['title^3', 'description^2', 'body'], fuzziness: 'AUTO' } };
+
+          const result = await client.search({
+            index: idx,
+            params: { search_pipeline: HYBRID_PIPELINE_NAME },
+            body: {
+              query: {
+                hybrid: {
+                  queries: [
+                    bm25Query,
+                    { knn: { embedding: { vector: topicEmbedding, k: count + 5 } } },
+                  ],
+                },
+              },
+              size: count,
+              _source: { excludes: ['body', 'embedding'] },
+            },
+          });
+          articles = result.body.hits.hits.map((h) => h._source);
+        } else {
+          // Fallback: BM25 only
+          const searchQuery = region
+            ? { bool: { must: [{ multi_match: { query: intent.topic, fields: ['title^3', 'description^2', 'body'], fuzziness: 'AUTO' } }], should: [{ term: { region: { value: region, boost: 3 } } }] } }
+            : { multi_match: { query: intent.topic, fields: ['title^3', 'description^2', 'body'], fuzziness: 'AUTO' } };
+          const result = await client.search({
+            index: idx,
+            body: {
+              query: searchQuery,
+              sort: [{ _score: 'desc' }, { date: 'desc' }],
+              size: count,
+              _source: { excludes: ['body', 'embedding'] },
+            },
+          });
+          articles = result.body.hits.hits.map((h) => h._source);
+        }
       } catch {
         // Fallback to category-based fetch
       }
@@ -688,60 +717,230 @@ ${articleSummaries}`,
   }
 });
 
-// --- Story Threads: find related articles ---
+// --- Related articles via hybrid kNN + BM25 similarity ---
+app.get('/api/related/:id', async (req, res) => {
+  try {
+    const title = req.query.title || '';
+    const description = req.query.description || '';
+    const category = req.query.category || '';
+    const size = Math.min(parseInt(req.query.size) || 6, 20);
+
+    let article = null;
+    try { article = await getArticleById(req.params.id); } catch {}
+
+    const articleTitle = article?.title || title;
+    const articleDesc = article?.description || description;
+    const articleId = article?.articleId || req.params.id;
+    const lang = article?.lang || 'en';
+
+    if (!articleTitle) {
+      return res.json({ articles: [], count: 0 });
+    }
+
+    let relatedArticles = [];
+
+    try {
+      const client = getSearchClient();
+      const embeddingText = buildEmbeddingText(articleTitle, articleDesc);
+      const embedding = await generateEmbedding(embeddingText);
+
+      if (embedding) {
+        // Hybrid: BM25 more_like_this + kNN vector similarity
+        const result = await client.search({
+          index: `articles-${lang}`,
+          params: { search_pipeline: HYBRID_PIPELINE_NAME },
+          body: {
+            query: {
+              hybrid: {
+                queries: [
+                  {
+                    bool: {
+                      must: [{
+                        more_like_this: {
+                          fields: ['title', 'description'],
+                          like: articleTitle,
+                          min_term_freq: 1,
+                          min_doc_freq: 1,
+                          minimum_should_match: '20%',
+                          max_query_terms: 25,
+                        },
+                      }],
+                      must_not: [{ term: { articleId } }],
+                    },
+                  },
+                  {
+                    knn: {
+                      embedding: { vector: embedding, k: size + 5 },
+                    },
+                  },
+                ],
+              },
+            },
+            size: size + 1,
+            _source: ['articleId', 'title', 'description', 'source', 'date', 'image', 'slug', 'category', 'sectionId', 'mood'],
+          },
+        });
+        relatedArticles = result.body.hits.hits
+          .filter((h) => h._source.articleId !== articleId)
+          .slice(0, size)
+          .map((h) => ({ ...h._source, score: h._score }));
+      } else {
+        // Fallback: BM25 more_like_this only
+        const result = await client.search({
+          index: `articles-${lang}`,
+          body: {
+            query: {
+              bool: {
+                must: [{
+                  more_like_this: {
+                    fields: ['title', 'description'],
+                    like: articleTitle,
+                    min_term_freq: 1,
+                    min_doc_freq: 1,
+                    minimum_should_match: '20%',
+                    max_query_terms: 25,
+                  },
+                }],
+                must_not: [{ term: { articleId } }],
+              },
+            },
+            sort: [{ _score: 'desc' }, { date: 'desc' }],
+            size,
+            _source: ['articleId', 'title', 'description', 'source', 'date', 'image', 'slug', 'category', 'sectionId', 'mood'],
+          },
+        });
+        relatedArticles = result.body.hits.hits.map((h) => ({ ...h._source, score: h._score }));
+      }
+    } catch {}
+
+    // Fallback to DynamoDB category
+    if (relatedArticles.length === 0) {
+      const cat = article?.category || category || 'world';
+      try {
+        const catArticles = await queryByGlobalCategory(cat, 20);
+        relatedArticles = catArticles
+          .filter((a) => (a.articleId || a.id) !== articleId)
+          .slice(0, size);
+      } catch {}
+    }
+
+    res.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+    res.json({
+      articles: relatedArticles.map((a) => ({
+        id: a.articleId || a.id,
+        title: a.title,
+        description: a.description,
+        source: a.source,
+        date: a.date,
+        image: a.image,
+        slug: a.slug,
+        category: a.category,
+        sectionId: a.sectionId,
+        mood: a.mood,
+      })),
+      count: relatedArticles.length,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- Story Threads: find related articles via hybrid kNN + BM25 ---
 app.get('/api/threads/:id', async (req, res) => {
   try {
-    // Accept article title+category+lang via query params as fallback when article isn't in DynamoDB
     const title = req.query.title || '';
     const category = req.query.category || 'world';
     const userLang = req.query.lang || 'en';
 
     let article = null;
-    try {
-      article = await getArticleById(req.params.id);
-    } catch {}
+    try { article = await getArticleById(req.params.id); } catch {}
 
-    // If article not in DynamoDB, construct a minimal object from query params
     if (!article && !title) {
       return res.json({ article: null, thread: [], threadSummary: null, count: 0 });
     }
     const articleTitle = article?.title || title;
+    const articleDesc = article?.description || '';
     const articleId = article?.articleId || req.params.id;
     const lang = article?.lang || 'en';
     const cat = article?.category || category;
 
     let relatedArticles = [];
 
-    // Try OpenSearch more_like_this
     try {
       const client = getSearchClient();
-      const result = await client.search({
-        index: `articles-${lang}`,
-        body: {
-          query: {
-            bool: {
-              must: [{
-                more_like_this: {
-                  fields: ['title', 'description'],
-                  like: articleTitle,
-                  min_term_freq: 1,
-                  min_doc_freq: 1,
-                  minimum_should_match: '25%',
-                  max_query_terms: 25,
-                },
-              }],
-              must_not: [{ term: { articleId } }],
+      const embeddingText = buildEmbeddingText(articleTitle, articleDesc);
+      const embedding = await generateEmbedding(embeddingText);
+
+      if (embedding) {
+        // Hybrid: BM25 more_like_this + kNN for semantic thread matching
+        const result = await client.search({
+          index: `articles-${lang}`,
+          params: { search_pipeline: HYBRID_PIPELINE_NAME },
+          body: {
+            query: {
+              hybrid: {
+                queries: [
+                  {
+                    bool: {
+                      must: [{
+                        more_like_this: {
+                          fields: ['title', 'description'],
+                          like: articleTitle,
+                          min_term_freq: 1,
+                          min_doc_freq: 1,
+                          minimum_should_match: '25%',
+                          max_query_terms: 25,
+                        },
+                      }],
+                      must_not: [{ term: { articleId } }],
+                    },
+                  },
+                  {
+                    knn: {
+                      embedding: { vector: embedding, k: 20 },
+                    },
+                  },
+                ],
+              },
             },
+            size: 16,
+            _source: ['articleId', 'title', 'description', 'source', 'date', 'image', 'slug', 'category', 'section'],
           },
-          sort: [{ _score: 'desc' }, { date: 'desc' }],
-          size: 15,
-          _source: ['articleId', 'title', 'description', 'source', 'date', 'image', 'slug', 'category', 'section'],
-        },
-      });
-      relatedArticles = result.body.hits.hits.map((h) => ({ ...h._source, score: h._score }));
+        });
+        relatedArticles = result.body.hits.hits
+          .filter((h) => h._source.articleId !== articleId)
+          .slice(0, 15)
+          .map((h) => ({ ...h._source, score: h._score }));
+      } else {
+        // Fallback: BM25 more_like_this only
+        const result = await client.search({
+          index: `articles-${lang}`,
+          body: {
+            query: {
+              bool: {
+                must: [{
+                  more_like_this: {
+                    fields: ['title', 'description'],
+                    like: articleTitle,
+                    min_term_freq: 1,
+                    min_doc_freq: 1,
+                    minimum_should_match: '25%',
+                    max_query_terms: 25,
+                  },
+                }],
+                must_not: [{ term: { articleId } }],
+              },
+            },
+            sort: [{ _score: 'desc' }, { date: 'desc' }],
+            size: 15,
+            _source: ['articleId', 'title', 'description', 'source', 'date', 'image', 'slug', 'category', 'section'],
+          },
+        });
+        relatedArticles = result.body.hits.hits.map((h) => ({ ...h._source, score: h._score }));
+      }
     } catch {}
 
-    // Fallback to DynamoDB category if OpenSearch returned nothing
+    // Fallback to DynamoDB category
     if (relatedArticles.length === 0) {
       try {
         const catArticles = await queryByGlobalCategory(cat, 20);
@@ -854,7 +1053,7 @@ app.get('/sitemaps/daily/:date.xml', (req, res) => {
   serveSitemapFromS3(`sitemaps/daily/${date}.xml`, res);
 });
 
-// --- Full-text search via OpenSearch ---
+// --- Full-text search via OpenSearch (hybrid BM25 + kNN) ---
 
 app.get('/api/search', async (req, res) => {
   const q = req.query.q;
@@ -868,7 +1067,6 @@ app.get('/api/search', async (req, res) => {
     return res.status(400).json({ error: 'q param required' });
   }
 
-  // Determine which index(es) to search
   const supported = new Set(supportedLanguages());
   let targetIndex;
   if (lang === 'all') {
@@ -879,52 +1077,104 @@ app.get('/api/search', async (req, res) => {
     targetIndex = 'articles-*';
   }
 
-  // Build the search query
-  const must = [
-    {
-      multi_match: {
-        query: q.trim(),
-        fields: ['title^3', 'description^2', 'body'],
-        type: 'best_fields',
-        fuzziness: 'AUTO',
-      },
-    },
-  ];
-
   const filter = [];
   if (category) filter.push({ term: { category } });
   if (region) filter.push({ term: { region } });
 
-  const searchBody = {
-    query: {
-      bool: {
-        must,
-        ...(filter.length > 0 ? { filter } : {}),
-      },
-    },
-    sort: [{ _score: 'desc' }, { date: 'desc' }],
-    from,
-    size,
-    highlight: {
-      pre_tags: ['<mark>'],
-      post_tags: ['</mark>'],
-      fields: {
-        title: { number_of_fragments: 0 },
-        description: { number_of_fragments: 1, fragment_size: 200 },
-        body: { number_of_fragments: 2, fragment_size: 150 },
-      },
-    },
-    _source: {
-      excludes: ['body'],
-    },
-  };
-
   try {
     const client = getSearchClient();
-    const result = await client.search({
+
+    // Generate query embedding for kNN leg of hybrid search
+    const queryEmbedding = await generateEmbedding(q.trim());
+
+    let searchBody;
+
+    if (queryEmbedding) {
+      // Hybrid search: BM25 + kNN via search pipeline
+      const bm25Query = {
+        bool: {
+          must: [{
+            multi_match: {
+              query: q.trim(),
+              fields: ['title^3', 'description^2', 'body'],
+              type: 'best_fields',
+              fuzziness: 'AUTO',
+            },
+          }],
+          ...(filter.length > 0 ? { filter } : {}),
+        },
+      };
+
+      const knnQuery = {
+        knn: {
+          embedding: {
+            vector: queryEmbedding,
+            k: Math.min(size + from + 10, 100),
+          },
+        },
+      };
+
+      searchBody = {
+        query: {
+          hybrid: {
+            queries: [bm25Query, knnQuery],
+          },
+        },
+        from,
+        size,
+        highlight: {
+          pre_tags: ['<mark>'],
+          post_tags: ['</mark>'],
+          fields: {
+            title: { number_of_fragments: 0 },
+            description: { number_of_fragments: 1, fragment_size: 200 },
+            body: { number_of_fragments: 2, fragment_size: 150 },
+          },
+        },
+        _source: { excludes: ['body', 'embedding'] },
+      };
+    } else {
+      // Fallback: BM25 only (embedding generation failed)
+      searchBody = {
+        query: {
+          bool: {
+            must: [{
+              multi_match: {
+                query: q.trim(),
+                fields: ['title^3', 'description^2', 'body'],
+                type: 'best_fields',
+                fuzziness: 'AUTO',
+              },
+            }],
+            ...(filter.length > 0 ? { filter } : {}),
+          },
+        },
+        sort: [{ _score: 'desc' }, { date: 'desc' }],
+        from,
+        size,
+        highlight: {
+          pre_tags: ['<mark>'],
+          post_tags: ['</mark>'],
+          fields: {
+            title: { number_of_fragments: 0 },
+            description: { number_of_fragments: 1, fragment_size: 200 },
+            body: { number_of_fragments: 2, fragment_size: 150 },
+          },
+        },
+        _source: { excludes: ['body', 'embedding'] },
+      };
+    }
+
+    const searchParams = {
       index: targetIndex,
       body: searchBody,
-    });
+    };
+    // Attach hybrid pipeline only when using hybrid query
+    if (queryEmbedding) {
+      searchParams.params = { search_pipeline: HYBRID_PIPELINE_NAME };
+    }
+
+    const result = await client.search(searchParams);
 
     const hits = result.body.hits;
     const articles = hits.hits.map((hit) => ({
@@ -942,9 +1192,9 @@ app.get('/api/search', async (req, res) => {
       size,
       query: q,
       lang,
+      hybrid: !!queryEmbedding,
     });
   } catch (err) {
-    // If OpenSearch is not available, fall back to basic in-memory search
     if (err.message?.includes('OPENSEARCH_ENDPOINT') || err.name === 'ConnectionError') {
       try {
         const dbArticles = await queryByGlobalCategory('world', 100);

@@ -3,11 +3,15 @@
 //
 // Scans all GLOBAL#CAT#* partitions (which have full article content) and
 // indexes each article into the correct per-language OpenSearch index.
+// Generates vector embeddings for each article via Amazon Bedrock Titan.
 // Deduplicates by articleId so each article is indexed only once.
 //
 // Usage:
 //   OPENSEARCH_ENDPOINT=https://your-domain.eu-west-1.es.amazonaws.com \
 //   node server/search/backfill.js
+//
+// Options:
+//   --skip-embeddings    Skip embedding generation (BM25-only backfill)
 // ---------------------------------------------------------------------------
 
 import { createHash } from 'crypto';
@@ -19,10 +23,12 @@ import {
   supportedLanguages,
   buildIndexSettings,
 } from './mappings.js';
+import { generateEmbedding, buildEmbeddingText } from './embeddings.js';
+import { createHybridPipeline } from './pipeline.js';
 
 const TABLE_NAME = process.env.DYNAMODB_TABLE || 'pulsenews-articles';
+const SKIP_EMBEDDINGS = process.argv.includes('--skip-embeddings');
 
-// OpenSearch _id max is 512 bytes — hash long IDs
 function safeId(id) {
   if (Buffer.byteLength(id, 'utf8') <= 512) return id;
   return createHash('sha256').update(id).digest('hex');
@@ -44,7 +50,7 @@ async function ensureAllIndexes(osClient) {
           index: idx,
           body: buildIndexSettings(lang),
         });
-        console.log(`  Created index: ${idx}`);
+        console.log(`  Created index: ${idx} (kNN + BM25)`);
       }
     } catch (err) {
       if (err.meta?.body?.error?.type !== 'resource_already_exists_exception') {
@@ -54,20 +60,53 @@ async function ensureAllIndexes(osClient) {
   }
 }
 
+/**
+ * Generate embeddings for a batch of items with concurrency control.
+ * Returns items enriched with an `embedding` field.
+ */
+async function enrichWithEmbeddings(items, concurrency = 5) {
+  let completed = 0;
+  let idx = 0;
+
+  async function worker() {
+    while (idx < items.length) {
+      const i = idx++;
+      const item = items[i];
+      const text = buildEmbeddingText(item.title, item.description);
+      item._embedding = await generateEmbedding(text);
+      completed++;
+      if (completed % 50 === 0) {
+        console.log(`    Embeddings: ${completed}/${items.length}`);
+      }
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, () => worker());
+  await Promise.all(workers);
+  return items;
+}
+
 async function main() {
   const osClient = getClient();
 
-  console.log('Ensuring all indexes exist...');
+  console.log('Ensuring all indexes exist (with kNN enabled)...');
   await ensureAllIndexes(osClient);
+
+  console.log('Ensuring hybrid search pipeline exists...');
+  await createHybridPipeline();
+
+  if (SKIP_EMBEDDINGS) {
+    console.log('\n⚠ Skipping embedding generation (--skip-embeddings flag)\n');
+  }
 
   console.log('\nScanning DynamoDB for articles...');
 
   const seen = new Set();
   let totalScanned = 0;
   let totalIndexed = 0;
+  let totalEmbeddings = 0;
   let lastKey = undefined;
 
-  // Scan for GLOBAL#CAT# items which have full article content
   do {
     const result = await docClient.send(
       new ScanCommand({
@@ -81,38 +120,55 @@ async function main() {
     const items = result.Items || [];
     totalScanned += items.length;
 
-    // Bulk index in batches
-    const bulkBody = [];
-
+    // Collect unique articles for this scan page
+    const uniqueItems = [];
     for (const item of items) {
       const id = item.articleId;
       if (!id || seen.has(id)) continue;
       seen.add(id);
+      uniqueItems.push(item);
+    }
 
+    // Generate embeddings for the batch
+    if (!SKIP_EMBEDDINGS && uniqueItems.length > 0) {
+      await enrichWithEmbeddings(uniqueItems, 5);
+    }
+
+    // Bulk index
+    const bulkBody = [];
+    for (const item of uniqueItems) {
       const lang = item.lang || 'en';
       const safeLang = SUPPORTED.has(lang) ? lang : 'en';
       const idx = indexName(safeLang);
 
+      const doc = {
+        articleId: item.articleId,
+        title: item.title || '',
+        description: item.description || '',
+        body: item.body || '',
+        url: item.url || '',
+        image: item.image || '',
+        author: item.author || '',
+        source: item.source || '',
+        category: item.category || 'general',
+        region: item.region || 'global',
+        lang: safeLang,
+        sectionId: item.sectionId || '',
+        tags: item.tags || [],
+        slug: item.slug || '',
+        mood: item.mood || '',
+        date: item.date || new Date().toISOString(),
+        createdAt: item.createdAt || new Date().toISOString(),
+      };
+
+      if (item._embedding) {
+        doc.embedding = item._embedding;
+        totalEmbeddings++;
+      }
+
       bulkBody.push(
-        { index: { _index: idx, _id: safeId(id) } },
-        {
-          articleId: id,
-          title: item.title || '',
-          description: item.description || '',
-          body: item.body || '',
-          url: item.url || '',
-          image: item.image || '',
-          author: item.author || '',
-          source: item.source || '',
-          category: item.category || 'general',
-          region: item.region || 'global',
-          lang: safeLang,
-          sectionId: item.sectionId || '',
-          tags: item.tags || [],
-          slug: item.slug || '',
-          date: item.date || new Date().toISOString(),
-          createdAt: item.createdAt || new Date().toISOString(),
-        },
+        { index: { _index: idx, _id: safeId(item.articleId) } },
+        doc,
       );
     }
 
@@ -122,26 +178,28 @@ async function main() {
         refresh: false,
       });
 
-      const indexedCount = bulkBody.length / 2; // action + doc pairs
+      const indexedCount = bulkBody.length / 2;
       totalIndexed += indexedCount;
 
       if (bulkResult.body.errors) {
         const errors = bulkResult.body.items.filter((i) => i.index?.error);
         console.warn(`  Batch had ${errors.length} errors`);
+        if (errors.length > 0) {
+          console.warn(`  First error: ${JSON.stringify(errors[0].index.error)}`);
+        }
       }
 
       console.log(
-        `  Scanned ${totalScanned} items, indexed ${totalIndexed} unique articles`,
+        `  Scanned ${totalScanned} items | indexed ${totalIndexed} articles | ${totalEmbeddings} embeddings`,
       );
     }
 
     lastKey = result.LastEvaluatedKey;
   } while (lastKey);
 
-  // Final refresh to make documents searchable
   await osClient.indices.refresh({ index: 'articles-*' });
 
-  console.log(`\nBackfill complete: ${totalIndexed} articles indexed.`);
+  console.log(`\nBackfill complete: ${totalIndexed} articles indexed, ${totalEmbeddings} with embeddings.`);
 }
 
 main().catch((err) => {

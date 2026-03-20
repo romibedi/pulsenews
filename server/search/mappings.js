@@ -3,7 +3,10 @@
 //
 // Each language gets its own index (articles-en, articles-hi, etc.) with the
 // correct analyzer for tokenization, stemming, and stop-word removal.
+// Includes knn_vector field for hybrid BM25 + semantic search.
 // ---------------------------------------------------------------------------
+
+import { DIMENSIONS } from './embeddings.js';
 
 /**
  * Analyzer configuration per language code.
@@ -52,6 +55,7 @@ export function buildIndexSettings(lang) {
   const settings = {
     number_of_shards: 1,
     number_of_replicas: 0,
+    'index.knn': true,
   };
 
   // Add custom analyzer with accent folding for built-in analyzers
@@ -107,6 +111,21 @@ export function buildIndexSettings(lang) {
         sectionId: { type: 'keyword' },
         tags: { type: 'keyword' },
         mood: { type: 'keyword' },
+
+        // --- Vector embedding for kNN semantic search ---
+        embedding: {
+          type: 'knn_vector',
+          dimension: DIMENSIONS,
+          method: {
+            name: 'hnsw',
+            space_type: 'l2',
+            engine: 'faiss',
+            parameters: {
+              ef_construction: 128,
+              m: 16,
+            },
+          },
+        },
 
         // --- Date and numeric fields ---
         date: { type: 'date' },
