@@ -471,6 +471,26 @@ export const LANG_FEEDS = {
   sw: [
     { url: 'https://feeds.bbci.co.uk/swahili/rss.xml', source: 'BBC Swahili' },
   ],
+  // Indian regional languages
+  kn: [
+    { url: 'https://feeds.bbci.co.uk/kannada/rss.xml', source: 'BBC Kannada' },
+    { url: 'https://news.google.com/rss?hl=kn-IN&gl=IN&ceid=IN:kn', source: 'Google News Kannada' },
+  ],
+  ml: [
+    { url: 'https://feeds.bbci.co.uk/malayalam/rss.xml', source: 'BBC Malayalam' },
+    { url: 'https://news.google.com/rss?hl=ml-IN&gl=IN&ceid=IN:ml', source: 'Google News Malayalam' },
+  ],
+  gu: [
+    { url: 'https://feeds.bbci.co.uk/gujarati/rss.xml', source: 'BBC Gujarati' },
+    { url: 'https://news.google.com/rss?hl=gu-IN&gl=IN&ceid=IN:gu', source: 'Google News Gujarati' },
+  ],
+  pa: [
+    { url: 'https://feeds.bbci.co.uk/punjabi/rss.xml', source: 'BBC Punjabi' },
+    { url: 'https://news.google.com/rss?hl=pa-IN&gl=IN&ceid=IN:pa', source: 'Google News Punjabi' },
+  ],
+  as: [
+    { url: 'https://news.google.com/rss?hl=as-IN&gl=IN&ceid=IN:as', source: 'Google News Assamese' },
+  ],
 };
 
 // --- City-level feeds (hyperlocal news) ---
@@ -478,86 +498,96 @@ export const CITY_FEEDS = {
   // === Phase 1: India Top 10 ===
   mumbai: {
     label: 'Mumbai', region: 'india', country: 'IN',
-    lat: 19.076, lng: 72.8777,
+    lang: 'mr', lat: 19.076, lng: 72.8777,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Mumbai?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Mumbai' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Mumbai?hl=mr-IN&gl=IN&ceid=IN:mr', source: 'Google News Mumbai Marathi' },
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/2950533.cms', source: 'TOI Mumbai' },
       { url: 'https://www.hindustantimes.com/feeds/rss/mumbai-news/rssfeed.xml', source: 'HT Mumbai' },
     ],
   },
   delhi: {
     label: 'Delhi', region: 'india', country: 'IN',
-    lat: 28.6139, lng: 77.209,
+    lang: 'hi', lat: 28.6139, lng: 77.209,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Delhi?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Delhi' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Delhi?hl=hi-IN&gl=IN&ceid=IN:hi', source: 'Google News Delhi Hindi' },
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/2951551.cms', source: 'TOI Delhi' },
       { url: 'https://www.hindustantimes.com/feeds/rss/delhi-news/rssfeed.xml', source: 'HT Delhi' },
     ],
   },
   bangalore: {
     label: 'Bangalore', region: 'india', country: 'IN',
-    lat: 12.9716, lng: 77.5946,
+    lang: 'kn', lat: 12.9716, lng: 77.5946,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Bangalore?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Bangalore' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Bangalore?hl=kn-IN&gl=IN&ceid=IN:kn', source: 'Google News Bangalore Kannada' },
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/3214351.cms', source: 'TOI Bangalore' },
     ],
   },
   chennai: {
     label: 'Chennai', region: 'india', country: 'IN',
-    lat: 13.0827, lng: 80.2707,
+    lang: 'ta', lat: 13.0827, lng: 80.2707,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Chennai?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Chennai' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Chennai?hl=ta-IN&gl=IN&ceid=IN:ta', source: 'Google News Chennai Tamil' },
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/2950623.cms', source: 'TOI Chennai' },
       { url: 'https://www.thehindu.com/news/cities/chennai/feeder/default.rss', source: 'The Hindu Chennai' },
     ],
   },
   hyderabad: {
     label: 'Hyderabad', region: 'india', country: 'IN',
-    lat: 17.385, lng: 78.4867,
+    lang: 'te', lat: 17.385, lng: 78.4867,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Hyderabad?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Hyderabad' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Hyderabad?hl=te-IN&gl=IN&ceid=IN:te', source: 'Google News Hyderabad Telugu' },
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/3218361.cms', source: 'TOI Hyderabad' },
     ],
   },
   pune: {
     label: 'Pune', region: 'india', country: 'IN',
-    lat: 18.5204, lng: 73.8567,
+    lang: 'mr', lat: 18.5204, lng: 73.8567,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Pune?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Pune' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Pune?hl=mr-IN&gl=IN&ceid=IN:mr', source: 'Google News Pune Marathi' },
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/3211131.cms', source: 'TOI Pune' },
       { url: 'https://www.hindustantimes.com/feeds/rss/pune-news/rssfeed.xml', source: 'HT Pune' },
     ],
   },
   kolkata: {
     label: 'Kolkata', region: 'india', country: 'IN',
-    lat: 22.5726, lng: 88.3639,
+    lang: 'bn', lat: 22.5726, lng: 88.3639,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Kolkata?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Kolkata' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Kolkata?hl=bn-IN&gl=IN&ceid=IN:bn', source: 'Google News Kolkata Bengali' },
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/2950603.cms', source: 'TOI Kolkata' },
     ],
   },
   ahmedabad: {
     label: 'Ahmedabad', region: 'india', country: 'IN',
-    lat: 23.0225, lng: 72.5714,
+    lang: 'gu', lat: 23.0225, lng: 72.5714,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Ahmedabad?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Ahmedabad' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Ahmedabad?hl=gu-IN&gl=IN&ceid=IN:gu', source: 'Google News Ahmedabad Gujarati' },
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/3214801.cms', source: 'TOI Ahmedabad' },
     ],
   },
   chandigarh: {
     label: 'Chandigarh', region: 'india', country: 'IN',
-    lat: 30.7333, lng: 76.7794,
+    lang: 'pa', lat: 30.7333, lng: 76.7794,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Chandigarh?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Chandigarh' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Chandigarh?hl=pa-IN&gl=IN&ceid=IN:pa', source: 'Google News Chandigarh Punjabi' },
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/3211541.cms', source: 'TOI Chandigarh' },
       { url: 'https://www.hindustantimes.com/feeds/rss/chandigarh/rssfeed.xml', source: 'HT Chandigarh' },
     ],
   },
   lucknow: {
     label: 'Lucknow', region: 'india', country: 'IN',
-    lat: 26.8467, lng: 80.9462,
+    lang: 'hi', lat: 26.8467, lng: 80.9462,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Lucknow?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Lucknow' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Lucknow?hl=hi-IN&gl=IN&ceid=IN:hi', source: 'Google News Lucknow Hindi' },
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/3205391.cms', source: 'TOI Lucknow' },
       { url: 'https://www.hindustantimes.com/feeds/rss/lucknow-news/rssfeed.xml', source: 'HT Lucknow' },
     ],
@@ -566,80 +596,90 @@ export const CITY_FEEDS = {
   // === Phase 2: India +10 ===
   jaipur: {
     label: 'Jaipur', region: 'india', country: 'IN',
-    lat: 26.9124, lng: 75.7873,
+    lang: 'hi', lat: 26.9124, lng: 75.7873,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Jaipur?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Jaipur' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Jaipur?hl=hi-IN&gl=IN&ceid=IN:hi', source: 'Google News Jaipur Hindi' },
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/3012544.cms', source: 'TOI Jaipur' },
     ],
   },
   kochi: {
     label: 'Kochi', region: 'india', country: 'IN',
-    lat: 9.9312, lng: 76.2673,
+    lang: 'ml', lat: 9.9312, lng: 76.2673,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Kochi?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Kochi' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Kochi?hl=ml-IN&gl=IN&ceid=IN:ml', source: 'Google News Kochi Malayalam' },
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/2950573.cms', source: 'TOI Kochi' },
     ],
   },
   bhopal: {
     label: 'Bhopal', region: 'india', country: 'IN',
-    lat: 23.2599, lng: 77.4126,
+    lang: 'hi', lat: 23.2599, lng: 77.4126,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Bhopal?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Bhopal' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Bhopal?hl=hi-IN&gl=IN&ceid=IN:hi', source: 'Google News Bhopal Hindi' },
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/3214337.cms', source: 'TOI Bhopal' },
     ],
   },
   patna: {
     label: 'Patna', region: 'india', country: 'IN',
-    lat: 25.6093, lng: 85.1376,
+    lang: 'hi', lat: 25.6093, lng: 85.1376,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Patna?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Patna' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Patna?hl=hi-IN&gl=IN&ceid=IN:hi', source: 'Google News Patna Hindi' },
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/3214353.cms', source: 'TOI Patna' },
     ],
   },
   thiruvananthapuram: {
     label: 'Thiruvananthapuram', region: 'india', country: 'IN',
-    lat: 8.5241, lng: 76.9366,
+    lang: 'ml', lat: 8.5241, lng: 76.9366,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Thiruvananthapuram?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Trivandrum' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Thiruvananthapuram?hl=ml-IN&gl=IN&ceid=IN:ml', source: 'Google News Trivandrum Malayalam' },
       { url: 'https://www.thehindu.com/news/cities/Thiruvananthapuram/feeder/default.rss', source: 'The Hindu Trivandrum' },
     ],
   },
   guwahati: {
     label: 'Guwahati', region: 'india', country: 'IN',
-    lat: 26.1445, lng: 91.7362,
+    lang: 'as', lat: 26.1445, lng: 91.7362,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Guwahati?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Guwahati' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Guwahati?hl=as-IN&gl=IN&ceid=IN:as', source: 'Google News Guwahati Assamese' },
     ],
   },
   indore: {
     label: 'Indore', region: 'india', country: 'IN',
-    lat: 22.7196, lng: 75.8577,
+    lang: 'hi', lat: 22.7196, lng: 75.8577,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Indore?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Indore' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Indore?hl=hi-IN&gl=IN&ceid=IN:hi', source: 'Google News Indore Hindi' },
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/3214344.cms', source: 'TOI Indore' },
     ],
   },
   nagpur: {
     label: 'Nagpur', region: 'india', country: 'IN',
-    lat: 21.1458, lng: 79.0882,
+    lang: 'mr', lat: 21.1458, lng: 79.0882,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Nagpur?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Nagpur' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Nagpur?hl=mr-IN&gl=IN&ceid=IN:mr', source: 'Google News Nagpur Marathi' },
       { url: 'https://timesofindia.indiatimes.com/rssfeeds/3214347.cms', source: 'TOI Nagpur' },
     ],
   },
   coimbatore: {
     label: 'Coimbatore', region: 'india', country: 'IN',
-    lat: 11.0168, lng: 76.9558,
+    lang: 'ta', lat: 11.0168, lng: 76.9558,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Coimbatore?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Coimbatore' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Coimbatore?hl=ta-IN&gl=IN&ceid=IN:ta', source: 'Google News Coimbatore Tamil' },
       { url: 'https://www.thehindu.com/news/cities/Coimbatore/feeder/default.rss', source: 'The Hindu Coimbatore' },
     ],
   },
   visakhapatnam: {
     label: 'Visakhapatnam', region: 'india', country: 'IN',
-    lat: 17.6868, lng: 83.2185,
+    lang: 'te', lat: 17.6868, lng: 83.2185,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Visakhapatnam?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Vizag' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Visakhapatnam?hl=te-IN&gl=IN&ceid=IN:te', source: 'Google News Vizag Telugu' },
     ],
   },
 

@@ -9,6 +9,11 @@ export const LANGUAGES = {
   te: { label: 'Telugu', nativeLabel: 'తెలుగు', flag: '🇮🇳' },
   bn: { label: 'Bengali', nativeLabel: 'বাংলা', flag: '🇮🇳' },
   mr: { label: 'Marathi', nativeLabel: 'मराठी', flag: '🇮🇳' },
+  kn: { label: 'Kannada', nativeLabel: 'ಕನ್ನಡ', flag: '🇮🇳' },
+  ml: { label: 'Malayalam', nativeLabel: 'മലയാളം', flag: '🇮🇳' },
+  gu: { label: 'Gujarati', nativeLabel: 'ગુજરાતી', flag: '🇮🇳' },
+  pa: { label: 'Punjabi', nativeLabel: 'ਪੰਜਾਬੀ', flag: '🇮🇳' },
+  as: { label: 'Assamese', nativeLabel: 'অসমীয়া', flag: '🇮🇳' },
   ur: { label: 'Urdu', nativeLabel: 'اردو', flag: '🇵🇰' },
   // Middle East
   ar: { label: 'Arabic', nativeLabel: 'العربية', flag: '🇸🇦' },
@@ -27,7 +32,7 @@ export const LANGUAGES = {
 
 // Which languages are available per region
 export const REGION_LANGUAGES = {
-  india: ['en', 'hi', 'ta', 'te', 'bn', 'mr', 'ur'],
+  india: ['en', 'hi', 'ta', 'te', 'bn', 'mr', 'kn', 'ml', 'gu', 'pa', 'as', 'ur'],
   uk: ['en'],
   us: ['en', 'es'],
   australia: ['en'],
@@ -62,6 +67,19 @@ const UI_STRINGS = {
     newsletter: 'Newsletter',
     daily: 'Daily',
     weekly: 'Weekly',
+    // Categories
+    catWorld: 'World', catTechnology: 'Technology', catBusiness: 'Business', catSport: 'Sport',
+    catScience: 'Science', catCulture: 'Culture', catEnvironment: 'Environment', catPolitics: 'Politics',
+    catAi: 'AI', catEntertainment: 'Entertainment', catGaming: 'Gaming', catCricket: 'Cricket',
+    catStartups: 'Startups', catSpace: 'Space', catCrypto: 'Crypto', catTopStories: 'Top Stories',
+    // Navigation
+    regions: 'Regions', archive: 'Archive',
+    // Region page
+    region: 'Region', yourRegion: 'Your region', setAsRegion: 'Set as my region',
+    latestFrom: 'Latest news from', latestFromShort: 'Latest from',
+    noNewsAvailable: 'No news available',
+    // Explore
+    exploreByRegion: 'Explore by Region', newsFromWorld: 'News from around the world', explore: 'Explore',
   },
   hi: {
     headlines: 'आज की सुर्खियाँ',
@@ -86,6 +104,15 @@ const UI_STRINGS = {
     newsletter: 'न्यूज़लेटर',
     daily: 'दैनिक',
     weekly: 'साप्ताहिक',
+    catWorld: 'दुनिया', catTechnology: 'प्रौद्योगिकी', catBusiness: 'व्यापार', catSport: 'खेल',
+    catScience: 'विज्ञान', catCulture: 'संस्कृति', catEnvironment: 'पर्यावरण', catPolitics: 'राजनीति',
+    catAi: 'AI', catEntertainment: 'मनोरंजन', catGaming: 'गेमिंग', catCricket: 'क्रिकेट',
+    catStartups: 'स्टार्टअप', catSpace: 'अंतरिक्ष', catCrypto: 'क्रिप्टो', catTopStories: 'मुख्य समाचार',
+    regions: 'क्षेत्र', archive: 'संग्रह',
+    region: 'क्षेत्र', yourRegion: 'आपका क्षेत्र', setAsRegion: 'मेरा क्षेत्र सेट करें',
+    latestFrom: 'से ताज़ा समाचार', latestFromShort: 'ताज़ा खबरें',
+    noNewsAvailable: 'कोई समाचार उपलब्ध नहीं',
+    exploreByRegion: 'क्षेत्र अनुसार खोजें', newsFromWorld: 'दुनिया भर से समाचार', explore: 'एक्सप्लोर',
   },
   ta: {
     headlines: 'இன்றைய தலைப்புச் செய்திகள்',
@@ -110,6 +137,15 @@ const UI_STRINGS = {
     newsletter: 'செய்திமடல்',
     daily: 'தினசரி',
     weekly: 'வாராந்திர',
+    catWorld: 'உலகம்', catTechnology: 'தொழில்நுட்பம்', catBusiness: 'வணிகம்', catSport: 'விளையாட்டு',
+    catScience: 'அறிவியல்', catCulture: 'கலாச்சாரம்', catEnvironment: 'சுற்றுச்சூழல்', catPolitics: 'அரசியல்',
+    catAi: 'AI', catEntertainment: 'பொழுதுபோக்கு', catGaming: 'கேமிங்', catCricket: 'கிரிக்கெட்',
+    catStartups: 'ஸ்டார்ட்அப்', catSpace: 'விண்வெளி', catCrypto: 'கிரிப்டோ', catTopStories: 'முக்கிய செய்திகள்',
+    regions: 'பகுதிகள்', archive: 'காப்பகம்',
+    region: 'பகுதி', yourRegion: 'உங்கள் பகுதி', setAsRegion: 'என் பகுதியாக அமை',
+    latestFrom: 'இலிருந்து சமீபத்திய செய்திகள்', latestFromShort: 'சமீபத்திய',
+    noNewsAvailable: 'செய்திகள் இல்லை',
+    exploreByRegion: 'பகுதி வாரியாக ஆராய', newsFromWorld: 'உலகம் முழுவதும் செய்திகள்', explore: 'ஆராய',
   },
   te: {
     headlines: 'నేటి ముఖ్యాంశాలు',
@@ -134,6 +170,15 @@ const UI_STRINGS = {
     newsletter: 'వార్తాపత్రం',
     daily: 'రోజువారీ',
     weekly: 'వారంవారీ',
+    catWorld: 'ప్రపంచం', catTechnology: 'సాంకేతికత', catBusiness: 'వ్యాపారం', catSport: 'క్రీడ',
+    catScience: 'సైన్స్', catCulture: 'సంస్కృతి', catEnvironment: 'పర్యావరణం', catPolitics: 'రాజకీయాలు',
+    catAi: 'AI', catEntertainment: 'వినోదం', catGaming: 'గేమింగ్', catCricket: 'క్రికెట్',
+    catStartups: 'స్టార్టప్‌లు', catSpace: 'అంతరిక్షం', catCrypto: 'క్రిప్టో', catTopStories: 'ప్రధాన వార్తలు',
+    regions: 'ప్రాంతాలు', archive: 'ఆర్కైవ్',
+    region: 'ప్రాంతం', yourRegion: 'మీ ప్రాంతం', setAsRegion: 'నా ప్రాంతంగా సెట్ చేయండి',
+    latestFrom: 'నుండి తాజా వార్తలు', latestFromShort: 'తాజా',
+    noNewsAvailable: 'వార్తలు అందుబాటులో లేవు',
+    exploreByRegion: 'ప్రాంతం వారీగా అన్వేషించండి', newsFromWorld: 'ప్రపంచం నలుమూలల నుండి వార్తలు', explore: 'అన్వేషించు',
   },
   bn: {
     headlines: 'আজকের শিরোনাম',
@@ -158,6 +203,15 @@ const UI_STRINGS = {
     newsletter: 'নিউজলেটার',
     daily: 'দৈনিক',
     weekly: 'সাপ্তাহিক',
+    catWorld: 'বিশ্ব', catTechnology: 'প্রযুক্তি', catBusiness: 'ব্যবসা', catSport: 'খেলা',
+    catScience: 'বিজ্ঞান', catCulture: 'সংস্কৃতি', catEnvironment: 'পরিবেশ', catPolitics: 'রাজনীতি',
+    catAi: 'AI', catEntertainment: 'বিনোদন', catGaming: 'গেমিং', catCricket: 'ক্রিকেট',
+    catStartups: 'স্টার্টআপ', catSpace: 'মহাকাশ', catCrypto: 'ক্রিপ্টো', catTopStories: 'প্রধান সংবাদ',
+    regions: 'অঞ্চল', archive: 'আর্কাইভ',
+    region: 'অঞ্চল', yourRegion: 'আপনার অঞ্চল', setAsRegion: 'আমার অঞ্চল সেট করুন',
+    latestFrom: 'থেকে সাম্প্রতিক সংবাদ', latestFromShort: 'সাম্প্রতিক',
+    noNewsAvailable: 'কোনো সংবাদ নেই',
+    exploreByRegion: 'অঞ্চল অনুসারে অন্বেষণ', newsFromWorld: 'বিশ্বজুড়ে সংবাদ', explore: 'অন্বেষণ',
   },
   mr: {
     headlines: 'आजच्या मथळे',
@@ -182,6 +236,15 @@ const UI_STRINGS = {
     newsletter: 'वृत्तपत्र',
     daily: 'दैनिक',
     weekly: 'साप्ताहिक',
+    catWorld: 'जग', catTechnology: 'तंत्रज्ञान', catBusiness: 'व्यवसाय', catSport: 'खेळ',
+    catScience: 'विज्ञान', catCulture: 'संस्कृती', catEnvironment: 'पर्यावरण', catPolitics: 'राजकारण',
+    catAi: 'AI', catEntertainment: 'मनोरंजन', catGaming: 'गेमिंग', catCricket: 'क्रिकेट',
+    catStartups: 'स्टार्टअप', catSpace: 'अंतराळ', catCrypto: 'क्रिप्टो', catTopStories: 'मुख्य बातम्या',
+    regions: 'प्रदेश', archive: 'संग्रह',
+    region: 'प्रदेश', yourRegion: 'तुमचा प्रदेश', setAsRegion: 'माझा प्रदेश म्हणून सेट करा',
+    latestFrom: 'कडून ताज्या बातम्या', latestFromShort: 'ताज्या',
+    noNewsAvailable: 'बातम्या उपलब्ध नाहीत',
+    exploreByRegion: 'प्रदेशानुसार शोधा', newsFromWorld: 'जगभरातील बातम्या', explore: 'शोधा',
   },
   ur: {
     headlines: 'آج کی سرخیاں',
@@ -206,6 +269,15 @@ const UI_STRINGS = {
     newsletter: 'نیوز لیٹر',
     daily: 'روزانہ',
     weekly: 'ہفتہ وار',
+    catWorld: 'دنیا', catTechnology: 'ٹیکنالوجی', catBusiness: 'کاروبار', catSport: 'کھیل',
+    catScience: 'سائنس', catCulture: 'ثقافت', catEnvironment: 'ماحولیات', catPolitics: 'سیاست',
+    catAi: 'AI', catEntertainment: 'تفریح', catGaming: 'گیمنگ', catCricket: 'کرکٹ',
+    catStartups: 'اسٹارٹ اپ', catSpace: 'خلا', catCrypto: 'کرپٹو', catTopStories: 'اہم خبریں',
+    regions: 'علاقے', archive: 'محفوظات',
+    region: 'علاقہ', yourRegion: 'آپ کا علاقہ', setAsRegion: 'میرا علاقہ مقرر کریں',
+    latestFrom: 'سے تازہ خبریں', latestFromShort: 'تازہ ترین',
+    noNewsAvailable: 'کوئی خبر دستیاب نہیں',
+    exploreByRegion: 'علاقے کے مطابق دریافت کریں', newsFromWorld: 'دنیا بھر سے خبریں', explore: 'دریافت کریں',
   },
   ar: {
     headlines: 'عناوين اليوم',
@@ -230,6 +302,15 @@ const UI_STRINGS = {
     newsletter: 'النشرة الإخبارية',
     daily: 'يومي',
     weekly: 'أسبوعي',
+    catWorld: 'العالم', catTechnology: 'التكنولوجيا', catBusiness: 'الأعمال', catSport: 'الرياضة',
+    catScience: 'العلوم', catCulture: 'الثقافة', catEnvironment: 'البيئة', catPolitics: 'السياسة',
+    catAi: 'AI', catEntertainment: 'الترفيه', catGaming: 'الألعاب', catCricket: 'الكريكيت',
+    catStartups: 'الشركات الناشئة', catSpace: 'الفضاء', catCrypto: 'العملات الرقمية', catTopStories: 'أهم الأخبار',
+    regions: 'المناطق', archive: 'الأرشيف',
+    region: 'المنطقة', yourRegion: 'منطقتك', setAsRegion: 'تعيين كمنطقتي',
+    latestFrom: 'آخر الأخبار من', latestFromShort: 'الأحدث من',
+    noNewsAvailable: 'لا توجد أخبار',
+    exploreByRegion: 'استكشاف حسب المنطقة', newsFromWorld: 'أخبار من حول العالم', explore: 'استكشاف',
   },
   fr: {
     headlines: 'Titres du jour',
@@ -254,6 +335,15 @@ const UI_STRINGS = {
     newsletter: 'Newsletter',
     daily: 'Quotidien',
     weekly: 'Hebdomadaire',
+    catWorld: 'Monde', catTechnology: 'Technologie', catBusiness: 'Affaires', catSport: 'Sport',
+    catScience: 'Sciences', catCulture: 'Culture', catEnvironment: 'Environnement', catPolitics: 'Politique',
+    catAi: 'IA', catEntertainment: 'Divertissement', catGaming: 'Jeux vidéo', catCricket: 'Cricket',
+    catStartups: 'Startups', catSpace: 'Espace', catCrypto: 'Crypto', catTopStories: 'À la une',
+    regions: 'Régions', archive: 'Archives',
+    region: 'Région', yourRegion: 'Votre région', setAsRegion: 'Définir comme ma région',
+    latestFrom: 'Dernières nouvelles de', latestFromShort: 'Dernières de',
+    noNewsAvailable: 'Aucune actualité disponible',
+    exploreByRegion: 'Explorer par région', newsFromWorld: 'Actualités du monde entier', explore: 'Explorer',
   },
   de: {
     headlines: 'Schlagzeilen',
@@ -278,6 +368,15 @@ const UI_STRINGS = {
     newsletter: 'Newsletter',
     daily: 'Täglich',
     weekly: 'Wöchentlich',
+    catWorld: 'Welt', catTechnology: 'Technologie', catBusiness: 'Wirtschaft', catSport: 'Sport',
+    catScience: 'Wissenschaft', catCulture: 'Kultur', catEnvironment: 'Umwelt', catPolitics: 'Politik',
+    catAi: 'KI', catEntertainment: 'Unterhaltung', catGaming: 'Gaming', catCricket: 'Cricket',
+    catStartups: 'Startups', catSpace: 'Weltraum', catCrypto: 'Krypto', catTopStories: 'Top-Nachrichten',
+    regions: 'Regionen', archive: 'Archiv',
+    region: 'Region', yourRegion: 'Ihre Region', setAsRegion: 'Als meine Region festlegen',
+    latestFrom: 'Neueste Nachrichten aus', latestFromShort: 'Neueste aus',
+    noNewsAvailable: 'Keine Nachrichten verfügbar',
+    exploreByRegion: 'Nach Region erkunden', newsFromWorld: 'Nachrichten aus aller Welt', explore: 'Erkunden',
   },
   es: {
     headlines: 'Titulares de hoy',
@@ -302,6 +401,15 @@ const UI_STRINGS = {
     newsletter: 'Boletín',
     daily: 'Diario',
     weekly: 'Semanal',
+    catWorld: 'Mundo', catTechnology: 'Tecnología', catBusiness: 'Negocios', catSport: 'Deportes',
+    catScience: 'Ciencia', catCulture: 'Cultura', catEnvironment: 'Medio ambiente', catPolitics: 'Política',
+    catAi: 'IA', catEntertainment: 'Entretenimiento', catGaming: 'Videojuegos', catCricket: 'Críquet',
+    catStartups: 'Startups', catSpace: 'Espacio', catCrypto: 'Cripto', catTopStories: 'Principales',
+    regions: 'Regiones', archive: 'Archivo',
+    region: 'Región', yourRegion: 'Tu región', setAsRegion: 'Establecer como mi región',
+    latestFrom: 'Últimas noticias de', latestFromShort: 'Últimas de',
+    noNewsAvailable: 'No hay noticias disponibles',
+    exploreByRegion: 'Explorar por región', newsFromWorld: 'Noticias de todo el mundo', explore: 'Explorar',
   },
   pt: {
     headlines: 'Manchetes de hoje',
@@ -326,6 +434,15 @@ const UI_STRINGS = {
     newsletter: 'Newsletter',
     daily: 'Diário',
     weekly: 'Semanal',
+    catWorld: 'Mundo', catTechnology: 'Tecnologia', catBusiness: 'Negócios', catSport: 'Esportes',
+    catScience: 'Ciência', catCulture: 'Cultura', catEnvironment: 'Meio ambiente', catPolitics: 'Política',
+    catAi: 'IA', catEntertainment: 'Entretenimento', catGaming: 'Jogos', catCricket: 'Críquete',
+    catStartups: 'Startups', catSpace: 'Espaço', catCrypto: 'Cripto', catTopStories: 'Destaques',
+    regions: 'Regiões', archive: 'Arquivo',
+    region: 'Região', yourRegion: 'Sua região', setAsRegion: 'Definir como minha região',
+    latestFrom: 'Últimas notícias de', latestFromShort: 'Últimas de',
+    noNewsAvailable: 'Nenhuma notícia disponível',
+    exploreByRegion: 'Explorar por região', newsFromWorld: 'Notícias de todo o mundo', explore: 'Explorar',
   },
   zh: {
     headlines: '今日头条',
@@ -350,6 +467,15 @@ const UI_STRINGS = {
     newsletter: '新闻简报',
     daily: '每日',
     weekly: '每周',
+    catWorld: '世界', catTechnology: '科技', catBusiness: '商业', catSport: '体育',
+    catScience: '科学', catCulture: '文化', catEnvironment: '环境', catPolitics: '政治',
+    catAi: 'AI', catEntertainment: '娱乐', catGaming: '游戏', catCricket: '板球',
+    catStartups: '创业', catSpace: '太空', catCrypto: '加密货币', catTopStories: '头条新闻',
+    regions: '地区', archive: '存档',
+    region: '地区', yourRegion: '您的地区', setAsRegion: '设为我的地区',
+    latestFrom: '来自的最新新闻', latestFromShort: '最新',
+    noNewsAvailable: '暂无新闻',
+    exploreByRegion: '按地区浏览', newsFromWorld: '全球新闻', explore: '探索',
   },
   ja: {
     headlines: '今日のヘッドライン',
@@ -374,6 +500,15 @@ const UI_STRINGS = {
     newsletter: 'ニュースレター',
     daily: '日刊',
     weekly: '週刊',
+    catWorld: '世界', catTechnology: 'テクノロジー', catBusiness: 'ビジネス', catSport: 'スポーツ',
+    catScience: '科学', catCulture: '文化', catEnvironment: '環境', catPolitics: '政治',
+    catAi: 'AI', catEntertainment: 'エンタメ', catGaming: 'ゲーム', catCricket: 'クリケット',
+    catStartups: 'スタートアップ', catSpace: '宇宙', catCrypto: '暗号通貨', catTopStories: 'トップニュース',
+    regions: '地域', archive: 'アーカイブ',
+    region: '地域', yourRegion: 'あなたの地域', setAsRegion: '私の地域に設定',
+    latestFrom: 'からの最新ニュース', latestFromShort: '最新',
+    noNewsAvailable: 'ニュースはありません',
+    exploreByRegion: '地域別に探す', newsFromWorld: '世界中のニュース', explore: '探索',
   },
   ko: {
     headlines: '오늘의 헤드라인',
@@ -398,6 +533,15 @@ const UI_STRINGS = {
     newsletter: '뉴스레터',
     daily: '일간',
     weekly: '주간',
+    catWorld: '세계', catTechnology: '기술', catBusiness: '경제', catSport: '스포츠',
+    catScience: '과학', catCulture: '문화', catEnvironment: '환경', catPolitics: '정치',
+    catAi: 'AI', catEntertainment: '연예', catGaming: '게임', catCricket: '크리켓',
+    catStartups: '스타트업', catSpace: '우주', catCrypto: '암호화폐', catTopStories: '주요 뉴스',
+    regions: '지역', archive: '보관함',
+    region: '지역', yourRegion: '내 지역', setAsRegion: '내 지역으로 설정',
+    latestFrom: '최신 뉴스', latestFromShort: '최신',
+    noNewsAvailable: '뉴스가 없습니다',
+    exploreByRegion: '지역별 탐색', newsFromWorld: '전 세계 뉴스', explore: '탐색',
   },
   sw: {
     headlines: 'Vichwa vya Habari',
@@ -422,7 +566,24 @@ const UI_STRINGS = {
     newsletter: 'Jarida',
     daily: 'Kila siku',
     weekly: 'Kila wiki',
+    catWorld: 'Dunia', catTechnology: 'Teknolojia', catBusiness: 'Biashara', catSport: 'Michezo',
+    catScience: 'Sayansi', catCulture: 'Utamaduni', catEnvironment: 'Mazingira', catPolitics: 'Siasa',
+    catAi: 'AI', catEntertainment: 'Burudani', catGaming: 'Michezo ya Kompyuta', catCricket: 'Kriketi',
+    catStartups: 'Biashara Mpya', catSpace: 'Angani', catCrypto: 'Kripto', catTopStories: 'Habari Kuu',
+    regions: 'Maeneo', archive: 'Kumbukumbu',
+    region: 'Eneo', yourRegion: 'Eneo lako', setAsRegion: 'Weka kama eneo langu',
+    latestFrom: 'Habari za hivi karibuni kutoka', latestFromShort: 'Za hivi karibuni',
+    noNewsAvailable: 'Hakuna habari',
+    exploreByRegion: 'Chunguza kwa eneo', newsFromWorld: 'Habari kutoka ulimwenguni', explore: 'Chunguza',
   },
+};
+
+// Map category key to translation key
+const CAT_KEY_MAP = {
+  world: 'catWorld', technology: 'catTechnology', business: 'catBusiness', sport: 'catSport',
+  science: 'catScience', culture: 'catCulture', environment: 'catEnvironment', politics: 'catPolitics',
+  ai: 'catAi', entertainment: 'catEntertainment', gaming: 'catGaming', cricket: 'catCricket',
+  startups: 'catStartups', space: 'catSpace', crypto: 'catCrypto',
 };
 
 const LanguageContext = createContext(null);
@@ -431,9 +592,10 @@ export function LanguageProvider({ children }) {
   const [lang, setLang] = useLocalStorage('pulsenews-lang', 'en');
 
   const t = (key) => UI_STRINGS[lang]?.[key] || UI_STRINGS.en[key] || key;
+  const tCat = (catKey) => t(CAT_KEY_MAP[catKey] || catKey);
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t, langInfo: LANGUAGES[lang] || LANGUAGES.en }}>
+    <LanguageContext.Provider value={{ lang, setLang, t, tCat, langInfo: LANGUAGES[lang] || LANGUAGES.en }}>
       {children}
     </LanguageContext.Provider>
   );

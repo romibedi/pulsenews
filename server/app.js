@@ -378,9 +378,10 @@ app.get('/api/stocks', async (req, res) => {
 // Language display names (used in AI prompts)
 const LANG_NAMES = {
   en: 'English', hi: 'Hindi', ta: 'Tamil', te: 'Telugu', bn: 'Bengali',
-  mr: 'Marathi', ur: 'Urdu', ar: 'Arabic', fr: 'French', de: 'German',
-  es: 'Spanish', pt: 'Portuguese', zh: 'Chinese', ja: 'Japanese',
-  ko: 'Korean', sw: 'Swahili',
+  mr: 'Marathi', kn: 'Kannada', ml: 'Malayalam', gu: 'Gujarati',
+  pa: 'Punjabi', as: 'Assamese', ur: 'Urdu', ar: 'Arabic', fr: 'French',
+  de: 'German', es: 'Spanish', pt: 'Portuguese', zh: 'Chinese',
+  ja: 'Japanese', ko: 'Korean', sw: 'Swahili',
 };
 
 // Helper: build language instruction for AI prompts
