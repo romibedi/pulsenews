@@ -74,6 +74,53 @@ export async function fetchArchive(date, { region, lang } = {}) {
   }
 }
 
+export async function fetchByCity(city, { before } = {}) {
+  let url = `/api/city-feeds?city=${encodeURIComponent(city)}`;
+  if (before) url += `&before=${encodeURIComponent(before)}`;
+
+  if (!before) {
+    const cached = getCached(url);
+    if (cached && cached.articles) return cached;
+  }
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return { articles: [] };
+    const data = await res.json();
+    const result = { articles: data.articles || [] };
+    if (!before) setCache(url, result);
+    return result;
+  } catch {
+    return { articles: [] };
+  }
+}
+
+export async function fetchCities(region) {
+  const url = region ? `/api/cities?region=${encodeURIComponent(region)}` : '/api/cities';
+  const cached = getCached(url);
+  if (cached) return cached;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return { cities: [] };
+    const data = await res.json();
+    setCache(url, data);
+    return data;
+  } catch {
+    return { cities: [] };
+  }
+}
+
+export async function fetchGeoCity(lat, lng) {
+  try {
+    const res = await fetch(`/api/geo-city?lat=${lat}&lng=${lng}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.city;
+  } catch {
+    return null;
+  }
+}
+
 export async function searchNews(query, { lang = 'all', category, region } = {}) {
   if (!query || query.trim().length === 0) {
     return { articles: [], total: 0, currentPage: 1, totalPages: 1 };

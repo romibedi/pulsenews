@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CATEGORIES, CATEGORY_LABELS } from '../api/newsApi';
+import { CATEGORIES } from '../api/newsApi';
 import { useTheme } from '../contexts/ThemeContext';
 import { useBookmarks } from '../contexts/BookmarkContext';
 import useAudio from '../contexts/AudioContext';
 import useLanguage from '../hooks/useLanguage';
 import useRegion from '../hooks/useRegion';
+import useCity from '../hooks/useCity';
 import LanguageSelector from './LanguageSelector';
 
 export default function Navbar() {
@@ -16,8 +17,9 @@ export default function Navbar() {
   const { isDark, toggleTheme } = useTheme();
   const { bookmarks } = useBookmarks();
   const { autoplay, toggleAutoplay } = useAudio();
-  const { t } = useLanguage();
+  const { t, tCat } = useLanguage();
   const { region, regionInfo } = useRegion();
+  const { city: detectedCity } = useCity();
 
   useEffect(() => {
     const on = () => setOnline(true);
@@ -147,10 +149,10 @@ export default function Navbar() {
             {/* More menu - desktop */}
             <div className="hidden md:flex items-center gap-1">
               {[
-                { to: '/region/india', label: 'Regions' },
-                { to: '/archive', label: 'Archive' },
-                { to: '/feeds', label: 'Feeds' },
-                { to: '/about', label: 'About' },
+                { to: '/region/india', label: t('regions') },
+                { to: '/archive', label: t('archive') },
+                { to: '/feeds', label: t('feeds') },
+                { to: '/about', label: t('about') },
               ].map((link) => (
                 <Link key={link.to} to={link.to} className="text-xs text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline px-2 py-1 rounded-md hover:bg-[var(--bg)]">
                   {link.label}
@@ -170,13 +172,24 @@ export default function Navbar() {
               {regionInfo.flag} {regionInfo.label}
             </Link>
           )}
+          {detectedCity && (
+            <Link
+              to={`/city/${detectedCity}`}
+              className="px-3 py-1 text-xs font-semibold text-[#e05d44] dark:text-[#e87461] bg-[#fef0ed] dark:bg-[#e87461]/10 rounded-full no-underline whitespace-nowrap flex items-center gap-1"
+            >
+              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+              </svg>
+              Local
+            </Link>
+          )}
           {CATEGORIES.filter((c) => c !== 'world').map((cat) => (
             <Link
               key={cat}
               to={`/category/${cat}`}
               className="px-3 py-1 text-xs font-medium text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] hover:bg-[#fef0ed] dark:hover:bg-[#e87461]/10 rounded-full transition-all no-underline whitespace-nowrap"
             >
-              {CATEGORY_LABELS[cat] || cat}
+              {tCat(cat)}
             </Link>
           ))}
         </div>

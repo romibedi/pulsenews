@@ -97,6 +97,28 @@ export async function queryByLang(lang, limit = 20, before = null) {
 }
 
 /**
+ * Query articles by city.
+ * PK = CITY#<city>, SK descending.
+ * @param {string} before - ISO date string to paginate (return articles older than this)
+ */
+export async function queryByCity(city, limit = 20, before = null) {
+  const params = {
+    TableName: TABLE_NAME,
+    KeyConditionExpression: before
+      ? 'PK = :pk AND SK < :before'
+      : 'PK = :pk',
+    ExpressionAttributeValues: {
+      ':pk': `CITY#${city}`,
+      ...(before && { ':before': before }),
+    },
+    ScanIndexForward: false,
+    Limit: limit,
+  };
+  const result = await docClient.send(new QueryCommand(params));
+  return cleanItems(result.Items);
+}
+
+/**
  * Query articles for a specific date (archive).
  * Queries GLOBAL#CAT#, REGION#, and LANG# partitions in parallel so results
  * include full display fields.  Supports optional region/lang filters.

@@ -100,6 +100,8 @@ function buildPK(ctx) {
         : `REGION#${ctx.region}`;
     case 'lang':
       return `LANG#${ctx.lang}`;
+    case 'city':
+      return `CITY#${ctx.city}`;
     default:
       return `UNKNOWN#${JSON.stringify(ctx)}`;
   }
@@ -120,6 +122,8 @@ function contextFields(ctx) {
       };
     case 'lang':
       return { region: 'global', category: 'general', lang: ctx.lang };
+    case 'city':
+      return { region: ctx.region, category: 'city', lang: 'en', city: ctx.city };
     default:
       return { region: 'global', category: 'general', lang: 'en' };
   }

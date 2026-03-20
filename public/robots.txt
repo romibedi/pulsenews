@@ -6,16 +6,17 @@ Allow: /api/sitemap*.xml
 User-agent: Googlebot
 Allow: /api/sitemap*.xml
 
-# Block AI training crawlers
+# AI answer engines — allow so our content gets cited
 User-agent: GPTBot
-Disallow: /
+Allow: /
 
 User-agent: ClaudeBot
-Disallow: /
+Allow: /
 
 User-agent: PerplexityBot
-Disallow: /
+Allow: /
 
+# Block pure training crawlers (no citation/traffic benefit)
 User-agent: CCBot
 Disallow: /
 

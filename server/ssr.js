@@ -340,6 +340,49 @@ export function renderCategoryPage(category, articles = []) {
 }
 
 /**
+ * Render a city page for bots — includes local article listings.
+ */
+export function renderCityPage(city, cityLabel, articles = []) {
+  const canonicalUrl = `${SITE_URL}/city/${city}`;
+  const description = `Latest local news from ${cityLabel}. Breaking stories, updates, and headlines from ${cityLabel}.`;
+
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE_URL },
+      { "@type": "ListItem", "position": 2, "name": `${cityLabel} News`, "item": canonicalUrl }
+    ]
+  };
+
+  const ogImage = (articles.find(a => a.image)?.image) || `${SITE_URL}/favicon.svg`;
+
+  const articleCards = articles.length > 0
+    ? `<section style="margin-top:1.5em;">${articles.map(renderArticleCard).join('\n')}</section>`
+    : '';
+
+  const bodyContent = `
+  <main style="max-width:720px;margin:0 auto;padding:1em;font-family:system-ui,sans-serif;">
+    <nav aria-label="Breadcrumb" style="font-size:14px;color:#888;margin-bottom:1em;">
+      <a href="${SITE_URL}" style="color:#e05d44;">Home</a> / ${escapeHtml(cityLabel)} News
+    </nav>
+    <h1 style="font-size:2em;">${escapeHtml(cityLabel)} News - PulseNewsToday</h1>
+    <p style="font-size:1.1em;color:#555;">${escapeHtml(description)}</p>
+    ${articleCards}
+  </main>`;
+
+  return buildHtmlShell({
+    title: `${cityLabel} News - PulseNewsToday`,
+    description,
+    canonicalUrl,
+    ogType: 'website',
+    ogImage,
+    jsonLd: [breadcrumbLd],
+    bodyContent,
+  });
+}
+
+/**
  * Check if the request is from a known search engine bot.
  */
 export function isBot(userAgent) {

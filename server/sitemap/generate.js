@@ -15,6 +15,7 @@ import {
   ListObjectsV2Command,
 } from '@aws-sdk/client-s3';
 import { querySitemapEntries } from '../db.js';
+import { CITY_FEEDS } from '../shared/feedRegistry.js';
 
 const BUCKET = process.env.AUDIO_BUCKET || 'pulsenews-audio-prod';
 const REGION = process.env.AWS_REGION || 'eu-west-1';
@@ -109,6 +110,9 @@ function buildStaticSitemapXml() {
   }
   for (const page of staticPages) {
     xml += `  <url>\n    <loc>${SITE_URL}/${page}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.4</priority>\n  </url>\n`;
+  }
+  for (const city of Object.keys(CITY_FEEDS)) {
+    xml += `  <url>\n    <loc>${SITE_URL}/city/${city}</loc>\n    <changefreq>hourly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
   }
 
   xml += '</urlset>';

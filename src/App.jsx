@@ -18,6 +18,7 @@ import Search from './pages/Search';
 import About from './pages/About';
 import Bookmarks from './pages/Bookmarks';
 import Region from './pages/Region';
+import City from './pages/City';
 import Explore from './pages/Explore';
 import Settings from './pages/Settings';
 import Archive from './pages/Archive';
@@ -44,6 +45,7 @@ export default function App() {
                   <Route path="/" element={<Home />} />
                   <Route path="/category/:category" element={<Category />} />
                   <Route path="/region/:region" element={<Region />} />
+                  <Route path="/city/:city" element={<City />} />
                   <Route path="/article/*" element={<Article />} />
                   <Route path="/news/:slug" element={<Article />} />
                   <Route path="/search" element={<Search />} />

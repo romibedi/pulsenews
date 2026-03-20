@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { fetchByCategory } from '../api/newsApi';
+import { fetchByCategory, fetchByCity } from '../api/newsApi';
 import useLocalStorage from '../hooks/useLocalStorage';
 import useRegion, { REGIONS } from '../hooks/useRegion';
+import useCity from '../hooks/useCity';
 import useLanguage from '../hooks/useLanguage';
 import NewsCard from '../components/NewsCard';
 import Loader, { HeroLoader } from '../components/Loader';
@@ -26,6 +27,9 @@ export default function Home() {
   const [showRegionPicker, setShowRegionPicker] = useState(false);
   const [mood, setMood] = useState('all');
   const { playArticle, prefetchArticle, addToQueue } = useAudio();
+  const { city: detectedCity } = useCity();
+  const [cityArticles, setCityArticles] = useState([]);
+  const [cityLoading, setCityLoading] = useState(false);
 
   const activeSections = savedSections
     ? savedSections.filter((s) => s.pinned !== false)
@@ -50,6 +54,16 @@ export default function Home() {
     }
     load();
   }, [savedSections, region, regionLoading]);
+
+  // Fetch city-local news when city is detected
+  useEffect(() => {
+    if (!detectedCity) { setCityArticles([]); return; }
+    setCityLoading(true);
+    fetchByCity(detectedCity)
+      .then((data) => setCityArticles(data.articles || []))
+      .catch(() => setCityArticles([]))
+      .finally(() => setCityLoading(false));
+  }, [detectedCity]);
 
   // Fetch language-specific news (non-English)
   useEffect(() => {
@@ -293,6 +307,37 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      {/* Local News — shown when city is detected */}
+      {detectedCity && (cityArticles.length > 0 || cityLoading) && (
+        <section>
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="text-[#e05d44] dark:text-[#e87461]">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+              </svg>
+              <h2 className="text-2xl font-normal text-[var(--text)]">Local News</h2>
+            </div>
+            <Link
+              to={`/city/${detectedCity}`}
+              className="text-sm text-[#e05d44] dark:text-[#e87461] hover:text-[#c94e38] no-underline transition-colors"
+            >
+              View all &rarr;
+            </Link>
+          </div>
+          {cityLoading ? (
+            <Loader count={4} />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {cityArticles.slice(0, 4).map((article, i) => (
+                <div key={article.id} className="animate-fade-in h-full" style={{ animationDelay: `${i * 80}ms` }}>
+                  <NewsCard article={article} />
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Other section highlights — only shown in English mode */}
       {!isNonEnglish && activeSections.slice(1).map((sec) => (

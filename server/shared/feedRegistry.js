@@ -473,6 +473,263 @@ export const LANG_FEEDS = {
   ],
 };
 
+// --- City-level feeds (hyperlocal news) ---
+export const CITY_FEEDS = {
+  // === Phase 1: India Top 10 ===
+  mumbai: {
+    label: 'Mumbai', region: 'india', country: 'IN',
+    lat: 19.076, lng: 72.8777,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Mumbai?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Mumbai' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/2950533.cms', source: 'TOI Mumbai' },
+      { url: 'https://www.hindustantimes.com/feeds/rss/mumbai-news/rssfeed.xml', source: 'HT Mumbai' },
+    ],
+  },
+  delhi: {
+    label: 'Delhi', region: 'india', country: 'IN',
+    lat: 28.6139, lng: 77.209,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Delhi?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Delhi' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/2951551.cms', source: 'TOI Delhi' },
+      { url: 'https://www.hindustantimes.com/feeds/rss/delhi-news/rssfeed.xml', source: 'HT Delhi' },
+    ],
+  },
+  bangalore: {
+    label: 'Bangalore', region: 'india', country: 'IN',
+    lat: 12.9716, lng: 77.5946,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Bangalore?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Bangalore' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/3214351.cms', source: 'TOI Bangalore' },
+    ],
+  },
+  chennai: {
+    label: 'Chennai', region: 'india', country: 'IN',
+    lat: 13.0827, lng: 80.2707,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Chennai?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Chennai' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/2950623.cms', source: 'TOI Chennai' },
+      { url: 'https://www.thehindu.com/news/cities/chennai/feeder/default.rss', source: 'The Hindu Chennai' },
+    ],
+  },
+  hyderabad: {
+    label: 'Hyderabad', region: 'india', country: 'IN',
+    lat: 17.385, lng: 78.4867,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Hyderabad?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Hyderabad' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/3218361.cms', source: 'TOI Hyderabad' },
+    ],
+  },
+  pune: {
+    label: 'Pune', region: 'india', country: 'IN',
+    lat: 18.5204, lng: 73.8567,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Pune?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Pune' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/3211131.cms', source: 'TOI Pune' },
+      { url: 'https://www.hindustantimes.com/feeds/rss/pune-news/rssfeed.xml', source: 'HT Pune' },
+    ],
+  },
+  kolkata: {
+    label: 'Kolkata', region: 'india', country: 'IN',
+    lat: 22.5726, lng: 88.3639,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Kolkata?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Kolkata' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/2950603.cms', source: 'TOI Kolkata' },
+    ],
+  },
+  ahmedabad: {
+    label: 'Ahmedabad', region: 'india', country: 'IN',
+    lat: 23.0225, lng: 72.5714,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Ahmedabad?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Ahmedabad' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/3214801.cms', source: 'TOI Ahmedabad' },
+    ],
+  },
+  chandigarh: {
+    label: 'Chandigarh', region: 'india', country: 'IN',
+    lat: 30.7333, lng: 76.7794,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Chandigarh?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Chandigarh' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/3211541.cms', source: 'TOI Chandigarh' },
+      { url: 'https://www.hindustantimes.com/feeds/rss/chandigarh/rssfeed.xml', source: 'HT Chandigarh' },
+    ],
+  },
+  lucknow: {
+    label: 'Lucknow', region: 'india', country: 'IN',
+    lat: 26.8467, lng: 80.9462,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Lucknow?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Lucknow' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/3205391.cms', source: 'TOI Lucknow' },
+      { url: 'https://www.hindustantimes.com/feeds/rss/lucknow-news/rssfeed.xml', source: 'HT Lucknow' },
+    ],
+  },
+
+  // === Phase 2: India +10 ===
+  jaipur: {
+    label: 'Jaipur', region: 'india', country: 'IN',
+    lat: 26.9124, lng: 75.7873,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Jaipur?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Jaipur' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/3012544.cms', source: 'TOI Jaipur' },
+    ],
+  },
+  kochi: {
+    label: 'Kochi', region: 'india', country: 'IN',
+    lat: 9.9312, lng: 76.2673,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Kochi?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Kochi' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/2950573.cms', source: 'TOI Kochi' },
+    ],
+  },
+  bhopal: {
+    label: 'Bhopal', region: 'india', country: 'IN',
+    lat: 23.2599, lng: 77.4126,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Bhopal?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Bhopal' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/3214337.cms', source: 'TOI Bhopal' },
+    ],
+  },
+  patna: {
+    label: 'Patna', region: 'india', country: 'IN',
+    lat: 25.6093, lng: 85.1376,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Patna?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Patna' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/3214353.cms', source: 'TOI Patna' },
+    ],
+  },
+  thiruvananthapuram: {
+    label: 'Thiruvananthapuram', region: 'india', country: 'IN',
+    lat: 8.5241, lng: 76.9366,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Thiruvananthapuram?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Trivandrum' },
+      { url: 'https://www.thehindu.com/news/cities/Thiruvananthapuram/feeder/default.rss', source: 'The Hindu Trivandrum' },
+    ],
+  },
+  guwahati: {
+    label: 'Guwahati', region: 'india', country: 'IN',
+    lat: 26.1445, lng: 91.7362,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Guwahati?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Guwahati' },
+    ],
+  },
+  indore: {
+    label: 'Indore', region: 'india', country: 'IN',
+    lat: 22.7196, lng: 75.8577,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Indore?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Indore' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/3214344.cms', source: 'TOI Indore' },
+    ],
+  },
+  nagpur: {
+    label: 'Nagpur', region: 'india', country: 'IN',
+    lat: 21.1458, lng: 79.0882,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Nagpur?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Nagpur' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/3214347.cms', source: 'TOI Nagpur' },
+    ],
+  },
+  coimbatore: {
+    label: 'Coimbatore', region: 'india', country: 'IN',
+    lat: 11.0168, lng: 76.9558,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Coimbatore?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Coimbatore' },
+      { url: 'https://www.thehindu.com/news/cities/Coimbatore/feeder/default.rss', source: 'The Hindu Coimbatore' },
+    ],
+  },
+  visakhapatnam: {
+    label: 'Visakhapatnam', region: 'india', country: 'IN',
+    lat: 17.6868, lng: 83.2185,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Visakhapatnam?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Vizag' },
+    ],
+  },
+
+  // === Phase 2: UK 3 ===
+  london: {
+    label: 'London', region: 'uk', country: 'GB',
+    lat: 51.5074, lng: -0.1278,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/London?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News London' },
+      { url: 'https://feeds.bbci.co.uk/news/england/london/rss.xml', source: 'BBC London' },
+    ],
+  },
+  manchester: {
+    label: 'Manchester', region: 'uk', country: 'GB',
+    lat: 53.4808, lng: -2.2426,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Manchester?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Manchester' },
+      { url: 'https://feeds.bbci.co.uk/news/england/manchester/rss.xml', source: 'BBC Manchester' },
+    ],
+  },
+  birmingham: {
+    label: 'Birmingham', region: 'uk', country: 'GB',
+    lat: 52.4862, lng: -1.8904,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Birmingham%20UK?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Birmingham' },
+      { url: 'https://feeds.bbci.co.uk/news/england/birmingham_and_black_country/rss.xml', source: 'BBC Birmingham' },
+    ],
+  },
+
+  // === Phase 3: US 5 ===
+  'new-york': {
+    label: 'New York', region: 'us', country: 'US',
+    lat: 40.7128, lng: -74.006,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/New%20York?hl=en-US&gl=US&ceid=US:en', source: 'Google News NYC' },
+    ],
+  },
+  'los-angeles': {
+    label: 'Los Angeles', region: 'us', country: 'US',
+    lat: 34.0522, lng: -118.2437,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Los%20Angeles?hl=en-US&gl=US&ceid=US:en', source: 'Google News LA' },
+    ],
+  },
+  chicago: {
+    label: 'Chicago', region: 'us', country: 'US',
+    lat: 41.8781, lng: -87.6298,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Chicago?hl=en-US&gl=US&ceid=US:en', source: 'Google News Chicago' },
+    ],
+  },
+  'san-francisco': {
+    label: 'San Francisco', region: 'us', country: 'US',
+    lat: 37.7749, lng: -122.4194,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/San%20Francisco?hl=en-US&gl=US&ceid=US:en', source: 'Google News SF' },
+    ],
+  },
+  'washington-dc': {
+    label: 'Washington DC', region: 'us', country: 'US',
+    lat: 38.9072, lng: -77.0369,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Washington%20DC?hl=en-US&gl=US&ceid=US:en', source: 'Google News DC' },
+    ],
+  },
+
+  // === Phase 3: Australia 3 ===
+  sydney: {
+    label: 'Sydney', region: 'australia', country: 'AU',
+    lat: -33.8688, lng: 151.2093,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Sydney?hl=en-AU&gl=AU&ceid=AU:en', source: 'Google News Sydney' },
+    ],
+  },
+  melbourne: {
+    label: 'Melbourne', region: 'australia', country: 'AU',
+    lat: -37.8136, lng: 144.9631,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Melbourne?hl=en-AU&gl=AU&ceid=AU:en', source: 'Google News Melbourne' },
+    ],
+  },
+  brisbane: {
+    label: 'Brisbane', region: 'australia', country: 'AU',
+    lat: -27.4698, lng: 153.0251,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Brisbane?hl=en-AU&gl=AU&ceid=AU:en', source: 'Google News Brisbane' },
+    ],
+  },
+};
+
 // ---------------------------------------------------------------------------
 // buildFeedContextMap()
 //
@@ -485,6 +742,7 @@ export const LANG_FEEDS = {
 //   { type: 'global',  category }
 //   { type: 'region',  region, category? }   -- category omitted for general regional feeds
 //   { type: 'lang',    lang }
+//   { type: 'city',    city, region }
 // ---------------------------------------------------------------------------
 export function buildFeedContextMap() {
   /** @type {Map<string, { source: string, contexts: Array<object> }>} */
@@ -530,6 +788,13 @@ export function buildFeedContextMap() {
   for (const [lang, feeds] of Object.entries(LANG_FEEDS)) {
     for (const { url, source } of feeds) {
       register(url, source, { type: 'lang', lang });
+    }
+  }
+
+  // 5. City-level feeds
+  for (const [city, meta] of Object.entries(CITY_FEEDS)) {
+    for (const { url, source } of meta.feeds) {
+      register(url, source, { type: 'city', city, region: meta.region });
     }
   }
 

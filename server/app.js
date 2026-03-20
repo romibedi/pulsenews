@@ -10,6 +10,7 @@ import {
   REGIONAL_FEEDS,
   REGIONAL_CATEGORY_FEEDS,
   LANG_FEEDS,
+  CITY_FEEDS,
 } from './shared/feedRegistry.js';
 import {
   getArticleById,
@@ -17,6 +18,7 @@ import {
   queryByGlobalCategory,
   queryByRegionCategory,
   queryByLang,
+  queryByCity,
   queryByDate,
 } from './db.js';
 import { getClient as getSearchClient } from './search/client.js';
@@ -26,6 +28,7 @@ import {
   renderArticlePage,
   renderHomePage,
   renderCategoryPage,
+  renderCityPage,
 } from './ssr.js';
 import { INDEXNOW_KEY } from './indexnow.js';
 import { generateCard } from './card.js';
@@ -133,6 +136,71 @@ app.get('/api/lang-feeds', async (req, res) => {
     return res.json({ articles, lang });
   }
   res.json({ articles: [], lang });
+});
+
+// City-level local news — DynamoDB first, RSS fallback
+// Supports ?before=<ISO-date> for pagination
+app.get('/api/city-feeds', async (req, res) => {
+  const city = req.query.city;
+  const before = req.query.before || null;
+  if (!city || !CITY_FEEDS[city]) return res.status(400).json({ error: 'Invalid city' });
+  try {
+    const dbArticles = await queryByCity(city, 20, before);
+    if (dbArticles.length > 0) {
+      res.set('Cache-Control', before ? 'no-cache' : 's-maxage=300, stale-while-revalidate=600');
+      return res.json({ articles: dbArticles, city });
+    }
+  } catch {}
+  // Fallback to live RSS (no pagination for live feeds)
+  if (!before) {
+    const feeds = CITY_FEEDS[city].feeds;
+    const results = await Promise.all(feeds.map((f) => fetchFeed(f.url, f.source)));
+    const articles = results.flat().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
+    res.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+    return res.json({ articles, city });
+  }
+  res.json({ articles: [], city });
+});
+
+// List all available cities
+app.get('/api/cities', (req, res) => {
+  const region = req.query.region;
+  const cities = Object.entries(CITY_FEEDS)
+    .filter(([, meta]) => !region || meta.region === region)
+    .map(([key, meta]) => ({
+      key,
+      label: meta.label,
+      region: meta.region,
+      country: meta.country,
+      lat: meta.lat,
+      lng: meta.lng,
+    }));
+  res.set('Cache-Control', 's-maxage=86400');
+  res.json({ cities });
+});
+
+// Geo-city: find nearest city from lat/lng
+app.get('/api/geo-city', (req, res) => {
+  const lat = parseFloat(req.query.lat);
+  const lng = parseFloat(req.query.lng);
+  if (isNaN(lat) || isNaN(lng)) return res.status(400).json({ error: 'lat and lng required' });
+
+  let nearest = null;
+  let minDist = Infinity;
+  for (const [key, meta] of Object.entries(CITY_FEEDS)) {
+    const d = Math.sqrt((meta.lat - lat) ** 2 + (meta.lng - lng) ** 2);
+    if (d < minDist) {
+      minDist = d;
+      nearest = { key, label: meta.label, region: meta.region, distance: d };
+    }
+  }
+  // Only return if within ~200km (roughly 1.8 degrees)
+  if (nearest && minDist < 1.8) {
+    res.set('Cache-Control', 's-maxage=86400');
+    res.json({ city: nearest });
+  } else {
+    res.json({ city: null });
+  }
 });
 
 // Archive — articles for a specific date, with optional region/lang filter
@@ -456,12 +524,22 @@ app.get('/api/card/:id', async (req, res) => {
   }
 });
 
+// Region display names for prompt context
+const REGION_NAMES = {
+  india: 'India', uk: 'United Kingdom', us: 'United States',
+  australia: 'Australia', 'middle-east': 'Middle East', europe: 'Europe',
+  africa: 'Africa', asia: 'Asia', latam: 'Latin America',
+};
+
 // --- Voice-First News Query ---
 app.post('/api/voice-query', async (req, res) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
   const { query, lang = 'en', region = '' } = req.body;
   if (!query) return res.status(400).json({ error: 'query required' });
+
+  const langName = LANG_NAMES[lang] || 'English';
+  const regionName = REGION_NAMES[region] || '';
 
   try {
     // Step 1: Extract intent from user query
@@ -484,17 +562,20 @@ app.post('/api/voice-query', async (req, res) => {
 
     const count = Math.min(intent.count || 3, 5);
 
-    // Step 2: Fetch relevant articles
+    // Step 2: Fetch relevant articles — use region-aware search
     let articles = [];
     if (intent.topic) {
-      // Search by topic using OpenSearch
+      // Search by topic using OpenSearch — try region-specific index first
       try {
         const client = getSearchClient();
         const idx = lang === 'all' ? 'articles-*' : `articles-${lang}`;
+        const searchQuery = region
+          ? { bool: { must: [{ multi_match: { query: intent.topic, fields: ['title^3', 'description^2', 'body'], fuzziness: 'AUTO' } }], should: [{ term: { region: { value: region, boost: 3 } } }] } }
+          : { multi_match: { query: intent.topic, fields: ['title^3', 'description^2', 'body'], fuzziness: 'AUTO' } };
         const result = await client.search({
           index: idx,
           body: {
-            query: { multi_match: { query: intent.topic, fields: ['title^3', 'description^2', 'body'], fuzziness: 'AUTO' } },
+            query: searchQuery,
             sort: [{ _score: 'desc' }, { date: 'desc' }],
             size: count,
             _source: { excludes: ['body'] },
@@ -507,25 +588,66 @@ app.post('/api/voice-query', async (req, res) => {
     }
     if (articles.length === 0) {
       const cat = intent.category || 'world';
-      articles = await queryByGlobalCategory(cat, count);
+      // Try regional articles first, fall back to global
+      if (region) {
+        try {
+          articles = await queryByRegionCategory(region, cat, count);
+        } catch {}
+      }
+      if (articles.length === 0) {
+        articles = await queryByGlobalCategory(cat, count);
+      }
     }
 
     if (articles.length === 0) {
-      return res.json({ briefing: 'No news articles found for your query.', articles: [] });
+      const noNewsMsg = lang === 'en' ? 'No news articles found for your query.'
+        : `No news articles found for your query.`;
+      return res.json({ briefing: noNewsMsg, articles: [] });
     }
 
-    // Step 3: Generate conversational briefing
+    // Step 3: Generate conversational briefing with strong language + region context
     const articleSummaries = articles.map((a, i) =>
       `Article ${i + 1}: "${a.title}" (${a.source || a.author || 'Unknown'}) - ${(a.description || '').slice(0, 200)}`
     ).join('\n');
+
+    // Build a precise system instruction for language and region
+    const regionContext = regionName ? ` Your audience is in ${regionName}.` : '';
+    let langDirective;
+    if (lang === 'en') {
+      // For English, tailor the accent/style to the region
+      const accentMap = {
+        india: 'Use Indian English style and phrasing.',
+        uk: 'Use British English style and phrasing.',
+        us: 'Use American English style and phrasing.',
+        australia: 'Use Australian English style and phrasing.',
+        'middle-east': 'Use clear, international English.',
+        europe: 'Use clear, international English.',
+        africa: 'Use clear, international English.',
+        asia: 'Use clear, international English.',
+        latam: 'Use clear, international English.',
+      };
+      langDirective = accentMap[region] || 'Use clear English.';
+    } else {
+      // For non-English: be very explicit — this is the critical fix
+      langDirective = `IMPORTANT: You MUST write your ENTIRE response in ${langName}. Every single word must be in ${langName}. Do NOT use English at all. The article titles below are in English but you must translate/adapt the content into ${langName}.`;
+    }
 
     const briefingRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 500,
-        messages: [{ role: 'user', content: `You are a friendly news anchor. Summarize these ${articles.length} articles into a conversational ${articles.length > 1 ? '60-second' : '30-second'} audio briefing. Use natural transitions like "Moving on..." or "In other news...". Keep it warm, clear, and spoken-word friendly. Do NOT use bullet points or formatting.${langInstruction(lang)}\n\n${articleSummaries}` }],
+        max_tokens: 600,
+        messages: [{
+          role: 'user',
+          content: `${langDirective}${regionContext}
+
+You are a friendly, warm news anchor delivering a ${articles.length > 1 ? '60-second' : '30-second'} audio briefing. Use natural spoken transitions like "Moving on..." or "In other news...". Keep it conversational and spoken-word friendly — NO bullet points, NO markdown, NO formatting. Just natural flowing speech.
+
+Here are the articles to cover:
+
+${articleSummaries}`,
+        }],
       }),
     });
     if (!briefingRes.ok) throw new Error('Briefing generation failed');
@@ -850,16 +972,17 @@ Allow: /
 User-agent: Bingbot
 Allow: /
 
-# Block AI training crawlers
+# AI answer engines — allow so our content gets cited
 User-agent: GPTBot
-Disallow: /
+Allow: /
 
 User-agent: ClaudeBot
-Disallow: /
+Allow: /
 
 User-agent: PerplexityBot
-Disallow: /
+Allow: /
 
+# Block pure training crawlers (no citation/traffic benefit)
 User-agent: CCBot
 Disallow: /
 
@@ -952,6 +1075,19 @@ app.get('/category/:cat', async (req, res, next) => {
   res.set('Content-Type', 'text/html');
   res.set('Cache-Control', 's-maxage=600, stale-while-revalidate=1200');
   res.send(renderCategoryPage(req.params.cat, articles));
+});
+
+// City page for bots — fetch city articles so crawlers see local content
+app.get('/city/:city', async (req, res, next) => {
+  if (!isBot(req.headers['user-agent'])) return next();
+  const cityKey = req.params.city;
+  const cityMeta = CITY_FEEDS[cityKey];
+  if (!cityMeta) return next();
+  let articles = [];
+  try { articles = await queryByCity(cityKey, 20); } catch {}
+  res.set('Content-Type', 'text/html');
+  res.set('Cache-Control', 's-maxage=600, stale-while-revalidate=1200');
+  res.send(renderCityPage(cityKey, cityMeta.label, articles));
 });
 
 // --- Static files + SPA fallback (for App Runner / container deployment) ---
