@@ -28,6 +28,13 @@ export const LANGUAGES = {
   ko: { label: 'Korean', nativeLabel: '한국어', flag: '🇰🇷' },
   // African
   sw: { label: 'Swahili', nativeLabel: 'Kiswahili', flag: '🇰🇪' },
+  // International
+  tr: { label: 'Turkish', nativeLabel: 'Türkçe', flag: '🇹🇷' },
+  it: { label: 'Italian', nativeLabel: 'Italiano', flag: '🇮🇹' },
+  nl: { label: 'Dutch', nativeLabel: 'Nederlands', flag: '🇳🇱' },
+  th: { label: 'Thai', nativeLabel: 'ภาษาไทย', flag: '🇹🇭' },
+  id: { label: 'Indonesian', nativeLabel: 'Bahasa Indonesia', flag: '🇮🇩' },
+  sv: { label: 'Swedish', nativeLabel: 'Svenska', flag: '🇸🇪' },
 };
 
 // Which languages are available per region
@@ -36,10 +43,10 @@ export const REGION_LANGUAGES = {
   uk: ['en'],
   us: ['en', 'es'],
   australia: ['en'],
-  'middle-east': ['en', 'ar', 'ur'],
-  europe: ['en', 'fr', 'de', 'es'],
+  'middle-east': ['en', 'ar', 'ur', 'tr'],
+  europe: ['en', 'fr', 'de', 'es', 'it', 'nl', 'sv'],
   africa: ['en', 'fr', 'sw'],
-  asia: ['en', 'zh', 'ja', 'ko'],
+  asia: ['en', 'zh', 'ja', 'ko', 'th', 'id'],
   latam: ['en', 'es', 'pt'],
 };
 

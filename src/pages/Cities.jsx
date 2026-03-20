@@ -8,13 +8,18 @@ import useCity from '../hooks/useCity';
 const SITE_URL = 'https://pulsenewstoday.com';
 
 const REGION_META = {
-  india: { label: 'India', flag: '\ud83c\uddee\ud83c\uddf3' },
-  uk: { label: 'United Kingdom', flag: '\ud83c\uddec\ud83c\udde7' },
-  us: { label: 'United States', flag: '\ud83c\uddfa\ud83c\uddf8' },
-  australia: { label: 'Australia', flag: '\ud83c\udde6\ud83c\uddfa' },
+  india: { label: 'India', flag: '🇮🇳' },
+  uk: { label: 'United Kingdom', flag: '🇬🇧' },
+  us: { label: 'United States', flag: '🇺🇸' },
+  australia: { label: 'Australia', flag: '🇦🇺' },
+  'middle-east': { label: 'Middle East', flag: '🌍' },
+  europe: { label: 'Europe', flag: '🇪🇺' },
+  asia: { label: 'Asia', flag: '🌏' },
+  africa: { label: 'Africa', flag: '🌍' },
+  latam: { label: 'Latin America', flag: '🌎' },
 };
 
-const REGION_ORDER = ['india', 'uk', 'us', 'australia'];
+const REGION_ORDER = ['india', 'uk', 'us', 'australia', 'middle-east', 'europe', 'asia', 'africa', 'latam'];
 
 export default function Cities() {
   const [cities, setCities] = useState([]);
@@ -35,8 +40,8 @@ export default function Cities() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-10">
       <Helmet>
-        <title>City News - Local News from 31 Cities Worldwide - PulseNewsToday</title>
-        <meta name="description" content="Browse local news from 31 cities across India, UK, US and Australia. Get hyperlocal coverage in local languages." />
+        <title>City News - Local News from 75+ Cities Worldwide - PulseNewsToday</title>
+        <meta name="description" content="Browse hyperlocal news from 75+ cities across India, UK, US, Australia, Middle East, Europe, Asia, Africa and Latin America in local languages." />
         <link rel="canonical" href={`${SITE_URL}/cities`} />
         <meta property="og:title" content="City News - PulseNewsToday" />
         <meta property="og:url" content={`${SITE_URL}/cities`} />
@@ -48,7 +53,7 @@ export default function Cities() {
           Hyperlocal
         </div>
         <h1 className="text-3xl md:text-4xl font-normal text-[var(--text)]">City News</h1>
-        <p className="text-[var(--text-muted)] mt-1 text-sm">Local news from 31 cities across 4 countries, in local languages</p>
+        <p className="text-[var(--text-muted)] mt-1 text-sm">Hyperlocal news from 75+ cities across 9 regions, in local languages</p>
       </div>
 
       {loading ? (

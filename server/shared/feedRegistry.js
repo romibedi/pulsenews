@@ -491,6 +491,28 @@ export const LANG_FEEDS = {
   as: [
     { url: 'https://news.google.com/rss?hl=as-IN&gl=IN&ceid=IN:as', source: 'Google News Assamese' },
   ],
+  // International languages
+  tr: [
+    { url: 'https://feeds.bbci.co.uk/turkce/rss.xml', source: 'BBC Turkish' },
+    { url: 'https://news.google.com/rss?hl=tr-TR&gl=TR&ceid=TR:tr', source: 'Google News Turkish' },
+  ],
+  it: [
+    { url: 'https://news.google.com/rss?hl=it-IT&gl=IT&ceid=IT:it', source: 'Google News Italian' },
+  ],
+  nl: [
+    { url: 'https://news.google.com/rss?hl=nl-NL&gl=NL&ceid=NL:nl', source: 'Google News Dutch' },
+  ],
+  th: [
+    { url: 'https://feeds.bbci.co.uk/thai/rss.xml', source: 'BBC Thai' },
+    { url: 'https://news.google.com/rss?hl=th-TH&gl=TH&ceid=TH:th', source: 'Google News Thai' },
+  ],
+  id: [
+    { url: 'https://feeds.bbci.co.uk/indonesia/rss.xml', source: 'BBC Indonesia' },
+    { url: 'https://news.google.com/rss?hl=id-ID&gl=ID&ceid=ID:id', source: 'Google News Indonesian' },
+  ],
+  sv: [
+    { url: 'https://news.google.com/rss?hl=sv-SE&gl=SE&ceid=SE:sv', source: 'Google News Swedish' },
+  ],
 };
 
 // --- City-level feeds (hyperlocal news) ---
@@ -682,13 +704,14 @@ export const CITY_FEEDS = {
     ],
   },
 
-  // === Phase 2: UK 3 ===
+  // === UK (8 cities) ===
   london: {
     label: 'London', region: 'uk', country: 'GB',
     lat: 51.5074, lng: -0.1278,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/London?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News London' },
       { url: 'https://feeds.bbci.co.uk/news/england/london/rss.xml', source: 'BBC London' },
+      { url: 'https://www.standard.co.uk/rss', source: 'Evening Standard' },
     ],
   },
   manchester: {
@@ -707,20 +730,64 @@ export const CITY_FEEDS = {
       { url: 'https://feeds.bbci.co.uk/news/england/birmingham_and_black_country/rss.xml', source: 'BBC Birmingham' },
     ],
   },
+  edinburgh: {
+    label: 'Edinburgh', region: 'uk', country: 'GB',
+    lat: 55.9533, lng: -3.1883,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Edinburgh?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Edinburgh' },
+      { url: 'https://feeds.bbci.co.uk/news/scotland/edinburgh_east_and_fife/rss.xml', source: 'BBC Edinburgh' },
+    ],
+  },
+  glasgow: {
+    label: 'Glasgow', region: 'uk', country: 'GB',
+    lat: 55.8642, lng: -4.2518,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Glasgow?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Glasgow' },
+      { url: 'https://feeds.bbci.co.uk/news/scotland/glasgow_and_west/rss.xml', source: 'BBC Glasgow' },
+    ],
+  },
+  leeds: {
+    label: 'Leeds', region: 'uk', country: 'GB',
+    lat: 53.8008, lng: -1.5491,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Leeds?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Leeds' },
+      { url: 'https://feeds.bbci.co.uk/news/england/leeds_and_west_yorkshire/rss.xml', source: 'BBC Leeds' },
+    ],
+  },
+  liverpool: {
+    label: 'Liverpool', region: 'uk', country: 'GB',
+    lat: 53.4084, lng: -2.9916,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Liverpool?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Liverpool' },
+      { url: 'https://feeds.bbci.co.uk/news/england/merseyside/rss.xml', source: 'BBC Merseyside' },
+    ],
+  },
+  bristol: {
+    label: 'Bristol', region: 'uk', country: 'GB',
+    lat: 51.4545, lng: -2.5879,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Bristol?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Bristol' },
+      { url: 'https://feeds.bbci.co.uk/news/england/bristol/rss.xml', source: 'BBC Bristol' },
+    ],
+  },
 
-  // === Phase 3: US 5 ===
+  // === US (15 cities) ===
   'new-york': {
     label: 'New York', region: 'us', country: 'US',
     lat: 40.7128, lng: -74.006,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/New%20York?hl=en-US&gl=US&ceid=US:en', source: 'Google News NYC' },
+      { url: 'https://gothamist.com/feed', source: 'Gothamist' },
+      { url: 'https://nypost.com/feed/', source: 'NY Post' },
     ],
   },
   'los-angeles': {
     label: 'Los Angeles', region: 'us', country: 'US',
-    lat: 34.0522, lng: -118.2437,
+    lang: 'es', lat: 34.0522, lng: -118.2437,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Los%20Angeles?hl=en-US&gl=US&ceid=US:en', source: 'Google News LA' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Los%20Angeles?hl=es-419&gl=US&ceid=US:es-419', source: 'Google News LA Spanish' },
+      { url: 'https://laist.com/feed', source: 'LAist' },
     ],
   },
   chicago: {
@@ -728,6 +795,7 @@ export const CITY_FEEDS = {
     lat: 41.8781, lng: -87.6298,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Chicago?hl=en-US&gl=US&ceid=US:en', source: 'Google News Chicago' },
+      { url: 'https://blockclubchicago.org/feed/', source: 'Block Club Chicago' },
     ],
   },
   'san-francisco': {
@@ -735,6 +803,7 @@ export const CITY_FEEDS = {
     lat: 37.7749, lng: -122.4194,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/San%20Francisco?hl=en-US&gl=US&ceid=US:en', source: 'Google News SF' },
+      { url: 'https://www.kqed.org/news/feed', source: 'KQED' },
     ],
   },
   'washington-dc': {
@@ -742,15 +811,94 @@ export const CITY_FEEDS = {
     lat: 38.9072, lng: -77.0369,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Washington%20DC?hl=en-US&gl=US&ceid=US:en', source: 'Google News DC' },
+      { url: 'https://dcist.com/feed', source: 'DCist' },
+      { url: 'https://wtop.com/feed/', source: 'WTOP' },
+    ],
+  },
+  houston: {
+    label: 'Houston', region: 'us', country: 'US',
+    lang: 'es', lat: 29.7604, lng: -95.3698,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Houston?hl=en-US&gl=US&ceid=US:en', source: 'Google News Houston' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Houston?hl=es-419&gl=US&ceid=US:es-419', source: 'Google News Houston Spanish' },
+    ],
+  },
+  miami: {
+    label: 'Miami', region: 'us', country: 'US',
+    lang: 'es', lat: 25.7617, lng: -80.1918,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Miami?hl=en-US&gl=US&ceid=US:en', source: 'Google News Miami' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Miami?hl=es-419&gl=US&ceid=US:es-419', source: 'Google News Miami Spanish' },
+    ],
+  },
+  dallas: {
+    label: 'Dallas', region: 'us', country: 'US',
+    lat: 32.7767, lng: -96.797,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Dallas?hl=en-US&gl=US&ceid=US:en', source: 'Google News Dallas' },
+    ],
+  },
+  seattle: {
+    label: 'Seattle', region: 'us', country: 'US',
+    lat: 47.6062, lng: -122.3321,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Seattle?hl=en-US&gl=US&ceid=US:en', source: 'Google News Seattle' },
+      { url: 'https://www.kuow.org/rss.xml', source: 'KUOW Seattle' },
+    ],
+  },
+  boston: {
+    label: 'Boston', region: 'us', country: 'US',
+    lat: 42.3601, lng: -71.0589,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Boston?hl=en-US&gl=US&ceid=US:en', source: 'Google News Boston' },
+      { url: 'https://www.wbur.org/rss/news', source: 'WBUR Boston' },
+    ],
+  },
+  atlanta: {
+    label: 'Atlanta', region: 'us', country: 'US',
+    lat: 33.749, lng: -84.388,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Atlanta?hl=en-US&gl=US&ceid=US:en', source: 'Google News Atlanta' },
+    ],
+  },
+  denver: {
+    label: 'Denver', region: 'us', country: 'US',
+    lat: 39.7392, lng: -104.9903,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Denver?hl=en-US&gl=US&ceid=US:en', source: 'Google News Denver' },
+      { url: 'https://www.cpr.org/feed/', source: 'CPR News' },
+    ],
+  },
+  philadelphia: {
+    label: 'Philadelphia', region: 'us', country: 'US',
+    lat: 39.9526, lng: -75.1652,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Philadelphia?hl=en-US&gl=US&ceid=US:en', source: 'Google News Philadelphia' },
+      { url: 'https://whyy.org/feed/', source: 'WHYY Philadelphia' },
+    ],
+  },
+  detroit: {
+    label: 'Detroit', region: 'us', country: 'US',
+    lat: 42.3314, lng: -83.0458,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Detroit?hl=en-US&gl=US&ceid=US:en', source: 'Google News Detroit' },
+    ],
+  },
+  phoenix: {
+    label: 'Phoenix', region: 'us', country: 'US',
+    lat: 33.4484, lng: -112.074,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Phoenix?hl=en-US&gl=US&ceid=US:en', source: 'Google News Phoenix' },
     ],
   },
 
-  // === Phase 3: Australia 3 ===
+  // === Australia (5 cities) ===
   sydney: {
     label: 'Sydney', region: 'australia', country: 'AU',
     lat: -33.8688, lng: 151.2093,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Sydney?hl=en-AU&gl=AU&ceid=AU:en', source: 'Google News Sydney' },
+      { url: 'https://www.smh.com.au/rss/feed.xml', source: 'Sydney Morning Herald' },
     ],
   },
   melbourne: {
@@ -758,6 +906,7 @@ export const CITY_FEEDS = {
     lat: -37.8136, lng: 144.9631,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Melbourne?hl=en-AU&gl=AU&ceid=AU:en', source: 'Google News Melbourne' },
+      { url: 'https://www.theage.com.au/rss/feed.xml', source: 'The Age' },
     ],
   },
   brisbane: {
@@ -765,6 +914,273 @@ export const CITY_FEEDS = {
     lat: -27.4698, lng: 153.0251,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Brisbane?hl=en-AU&gl=AU&ceid=AU:en', source: 'Google News Brisbane' },
+    ],
+  },
+  perth: {
+    label: 'Perth', region: 'australia', country: 'AU',
+    lat: -31.9505, lng: 115.8605,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Perth?hl=en-AU&gl=AU&ceid=AU:en', source: 'Google News Perth' },
+    ],
+  },
+  adelaide: {
+    label: 'Adelaide', region: 'australia', country: 'AU',
+    lat: -34.9285, lng: 138.6007,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Adelaide?hl=en-AU&gl=AU&ceid=AU:en', source: 'Google News Adelaide' },
+    ],
+  },
+
+  // =========================================================================
+  // MIDDLE EAST (5 cities)
+  // =========================================================================
+  dubai: {
+    label: 'Dubai', region: 'middle-east', country: 'AE',
+    lang: 'ar', lat: 25.2048, lng: 55.2708,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Dubai?hl=en-US&gl=US&ceid=US:en', source: 'Google News Dubai' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Dubai?hl=ar-AE&gl=AE&ceid=AE:ar', source: 'Google News Dubai Arabic' },
+      { url: 'https://gulfnews.com/rss', source: 'Gulf News' },
+    ],
+  },
+  riyadh: {
+    label: 'Riyadh', region: 'middle-east', country: 'SA',
+    lang: 'ar', lat: 24.7136, lng: 46.6753,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Riyadh?hl=en-US&gl=US&ceid=US:en', source: 'Google News Riyadh' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Riyadh?hl=ar-SA&gl=SA&ceid=SA:ar', source: 'Google News Riyadh Arabic' },
+      { url: 'https://www.arabnews.com/rss.xml', source: 'Arab News' },
+    ],
+  },
+  istanbul: {
+    label: 'Istanbul', region: 'middle-east', country: 'TR',
+    lang: 'tr', lat: 41.0082, lng: 28.9784,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Istanbul?hl=en-US&gl=US&ceid=US:en', source: 'Google News Istanbul' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Istanbul?hl=tr-TR&gl=TR&ceid=TR:tr', source: 'Google News Istanbul Turkish' },
+      { url: 'https://www.dailysabah.com/rssFeed/turkey', source: 'Daily Sabah' },
+    ],
+  },
+  cairo: {
+    label: 'Cairo', region: 'middle-east', country: 'EG',
+    lang: 'ar', lat: 30.0444, lng: 31.2357,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Cairo?hl=en-US&gl=US&ceid=US:en', source: 'Google News Cairo' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Cairo?hl=ar-EG&gl=EG&ceid=EG:ar', source: 'Google News Cairo Arabic' },
+    ],
+  },
+  doha: {
+    label: 'Doha', region: 'middle-east', country: 'QA',
+    lang: 'ar', lat: 25.2854, lng: 51.531,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Doha?hl=en-US&gl=US&ceid=US:en', source: 'Google News Doha' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Doha?hl=ar-QA&gl=QA&ceid=QA:ar', source: 'Google News Doha Arabic' },
+    ],
+  },
+
+  // =========================================================================
+  // EUROPE (8 cities)
+  // =========================================================================
+  paris: {
+    label: 'Paris', region: 'europe', country: 'FR',
+    lang: 'fr', lat: 48.8566, lng: 2.3522,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Paris?hl=en-US&gl=US&ceid=US:en', source: 'Google News Paris' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Paris?hl=fr-FR&gl=FR&ceid=FR:fr', source: 'Google News Paris French' },
+      { url: 'https://www.france24.com/en/france/rss', source: 'France 24' },
+    ],
+  },
+  berlin: {
+    label: 'Berlin', region: 'europe', country: 'DE',
+    lang: 'de', lat: 52.52, lng: 13.405,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Berlin?hl=en-US&gl=US&ceid=US:en', source: 'Google News Berlin' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Berlin?hl=de-DE&gl=DE&ceid=DE:de', source: 'Google News Berlin German' },
+      { url: 'https://rss.dw.com/xml/rss-en-all', source: 'DW News' },
+    ],
+  },
+  madrid: {
+    label: 'Madrid', region: 'europe', country: 'ES',
+    lang: 'es', lat: 40.4168, lng: -3.7038,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Madrid?hl=en-US&gl=US&ceid=US:en', source: 'Google News Madrid' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Madrid?hl=es-ES&gl=ES&ceid=ES:es', source: 'Google News Madrid Spanish' },
+    ],
+  },
+  rome: {
+    label: 'Rome', region: 'europe', country: 'IT',
+    lang: 'it', lat: 41.9028, lng: 12.4964,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Rome?hl=en-US&gl=US&ceid=US:en', source: 'Google News Rome' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Rome?hl=it-IT&gl=IT&ceid=IT:it', source: 'Google News Rome Italian' },
+    ],
+  },
+  amsterdam: {
+    label: 'Amsterdam', region: 'europe', country: 'NL',
+    lang: 'nl', lat: 52.3676, lng: 4.9041,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Amsterdam?hl=en-US&gl=US&ceid=US:en', source: 'Google News Amsterdam' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Amsterdam?hl=nl-NL&gl=NL&ceid=NL:nl', source: 'Google News Amsterdam Dutch' },
+      { url: 'https://www.dutchnews.nl/feed/', source: 'DutchNews' },
+    ],
+  },
+  barcelona: {
+    label: 'Barcelona', region: 'europe', country: 'ES',
+    lang: 'es', lat: 41.3874, lng: 2.1686,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Barcelona?hl=en-US&gl=US&ceid=US:en', source: 'Google News Barcelona' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Barcelona?hl=es-ES&gl=ES&ceid=ES:es', source: 'Google News Barcelona Spanish' },
+    ],
+  },
+  munich: {
+    label: 'Munich', region: 'europe', country: 'DE',
+    lang: 'de', lat: 48.1351, lng: 11.582,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Munich?hl=en-US&gl=US&ceid=US:en', source: 'Google News Munich' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Munich?hl=de-DE&gl=DE&ceid=DE:de', source: 'Google News Munich German' },
+    ],
+  },
+  stockholm: {
+    label: 'Stockholm', region: 'europe', country: 'SE',
+    lang: 'sv', lat: 59.3293, lng: 18.0686,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Stockholm?hl=en-US&gl=US&ceid=US:en', source: 'Google News Stockholm' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Stockholm?hl=sv-SE&gl=SE&ceid=SE:sv', source: 'Google News Stockholm Swedish' },
+    ],
+  },
+
+  // =========================================================================
+  // ASIA (6 cities)
+  // =========================================================================
+  tokyo: {
+    label: 'Tokyo', region: 'asia', country: 'JP',
+    lang: 'ja', lat: 35.6762, lng: 139.6503,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Tokyo?hl=en-US&gl=US&ceid=US:en', source: 'Google News Tokyo' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Tokyo?hl=ja-JP&gl=JP&ceid=JP:ja', source: 'Google News Tokyo Japanese' },
+      { url: 'https://www.japantimes.co.jp/feed/', source: 'Japan Times' },
+    ],
+  },
+  singapore: {
+    label: 'Singapore', region: 'asia', country: 'SG',
+    lat: 1.3521, lng: 103.8198,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Singapore?hl=en-SG&gl=SG&ceid=SG:en', source: 'Google News Singapore' },
+      { url: 'https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml', source: 'CNA Singapore' },
+    ],
+  },
+  'hong-kong': {
+    label: 'Hong Kong', region: 'asia', country: 'HK',
+    lang: 'zh', lat: 22.3193, lng: 114.1694,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Hong%20Kong?hl=en-US&gl=US&ceid=US:en', source: 'Google News Hong Kong' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Hong%20Kong?hl=zh-TW&gl=HK&ceid=HK:zh-Hant', source: 'Google News HK Chinese' },
+    ],
+  },
+  seoul: {
+    label: 'Seoul', region: 'asia', country: 'KR',
+    lang: 'ko', lat: 37.5665, lng: 126.978,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Seoul?hl=en-US&gl=US&ceid=US:en', source: 'Google News Seoul' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Seoul?hl=ko-KR&gl=KR&ceid=KR:ko', source: 'Google News Seoul Korean' },
+      { url: 'http://www.koreaherald.com/common/rss_xml.php', source: 'Korea Herald' },
+    ],
+  },
+  bangkok: {
+    label: 'Bangkok', region: 'asia', country: 'TH',
+    lang: 'th', lat: 13.7563, lng: 100.5018,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Bangkok?hl=en-US&gl=US&ceid=US:en', source: 'Google News Bangkok' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Bangkok?hl=th-TH&gl=TH&ceid=TH:th', source: 'Google News Bangkok Thai' },
+      { url: 'https://www.bangkokpost.com/rss/data/topstories.xml', source: 'Bangkok Post' },
+    ],
+  },
+  jakarta: {
+    label: 'Jakarta', region: 'asia', country: 'ID',
+    lang: 'id', lat: -6.2088, lng: 106.8456,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Jakarta?hl=en-US&gl=US&ceid=US:en', source: 'Google News Jakarta' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Jakarta?hl=id-ID&gl=ID&ceid=ID:id', source: 'Google News Jakarta Indonesian' },
+      { url: 'https://www.thejakartapost.com/rss', source: 'Jakarta Post' },
+    ],
+  },
+
+  // =========================================================================
+  // AFRICA (4 cities)
+  // =========================================================================
+  nairobi: {
+    label: 'Nairobi', region: 'africa', country: 'KE',
+    lang: 'sw', lat: -1.2921, lng: 36.8219,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Nairobi?hl=en-KE&gl=KE&ceid=KE:en', source: 'Google News Nairobi' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Nairobi?hl=sw-KE&gl=KE&ceid=KE:sw', source: 'Google News Nairobi Swahili' },
+    ],
+  },
+  lagos: {
+    label: 'Lagos', region: 'africa', country: 'NG',
+    lat: 6.5244, lng: 3.3792,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Lagos?hl=en-NG&gl=NG&ceid=NG:en', source: 'Google News Lagos' },
+      { url: 'https://punchng.com/feed/', source: 'Punch Nigeria' },
+    ],
+  },
+  johannesburg: {
+    label: 'Johannesburg', region: 'africa', country: 'ZA',
+    lat: -26.2041, lng: 28.0473,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Johannesburg?hl=en-ZA&gl=ZA&ceid=ZA:en', source: 'Google News Johannesburg' },
+      { url: 'https://feeds.news24.com/articles/news24/TopStories/rss', source: 'News24' },
+    ],
+  },
+  'cape-town': {
+    label: 'Cape Town', region: 'africa', country: 'ZA',
+    lat: -33.9249, lng: 18.4241,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Cape%20Town?hl=en-ZA&gl=ZA&ceid=ZA:en', source: 'Google News Cape Town' },
+    ],
+  },
+
+  // =========================================================================
+  // LATIN AMERICA (5 cities)
+  // =========================================================================
+  'sao-paulo': {
+    label: 'São Paulo', region: 'latam', country: 'BR',
+    lang: 'pt', lat: -23.5505, lng: -46.6333,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/S%C3%A3o%20Paulo?hl=en-US&gl=US&ceid=US:en', source: 'Google News São Paulo' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/S%C3%A3o%20Paulo?hl=pt-BR&gl=BR&ceid=BR:pt-419', source: 'Google News SP Portuguese' },
+    ],
+  },
+  'mexico-city': {
+    label: 'Mexico City', region: 'latam', country: 'MX',
+    lang: 'es', lat: 19.4326, lng: -99.1332,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Mexico%20City?hl=en-US&gl=US&ceid=US:en', source: 'Google News Mexico City' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Mexico%20City?hl=es-419&gl=MX&ceid=MX:es-419', source: 'Google News CDMX Spanish' },
+    ],
+  },
+  'buenos-aires': {
+    label: 'Buenos Aires', region: 'latam', country: 'AR',
+    lang: 'es', lat: -34.6037, lng: -58.3816,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Buenos%20Aires?hl=en-US&gl=US&ceid=US:en', source: 'Google News Buenos Aires' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Buenos%20Aires?hl=es-419&gl=AR&ceid=AR:es-419', source: 'Google News BA Spanish' },
+    ],
+  },
+  bogota: {
+    label: 'Bogotá', region: 'latam', country: 'CO',
+    lang: 'es', lat: 4.711, lng: -74.0721,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Bogot%C3%A1?hl=en-US&gl=US&ceid=US:en', source: 'Google News Bogotá' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Bogot%C3%A1?hl=es-419&gl=CO&ceid=CO:es-419', source: 'Google News Bogotá Spanish' },
+    ],
+  },
+  lima: {
+    label: 'Lima', region: 'latam', country: 'PE',
+    lang: 'es', lat: -12.0464, lng: -77.0428,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Lima?hl=en-US&gl=US&ceid=US:en', source: 'Google News Lima' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Lima?hl=es-419&gl=PE&ceid=PE:es-419', source: 'Google News Lima Spanish' },
     ],
   },
 };

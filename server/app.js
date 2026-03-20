@@ -399,7 +399,8 @@ const LANG_NAMES = {
   mr: 'Marathi', kn: 'Kannada', ml: 'Malayalam', gu: 'Gujarati',
   pa: 'Punjabi', as: 'Assamese', ur: 'Urdu', ar: 'Arabic', fr: 'French',
   de: 'German', es: 'Spanish', pt: 'Portuguese', zh: 'Chinese',
-  ja: 'Japanese', ko: 'Korean', sw: 'Swahili',
+  ja: 'Japanese', ko: 'Korean', sw: 'Swahili', tr: 'Turkish',
+  it: 'Italian', nl: 'Dutch', th: 'Thai', id: 'Indonesian', sv: 'Swedish',
 };
 
 // Helper: build language instruction for AI prompts
