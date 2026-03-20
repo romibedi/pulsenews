@@ -97,6 +97,23 @@ const RELATED_CATEGORIES = {
   crypto: ['business', 'technology', 'startups'],
 };
 
+const POPULAR_CITIES = [
+  { key: 'mumbai', label: 'Mumbai', flag: '\ud83c\uddee\ud83c\uddf3' },
+  { key: 'delhi', label: 'Delhi', flag: '\ud83c\uddee\ud83c\uddf3' },
+  { key: 'bangalore', label: 'Bangalore', flag: '\ud83c\uddee\ud83c\uddf3' },
+  { key: 'chennai', label: 'Chennai', flag: '\ud83c\uddee\ud83c\uddf3' },
+  { key: 'hyderabad', label: 'Hyderabad', flag: '\ud83c\uddee\ud83c\uddf3' },
+  { key: 'kolkata', label: 'Kolkata', flag: '\ud83c\uddee\ud83c\uddf3' },
+  { key: 'pune', label: 'Pune', flag: '\ud83c\uddee\ud83c\uddf3' },
+  { key: 'london', label: 'London', flag: '\ud83c\uddec\ud83c\udde7' },
+  { key: 'manchester', label: 'Manchester', flag: '\ud83c\uddec\ud83c\udde7' },
+  { key: 'new-york', label: 'New York', flag: '\ud83c\uddfa\ud83c\uddf8' },
+  { key: 'los-angeles', label: 'Los Angeles', flag: '\ud83c\uddfa\ud83c\uddf8' },
+  { key: 'san-francisco', label: 'San Francisco', flag: '\ud83c\uddfa\ud83c\uddf8' },
+  { key: 'sydney', label: 'Sydney', flag: '\ud83c\udde6\ud83c\uddfa' },
+  { key: 'melbourne', label: 'Melbourne', flag: '\ud83c\udde6\ud83c\uddfa' },
+];
+
 function timeAgo(dateStr) {
   const seconds = Math.floor((Date.now() - new Date(dateStr)) / 1000);
   if (seconds < 60) return 'just now';
@@ -342,6 +359,11 @@ export default function Category() {
               breaks.push({ type: 'regions', key: 'regions' });
             }
 
+            // Cities strip
+            if (gridArticles.length > 4) {
+              breaks.push({ type: 'cities', key: 'cities' });
+            }
+
             // Market widget (for relevant categories)
             if (showMarket) {
               breaks.push({ type: 'market', key: 'market' });
@@ -510,6 +532,23 @@ export default function Category() {
                         {Object.entries(REGIONS).map(([key, info]) => (
                           <Link key={key} to={`/region/${key}`} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs no-underline transition-colors shrink-0 whitespace-nowrap ${key === region ? 'bg-[#fef0ed] dark:bg-[#e87461]/10 text-[#e05d44] dark:text-[#e87461] font-semibold' : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg)]'}`}>
                             <span>{info.flag}</span><span>{info.label}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  );
+
+                case 'cities':
+                  return (
+                    <div key={br.key} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 sm:p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-xs font-semibold text-[var(--text)] uppercase tracking-wider">City News</h4>
+                        <Link to="/cities" className="text-[10px] sm:text-xs text-[#e05d44] dark:text-[#e87461] no-underline hover:underline">View all cities</Link>
+                      </div>
+                      <div className="flex gap-2 overflow-x-auto sm:overflow-visible sm:flex-wrap pb-1 sm:pb-0 -mx-1 px-1 scrollbar-hide">
+                        {POPULAR_CITIES.map((c) => (
+                          <Link key={c.key} to={`/city/${c.key}`} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs no-underline transition-colors shrink-0 whitespace-nowrap text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg)] border border-transparent hover:border-[var(--border)]">
+                            <span>{c.flag}</span><span>{c.label}</span>
                           </Link>
                         ))}
                       </div>
