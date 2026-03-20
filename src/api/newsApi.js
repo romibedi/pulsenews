@@ -87,7 +87,11 @@ export async function fetchByCity(city, { before } = {}) {
     const res = await fetch(url);
     if (!res.ok) return { articles: [] };
     const data = await res.json();
-    const result = { articles: data.articles || [] };
+    const result = {
+      articles: data.articles || [],
+      cityLang: data.cityLang || null,
+      cityLangLabel: data.cityLangLabel || null,
+    };
     if (!before) setCache(url, result);
     return result;
   } catch {
