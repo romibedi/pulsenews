@@ -14,7 +14,7 @@ import {
   GetObjectCommand,
   ListObjectsV2Command,
 } from '@aws-sdk/client-s3';
-import { querySitemapEntries } from '../db.js';
+import { querySitemapEntries, querySitemapByDate } from '../db.js';
 import { CITY_FEEDS } from '../shared/feedRegistry.js';
 
 const BUCKET = process.env.AUDIO_BUCKET || 'pulsenews-audio-prod';
@@ -244,13 +244,8 @@ export async function updateSitemaps(newArticles = []) {
     );
 
     if (toAdd.length > 0 || !existingXml) {
-      // Merge: existing entries + new entries
-      // Re-generate from scratch using all today's SITEMAP entries from DynamoDB
-      // This is a narrow query (only today's articles) — cheap
-      const allToday = await querySitemapEntries(10000);
-      const todayEntries = allToday.filter(
-        (e) => e.date && e.date.startsWith(today),
-      );
+      // Query only today's SITEMAP entries using SK prefix (efficient, paginated)
+      const todayEntries = await querySitemapByDate(today);
       const dailyXml = buildArticleSitemapXml(todayEntries);
       await writeToS3(dailyKey, dailyXml);
       console.log(`[sitemap] Updated daily sitemap: ${todayEntries.length} articles for ${today}`);

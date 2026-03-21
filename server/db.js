@@ -253,16 +253,53 @@ export async function articleExists(articleId) {
  * PK = SITEMAP, SK descending.
  */
 export async function querySitemapEntries(limit = 1000) {
-  const result = await docClient.send(
-    new QueryCommand({
-      TableName: TABLE_NAME,
-      KeyConditionExpression: 'PK = :pk',
-      ExpressionAttributeValues: { ':pk': 'SITEMAP' },
-      ScanIndexForward: false,
-      Limit: limit,
-    }),
-  );
-  return cleanItems(result.Items);
+  const items = [];
+  let lastKey = undefined;
+
+  do {
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: 'PK = :pk',
+        ExpressionAttributeValues: { ':pk': 'SITEMAP' },
+        ScanIndexForward: false,
+        ...(lastKey && { ExclusiveStartKey: lastKey }),
+      }),
+    );
+    items.push(...(result.Items || []));
+    lastKey = result.LastEvaluatedKey;
+    if (items.length >= limit) break;
+  } while (lastKey);
+
+  return cleanItems(items.slice(0, limit));
+}
+
+/**
+ * Query SITEMAP entries for a specific date prefix (e.g. "2026-03-21").
+ * SK format is "{date}#{articleId}", so we can use begins_with.
+ */
+export async function querySitemapByDate(datePrefix) {
+  const items = [];
+  let lastKey = undefined;
+
+  do {
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
+        ExpressionAttributeValues: {
+          ':pk': 'SITEMAP',
+          ':prefix': datePrefix,
+        },
+        ScanIndexForward: false,
+        ...(lastKey && { ExclusiveStartKey: lastKey }),
+      }),
+    );
+    items.push(...(result.Items || []));
+    lastKey = result.LastEvaluatedKey;
+  } while (lastKey);
+
+  return cleanItems(items);
 }
 
 /**
