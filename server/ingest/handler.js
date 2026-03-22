@@ -13,6 +13,7 @@ import { articleExists, batchWriteArticles } from '../db.js';
 import { submitUrls, articleUrl, pingSitemap } from '../indexnow.js';
 import { generateBatch } from '../tts/generate.js';
 import { updateSitemaps } from '../sitemap/generate.js';
+import { fetchGdeltArticles, buildGdeltContexts } from './gdelt.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -156,6 +157,87 @@ async function extractArticleContent(url) {
 }
 
 // ---------------------------------------------------------------------------
+// Unified AI analysis via Claude Haiku
+// ---------------------------------------------------------------------------
+
+async function analyzeArticle(title, description, body) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return { mood: 'neutral', entities: [], bestQuote: '', honestHeadline: '', questions: [], controversyScore: 0, predictions: [] };
+
+  const content = (body || description || '').slice(0, 1500);
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 500,
+        messages: [{ role: 'user', content: `Analyze this news article and return ONLY valid JSON (no markdown, no code blocks):
+{
+  "mood": "uplifting|neutral|investigative|breaking",
+  "entities": [{"name": "...", "type": "person|company|place"}],
+  "bestQuote": "most impactful direct quote from the article, or empty string if none",
+  "honestHeadline": "a factual, de-clickbaited headline",
+  "questions": ["what happened?", "who is affected?", "what happens next?"],
+  "controversyScore": 0-100,
+  "predictions": [{"claim": "...", "entity": "...", "targetDate": "..."}]
+}
+
+Rules:
+- entities: extract up to 5 key people, companies, or places mentioned
+- bestQuote: must be an actual quote from the text with attribution, empty string if no quotes found
+- honestHeadline: rewrite the headline to be factual and clear, removing any clickbait
+- questions: 3-5 natural questions this article answers
+- controversyScore: 0=completely neutral factual, 100=extremely polarizing
+- predictions: only include if the article contains forward-looking claims, otherwise empty array
+
+Title: ${title}
+
+${content}` }],
+      }),
+    });
+
+    if (!res.ok) return { mood: 'neutral', entities: [], bestQuote: '', honestHeadline: '', questions: [], controversyScore: 0, predictions: [] };
+
+    const data = await res.json();
+    const raw = (data.content?.[0]?.text || '').trim();
+
+    // Try to parse JSON (handle potential markdown code blocks)
+    let parsed;
+    try {
+      const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '');
+      parsed = JSON.parse(jsonStr);
+    } catch {
+      // If JSON parse fails, try to extract mood at minimum
+      const moodMatch = raw.match(/\b(uplifting|neutral|investigative|breaking)\b/);
+      return { mood: moodMatch?.[1] || 'neutral', entities: [], bestQuote: '', honestHeadline: '', questions: [], controversyScore: 0, predictions: [] };
+    }
+
+    // Validate and sanitize
+    const validMoods = ['uplifting', 'neutral', 'investigative', 'breaking'];
+    return {
+      mood: validMoods.includes(parsed.mood) ? parsed.mood : 'neutral',
+      entities: Array.isArray(parsed.entities) ? parsed.entities.slice(0, 5).map(e => ({
+        name: String(e.name || ''),
+        type: ['person', 'company', 'place'].includes(e.type) ? e.type : 'person',
+      })).filter(e => e.name) : [],
+      bestQuote: String(parsed.bestQuote || ''),
+      honestHeadline: String(parsed.honestHeadline || ''),
+      questions: Array.isArray(parsed.questions) ? parsed.questions.slice(0, 5).map(String) : [],
+      controversyScore: typeof parsed.controversyScore === 'number' ? Math.min(100, Math.max(0, Math.round(parsed.controversyScore))) : 0,
+      predictions: Array.isArray(parsed.predictions) ? parsed.predictions.slice(0, 3).map(p => ({
+        claim: String(p.claim || ''),
+        entity: String(p.entity || ''),
+        targetDate: String(p.targetDate || ''),
+      })).filter(p => p.claim) : [],
+    };
+  } catch {
+    return { mood: 'neutral', entities: [], bestQuote: '', honestHeadline: '', questions: [], controversyScore: 0, predictions: [] };
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Main handler
 // ---------------------------------------------------------------------------
 
@@ -231,27 +313,8 @@ export async function handler(event) {
             const now = new Date().toISOString();
             const ttl = Math.floor(Date.now() / 1000) + (90 * 24 * 60 * 60);
 
-            // 5b. Classify article mood via Claude Haiku
-            let mood = 'neutral';
-            const moodApiKey = process.env.ANTHROPIC_API_KEY;
-            if (moodApiKey) {
-              try {
-                const moodRes = await fetch('https://api.anthropic.com/v1/messages', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', 'x-api-key': moodApiKey, 'anthropic-version': '2023-06-01' },
-                  body: JSON.stringify({
-                    model: 'claude-haiku-4-5-20251001',
-                    max_tokens: 10,
-                    messages: [{ role: 'user', content: `Classify this news article tone into exactly one of: uplifting, neutral, investigative, breaking. Return ONLY the single word.\n\nTitle: ${article.title}\n\n${(article.description || '').slice(0, 500)}` }],
-                  }),
-                });
-                if (moodRes.ok) {
-                  const moodData = await moodRes.json();
-                  const raw = (moodData.content?.[0]?.text || '').trim().toLowerCase();
-                  if (['uplifting', 'neutral', 'investigative', 'breaking'].includes(raw)) mood = raw;
-                }
-              } catch {}
-            }
+            // 5b. Unified AI analysis via Claude Haiku
+            const analysis = await analyzeArticle(article.title, article.description, body);
 
             // 6. Build DynamoDB items for ALL relevant PK partitions
             const items = [];
@@ -284,7 +347,13 @@ export async function handler(event) {
                 category: fields.category,
                 lang: fields.lang,
                 tags: article.tags || [],
-                mood,
+                mood: analysis.mood,
+                entities: analysis.entities,
+                bestQuote: analysis.bestQuote,
+                honestHeadline: analysis.honestHeadline,
+                questions: analysis.questions,
+                controversyScore: analysis.controversyScore,
+                predictions: analysis.predictions,
                 isExternal: true,
                 ttl,
                 createdAt: now,
@@ -305,7 +374,13 @@ export async function handler(event) {
               source,
               category: primaryCtx.category,
               lang: primaryCtx.lang,
-              mood,
+              mood: analysis.mood,
+              entities: analysis.entities,
+              bestQuote: analysis.bestQuote,
+              honestHeadline: analysis.honestHeadline,
+              questions: analysis.questions,
+              controversyScore: analysis.controversyScore,
+              predictions: analysis.predictions,
               slug,
               date,
               ttl,
@@ -336,7 +411,13 @@ export async function handler(event) {
               source,
               category: primaryCtx.category,
               lang: primaryCtx.lang,
-              mood,
+              mood: analysis.mood,
+              entities: analysis.entities,
+              bestQuote: analysis.bestQuote,
+              honestHeadline: analysis.honestHeadline,
+              questions: analysis.questions,
+              controversyScore: analysis.controversyScore,
+              predictions: analysis.predictions,
             });
           } catch (err) {
             console.warn(
@@ -348,6 +429,147 @@ export async function handler(event) {
       }),
     ),
   );
+
+  // -----------------------------------------------------------------------
+  // GDELT: Fetch articles from GDELT Project API (free, 100+ countries)
+  // -----------------------------------------------------------------------
+  let gdeltIngested = 0;
+  try {
+    const gdeltArticles = await fetchGdeltArticles('15min');
+    console.log(`[ingest] Processing ${gdeltArticles.length} GDELT articles`);
+
+    for (const article of gdeltArticles) {
+      try {
+        const exists = await articleExists(article.id);
+        if (exists) {
+          totalSkipped++;
+          continue;
+        }
+
+        // GDELT provides title + URL + image but no body — extract content
+        const extracted = await extractArticleContent(article.url);
+        const body = extracted.body || '';
+        const image = article.image || extracted.image || '';
+        const author = extracted.author || article.source;
+
+        const date = article.date || new Date().toISOString();
+        const slug = generateSlug(article.title, date);
+        const now = new Date().toISOString();
+        const ttl = Math.floor(Date.now() / 1000) + (90 * 24 * 60 * 60);
+
+        // Unified AI analysis via Claude Haiku
+        const analysis = await analyzeArticle(article.title, article.description || body, body);
+
+        // Build contexts from GDELT metadata
+        const contexts = buildGdeltContexts(article);
+        const items = [];
+        const seenPKs = new Set();
+
+        for (const ctx of contexts) {
+          const pk = buildPK(ctx);
+          if (seenPKs.has(pk)) continue;
+          seenPKs.add(pk);
+          const fields = contextFields(ctx);
+
+          items.push({
+            PK: pk,
+            SK: `${date}#${article.id}`,
+            articleId: article.id,
+            title: article.title,
+            description: article.description || body.slice(0, 300),
+            body,
+            image,
+            author,
+            date,
+            section: article.source,
+            sectionId: article.source.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+            url: article.url,
+            source: article.source,
+            region: fields.region,
+            category: fields.category,
+            lang: fields.lang,
+            tags: [],
+            mood: analysis.mood,
+            entities: analysis.entities,
+            bestQuote: analysis.bestQuote,
+            honestHeadline: analysis.honestHeadline,
+            questions: analysis.questions,
+            controversyScore: analysis.controversyScore,
+            predictions: analysis.predictions,
+            isExternal: true,
+            ttl,
+            createdAt: now,
+            slug,
+          });
+        }
+
+        // SITEMAP entry
+        const primaryFields = contexts[0] ? contextFields(contexts[0]) : { category: 'world', lang: 'en' };
+        items.push({
+          PK: 'SITEMAP',
+          SK: `${date}#${article.id}`,
+          articleId: article.id,
+          title: article.title,
+          description: article.description || body.slice(0, 300),
+          image,
+          url: article.url,
+          source: article.source,
+          category: primaryFields.category,
+          lang: primaryFields.lang,
+          mood: analysis.mood,
+          entities: analysis.entities,
+          bestQuote: analysis.bestQuote,
+          honestHeadline: analysis.honestHeadline,
+          questions: analysis.questions,
+          controversyScore: analysis.controversyScore,
+          predictions: analysis.predictions,
+          slug,
+          date,
+          ttl,
+          createdAt: now,
+        });
+
+        await batchWriteArticles(items);
+        totalIngested++;
+        gdeltIngested++;
+        newArticleUrls.push(articleUrl(slug));
+
+        const ttsLang = article._lang || 'en';
+        const ttsRegion = article._region || 'global';
+        newArticlesForTts.push({
+          title: article.title,
+          body,
+          description: article.description,
+          lang: ttsLang,
+          region: ttsRegion,
+          slug,
+        });
+        newArticlesForSitemap.push({
+          articleId: article.id,
+          slug,
+          title: article.title,
+          description: article.description || body.slice(0, 300),
+          image,
+          date,
+          source: article.source,
+          category: primaryFields.category,
+          lang: primaryFields.lang,
+          mood: analysis.mood,
+          entities: analysis.entities,
+          bestQuote: analysis.bestQuote,
+          honestHeadline: analysis.honestHeadline,
+          questions: analysis.questions,
+          controversyScore: analysis.controversyScore,
+          predictions: analysis.predictions,
+        });
+      } catch (err) {
+        console.warn(`[ingest] GDELT article failed: ${article.url} - ${err.message}`);
+      }
+    }
+    console.log(`[ingest] GDELT: ingested ${gdeltIngested} new articles`);
+  } catch (err) {
+    console.warn(`[ingest] GDELT fetch failed: ${err.message}`);
+  }
 
   // Submit new URLs to IndexNow for instant indexing by Bing/Yandex/etc.
   // Also ping Google & Bing with updated sitemap.
@@ -382,13 +604,14 @@ export async function handler(event) {
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
   console.log(
-    `[ingest] Finished in ${elapsed}s | ingested=${totalIngested} skipped=${totalSkipped} feedErrors=${feedErrors}`,
+    `[ingest] Finished in ${elapsed}s | ingested=${totalIngested} (gdelt=${gdeltIngested}) skipped=${totalSkipped} feedErrors=${feedErrors}`,
   );
 
   return {
     statusCode: 200,
     body: JSON.stringify({
       ingested: totalIngested,
+      gdeltIngested,
       skipped: totalSkipped,
       feedErrors,
       durationSeconds: parseFloat(elapsed),

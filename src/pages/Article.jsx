@@ -11,6 +11,12 @@ import StoryThread from '../components/StoryThread';
 import AISummary from '../components/AISummary';
 import TextToSpeech from '../components/TextToSpeech';
 import Reactions from '../components/Reactions';
+import EntityBadges from '../components/EntityBadges';
+import HonestHeadline from '../components/HonestHeadline';
+import ArticleFAQ from '../components/ArticleFAQ';
+import ControversyBadge from '../components/ControversyBadge';
+import PredictionTracker from '../components/PredictionTracker';
+import BestQuote from '../components/BestQuote';
 import useAudio from '../contexts/AudioContext';
 
 const SITE_URL = 'https://pulsenewstoday.com';
@@ -277,6 +283,20 @@ export default function Article() {
             }
           ]
         })}</script>
+        {article.questions?.length > 0 && (
+          <script type="application/ld+json">{JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": article.questions.map(q => ({
+              "@type": "Question",
+              "name": q,
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": `Read the full article for details: ${metaDescription}`
+              }
+            }))
+          })}</script>
+        )}
       </Helmet>
 
       {/* Breadcrumb */}
@@ -288,7 +308,7 @@ export default function Article() {
         </Link>
       </div>
 
-      {/* Source badge + tag + reading time */}
+      {/* Source badge + tag + reading time + controversy */}
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <span className="inline-block px-3 py-1 text-xs font-semibold bg-[#fef0ed] dark:bg-[#e87461]/10 text-[#e05d44] dark:text-[#e87461] rounded-full capitalize">
           {article.section}
@@ -299,12 +319,23 @@ export default function Article() {
           </span>
         )}
         <span className="text-xs text-[var(--text-muted)]">{readTime} min read</span>
+        <ControversyBadge score={article.controversyScore} />
       </div>
+
+      {/* Honest headline (de-clickbaited) */}
+      <HonestHeadline original={article.title} honest={article.honestHeadline} />
 
       {/* Title */}
       <h1 className="text-3xl md:text-4xl lg:text-5xl font-normal text-[var(--text)] leading-tight mb-4">
         {article.title}
       </h1>
+
+      {/* Entity badges */}
+      {article.entities?.length > 0 && (
+        <div className="mb-4">
+          <EntityBadges entities={article.entities} />
+        </div>
+      )}
 
       {/* Meta */}
       <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--text-muted)] mb-4 pb-4 border-b border-[var(--border)]">
@@ -420,12 +451,23 @@ export default function Article() {
       {paragraphs.length > 0 && (
         <div className="relative">
           <div className="prose-custom space-y-5">
-            {paragraphs.map((p, i) => (
+            {paragraphs.slice(0, 3).map((p, i) => (
               <p key={i} className="text-[var(--text-secondary)] leading-relaxed text-[15px]">
                 {p}
               </p>
             ))}
           </div>
+          {/* Best quote — inserted after the 3rd paragraph */}
+          <BestQuote quote={article.bestQuote} />
+          {paragraphs.length > 3 && (
+            <div className="prose-custom space-y-5">
+              {paragraphs.slice(3).map((p, i) => (
+                <p key={i + 3} className="text-[var(--text-secondary)] leading-relaxed text-[15px]">
+                  {p}
+                </p>
+              ))}
+            </div>
+          )}
           {hasMoreContent && (
             <div className="relative -mt-20 pt-24 bg-gradient-to-t from-[var(--bg)] via-[var(--bg)]/90 to-transparent" />
           )}
@@ -454,6 +496,12 @@ export default function Article() {
           </a>
         </div>
       )}
+
+      {/* FAQ — questions this article answers */}
+      <ArticleFAQ questions={article.questions} />
+
+      {/* Predictions & claims tracker */}
+      <PredictionTracker predictions={article.predictions} />
 
       {/* Tags */}
       {article.tags?.length > 0 && (
