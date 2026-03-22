@@ -25,6 +25,7 @@
     "@extractus/article-extractor": "^8.0.20",
     "@resvg/resvg-js": "^2.6.2",
     "edge-tts-universal": "^1.4.0",
+    "google-news-decoder": "^1.0.1",
     "leaflet": "^1.9.4",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

@@ -1,5 +1,22 @@
 // Shared RSS parsing utilities used by all feed routes
 import { createHash } from 'crypto';
+import GoogleNewsDecoder from 'google-news-decoder';
+
+// Google News URL decoder singleton
+const _gnDecoder = new GoogleNewsDecoder();
+
+/**
+ * Resolve a Google News redirect URL to the actual article URL.
+ * Returns the original URL if it's not a Google News URL or decoding fails.
+ */
+export async function resolveGoogleNewsUrl(url) {
+  if (!url || !url.includes('news.google.com/rss/articles/')) return url;
+  try {
+    const result = await _gnDecoder.decodeGoogleNewsUrl(url);
+    if (result.status && result.decodedUrl) return result.decodedUrl;
+  } catch { /* fall through */ }
+  return url;
+}
 
 export function extractTag(xml, tag) {
   const re = new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`);

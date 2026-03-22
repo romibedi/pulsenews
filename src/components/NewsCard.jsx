@@ -3,6 +3,7 @@ import { useBookmarks } from '../contexts/BookmarkContext';
 import useAudio from '../contexts/AudioContext';
 import useLanguage from '../hooks/useLanguage';
 import { estimateReadingTime } from '../utils/readingTime';
+import { isLogoImage } from '../utils/articleHelpers';
 
 function stripHtml(str) {
   if (!str) return '';
@@ -630,6 +631,13 @@ function getArticlePlaceholder(article) {
   return getPlaceholder('world');
 }
 
+/** Get the display image for an article — skips logos in favor of category placeholders. */
+function getArticleImage(article, placeholder) {
+  const img = article.image;
+  if (!img || isLogoImage(img)) return placeholder;
+  return img;
+}
+
 const SOURCE_COLORS = {
   'BBC': 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400',
   'Al Jazeera': 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400',
@@ -746,6 +754,7 @@ export default function NewsCard({ article, featured = false, compact = false })
   const readTime = estimateReadingTime(article.body || article.description);
 
   const placeholder = getArticlePlaceholder(article);
+  const displayImage = getArticleImage(article, placeholder);
 
   if (compact) {
     return (
@@ -753,7 +762,7 @@ export default function NewsCard({ article, featured = false, compact = false })
         <div className="flex gap-3 rounded-xl overflow-hidden card-hover border border-[var(--border)] bg-[var(--surface)] h-full shadow-sm hover:shadow-md p-2.5">
           <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden">
             <img
-              src={article.image || placeholder}
+              src={displayImage}
               alt={article.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
@@ -785,7 +794,7 @@ export default function NewsCard({ article, featured = false, compact = false })
         <div className="relative rounded-2xl overflow-hidden card-hover border border-[var(--border)] bg-[var(--surface)] shadow-md hover:shadow-xl">
           <div className="aspect-[16/9] md:aspect-[21/9] overflow-hidden">
             <img
-              src={article.image || placeholder}
+              src={displayImage}
               alt={article.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
@@ -832,7 +841,7 @@ export default function NewsCard({ article, featured = false, compact = false })
       <div className="rounded-2xl overflow-hidden card-hover border border-[var(--border)] bg-[var(--surface)] h-full flex flex-col shadow-md hover:shadow-xl">
         <div className="aspect-[3/2] overflow-hidden">
           <img
-            src={article.image || placeholder}
+            src={displayImage}
             alt={article.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"

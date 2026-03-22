@@ -1,3 +1,26 @@
+/**
+ * Detect if an image URL is a site logo or generic placeholder,
+ * not an actual article-specific image.
+ */
+export function isLogoImage(url) {
+  if (!url) return true;
+  const lower = url.toLowerCase();
+  // Google News app logo
+  if (lower.includes('lh3.googleusercontent.com/j6_cofb')) return true;
+  // URL path contains "logo"
+  if (/[/\-_]logo[/\-_.\d]/i.test(lower)) return true;
+  // Common placeholder/favicon patterns
+  if (/[/\-_](favicon|placeholder|default[_-]?image|brand|site-icon)[/\-_.]/i.test(lower)) return true;
+  return false;
+}
+
+/**
+ * Return the article image if it's a real article image, or null if it's a logo.
+ */
+export function getArticleImage(article) {
+  return (article.image && !isLogoImage(article.image)) ? article.image : null;
+}
+
 const STOP_WORDS = new Set([
   'the','a','an','in','on','at','to','for','of','and','or','but','is','are','was','were',
   'be','been','has','have','had','do','does','did','will','would','could','should','may',
@@ -220,7 +243,7 @@ export function pickTopStory(articles) {
 
   for (const a of articles.slice(1, 15)) {
     let score = 0;
-    if (a.image) score += 3;
+    if (getArticleImage(a)) score += 3;
     const descLen = (a.description || '').replace(/<[^>]*>/g, '').length;
     if (descLen > 200) score += 3;
     else if (descLen > 100) score += 1;
@@ -245,8 +268,8 @@ export function pickPhotoOfDay(articles) {
   let bestScore = -1;
 
   for (const a of articles.slice(0, 20)) {
-    if (!a.image) continue;
-    let score = 1; // has image
+    if (!getArticleImage(a)) continue;
+    let score = 1; // has real image (not a logo)
     if (PHOTO_SOURCES.has(a.source)) score += 5;
     if (PHOTO_KEYWORDS.test(a.title)) score += 3;
     if ((a.description || '').replace(/<[^>]*>/g, '').length > 100) score += 1;

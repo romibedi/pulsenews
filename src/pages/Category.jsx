@@ -9,7 +9,7 @@ import useAudio from '../contexts/AudioContext';
 import NewsCard from '../components/NewsCard';
 import Loader from '../components/Loader';
 import StockTicker from '../components/StockTicker';
-import { clusterArticles, extractPullquote, timeAgo, getCitiesForRegion, extractSmartPullquote, pickTopStory, pickPhotoOfDay, extractStatistic, getDailyPoll, dailyShuffle, getTimeDivider } from '../utils/articleHelpers';
+import { clusterArticles, extractPullquote, timeAgo, getCitiesForRegion, extractSmartPullquote, pickTopStory, pickPhotoOfDay, extractStatistic, getDailyPoll, dailyShuffle, getTimeDivider, getArticleImage } from '../utils/articleHelpers';
 import QuickPoll from '../components/QuickPoll';
 
 const SITE_URL = 'https://pulsenewstoday.com';
@@ -411,7 +411,7 @@ export default function Category() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                         {br.cluster.articles.map((article) => (
                           <Link key={article.id} to={article.slug ? `/news/${article.slug}` : `/article/${encodeURIComponent(article.id)}`} className="flex gap-3 p-2 rounded-lg hover:bg-[var(--bg)] transition-colors no-underline group">
-                            {article.image && <img src={article.image} alt="" className="w-16 h-16 sm:w-14 sm:h-14 rounded-lg object-cover shrink-0" loading="lazy" />}
+                            {getArticleImage(article) && <img src={getArticleImage(article)} alt="" className="w-16 h-16 sm:w-14 sm:h-14 rounded-lg object-cover shrink-0" loading="lazy" />}
                             <div className="flex-1 min-w-0">
                               <p className="text-sm text-[var(--text)] group-hover:text-[#e05d44] dark:group-hover:text-[#e87461] transition-colors line-clamp-2 leading-snug font-medium">{article.title}</p>
                               <p className="text-[10px] text-[var(--text-muted)] mt-1">{article.source}</p>

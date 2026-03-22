@@ -8,7 +8,7 @@
 
 import { extract } from '@extractus/article-extractor';
 import { buildFeedContextMap } from '../shared/feedRegistry.js';
-import { parseRssFeed, fetchOgImage } from '../rss.js';
+import { parseRssFeed, fetchOgImage, resolveGoogleNewsUrl } from '../rss.js';
 import { articleExists, batchWriteArticles } from '../db.js';
 import { submitUrls, articleUrl, pingSitemap } from '../indexnow.js';
 import { generateBatch } from '../tts/generate.js';
@@ -18,6 +18,36 @@ import { fetchGdeltArticles, buildGdeltContexts } from './gdelt.js';
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Detect if an image URL is likely a site logo or generic placeholder
+ * rather than an article-specific image.
+ */
+function isLogoOrPlaceholder(url) {
+  if (!url) return true;
+  const lower = url.toLowerCase();
+
+  // Known generic images: Google News app logo
+  if (lower.includes('lh3.googleusercontent.com/j6_cofb')) return true;
+
+  // URL path contains "logo" (e.g., punch-logo-500x179-1.png)
+  if (/[/\-_]logo[/\-_.\d]/i.test(lower)) return true;
+
+  // Common placeholder/favicon patterns
+  if (/[/\-_](favicon|placeholder|default[_-]?image|brand|icon)[/\-_.]/i.test(lower)) return true;
+
+  // Very small images by dimension in URL (e.g., 16x16, 32x32, 100x50)
+  const dimMatch = lower.match(/[/_-](\d+)x(\d+)/);
+  if (dimMatch) {
+    const w = parseInt(dimMatch[1]);
+    const h = parseInt(dimMatch[2]);
+    // Logos are typically very wide/short or very small
+    if (w < 300 && h < 200 && (w / h > 2.5 || h / w > 2.5)) return true;
+    if (w < 100 && h < 100) return true;
+  }
+
+  return false;
+}
 
 /** Simple concurrency limiter (avoids adding p-limit as a dependency). */
 function createLimiter(concurrency) {
@@ -160,20 +190,9 @@ async function extractArticleContent(url) {
 // Unified AI analysis via Claude Haiku
 // ---------------------------------------------------------------------------
 
-async function analyzeArticle(title, description, body) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return { mood: 'neutral', entities: [], bestQuote: '', honestHeadline: '', questions: [], controversyScore: 0, predictions: [] };
+const ANALYSIS_DEFAULTS = { mood: 'neutral', entities: [], bestQuote: '', honestHeadline: '', questions: [], controversyScore: 0, predictions: [] };
 
-  const content = (body || description || '').slice(0, 1500);
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 500,
-        messages: [{ role: 'user', content: `Analyze this news article and return ONLY valid JSON (no markdown, no code blocks):
+const ANALYSIS_PROMPT = `Analyze this news article and return ONLY valid JSON (no markdown, no code blocks):
 {
   "mood": "uplifting|neutral|investigative|breaking",
   "entities": [{"name": "...", "type": "person|company|place"}],
@@ -190,28 +209,75 @@ Rules:
 - honestHeadline: rewrite the headline to be factual and clear, removing any clickbait
 - questions: 3-5 natural questions this article answers
 - controversyScore: 0=completely neutral factual, 100=extremely polarizing
-- predictions: only include if the article contains forward-looking claims, otherwise empty array
+- predictions: only include if the article contains forward-looking claims, otherwise empty array`;
 
-Title: ${title}
+/** Call Gemini 2.0 Flash for article analysis (~$0.0003/article). */
+async function analyzeWithGemini(title, content) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
 
-${content}` }],
-      }),
-    });
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: `${ANALYSIS_PROMPT}\n\nTitle: ${title}\n\n${content}` }] }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        maxOutputTokens: 500,
+        temperature: 0.1,
+      },
+    }),
+  });
 
-    if (!res.ok) return { mood: 'neutral', entities: [], bestQuote: '', honestHeadline: '', questions: [], controversyScore: 0, predictions: [] };
+  if (!res.ok) return null;
+  const data = await res.json();
+  const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  return raw.trim();
+}
 
-    const data = await res.json();
-    const raw = (data.content?.[0]?.text || '').trim();
+/** Call Claude Haiku as fallback (~$0.005/article). */
+async function analyzeWithHaiku(title, content) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return null;
 
-    // Try to parse JSON (handle potential markdown code blocks)
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 500,
+      messages: [{ role: 'user', content: `${ANALYSIS_PROMPT}\n\nTitle: ${title}\n\n${content}` }],
+    }),
+  });
+
+  if (!res.ok) return null;
+  const data = await res.json();
+  return (data.content?.[0]?.text || '').trim();
+}
+
+/**
+ * Unified article analysis — tries Gemini Flash first (cheap), falls back to Haiku.
+ * Set GEMINI_API_KEY to use Gemini, ANTHROPIC_API_KEY for Haiku fallback.
+ */
+async function analyzeArticle(title, description, body) {
+  const content = (body || description || '').slice(0, 1500);
+  if (!content && !title) return { ...ANALYSIS_DEFAULTS };
+
+  try {
+    // Try Gemini Flash first (17x cheaper), fall back to Haiku
+    const raw = await analyzeWithGemini(title, content)
+      || await analyzeWithHaiku(title, content);
+
+    if (!raw) return { ...ANALYSIS_DEFAULTS };
+
+    // Parse JSON (handle potential markdown code blocks)
     let parsed;
     try {
       const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '');
       parsed = JSON.parse(jsonStr);
     } catch {
-      // If JSON parse fails, try to extract mood at minimum
       const moodMatch = raw.match(/\b(uplifting|neutral|investigative|breaking)\b/);
-      return { mood: moodMatch?.[1] || 'neutral', entities: [], bestQuote: '', honestHeadline: '', questions: [], controversyScore: 0, predictions: [] };
+      return { ...ANALYSIS_DEFAULTS, mood: moodMatch?.[1] || 'neutral' };
     }
 
     // Validate and sanitize
@@ -233,7 +299,7 @@ ${content}` }],
       })).filter(p => p.claim) : [],
     };
   } catch {
-    return { mood: 'neutral', entities: [], bestQuote: '', honestHeadline: '', questions: [], controversyScore: 0, predictions: [] };
+    return { ...ANALYSIS_DEFAULTS };
   }
 }
 
@@ -293,16 +359,26 @@ export async function handler(event) {
               continue;
             }
 
-            // 4. Extract full article content (10s timeout per article)
-            const extracted = await extractArticleContent(article.url);
+            // 4. Resolve Google News redirect URLs to actual article URLs
+            //    Google News RSS links are encrypted redirects — decode to get
+            //    the real publisher URL for content extraction and OG images.
+            const realUrl = await resolveGoogleNewsUrl(article.url);
+            const isGoogleNews = realUrl !== article.url;
+
+            // 5. Extract full article content (10s timeout per article)
+            const extracted = await extractArticleContent(realUrl);
             const body = extracted.body || article.description || '';
             const author = extracted.author || article.author || source;
 
-            // 5. Resolve image: RSS feed → article-extractor → OG scrape
-            let image = article.image || extracted.image || '';
+            // 6. Resolve image: prefer article-specific images over logos
+            //    RSS feeds often embed site logos instead of article images.
+            const rssImage = !isLogoOrPlaceholder(article.image) ? article.image : '';
+            const extractedImage = !isLogoOrPlaceholder(extracted.image) ? extracted.image : '';
+            let image = rssImage || extractedImage || '';
             if (!image) {
               try {
-                image = await fetchOgImage(article.url) || '';
+                const ogImg = await fetchOgImage(realUrl) || '';
+                image = !isLogoOrPlaceholder(ogImg) ? ogImg : '';
               } catch {
                 image = '';
               }
@@ -341,7 +417,7 @@ export async function handler(event) {
                 date,
                 section: source,
                 sectionId: source.toLowerCase().replace(/\s+/g, '-'),
-                url: article.url,
+                url: isGoogleNews ? realUrl : article.url,
                 source,
                 region: fields.region,
                 category: fields.category,
@@ -370,7 +446,7 @@ export async function handler(event) {
               title: article.title,
               description: article.description,
               image,
-              url: article.url,
+              url: isGoogleNews ? realUrl : article.url,
               source,
               category: primaryCtx.category,
               lang: primaryCtx.lang,
@@ -449,7 +525,9 @@ export async function handler(event) {
         // GDELT provides title + URL + image but no body — extract content
         const extracted = await extractArticleContent(article.url);
         const body = extracted.body || '';
-        const image = article.image || extracted.image || '';
+        const gdeltImg = !isLogoOrPlaceholder(article.image) ? article.image : '';
+        const gdeltExtImg = !isLogoOrPlaceholder(extracted.image) ? extracted.image : '';
+        const image = gdeltImg || gdeltExtImg || '';
         const author = extracted.author || article.source;
 
         const date = article.date || new Date().toISOString();
@@ -586,13 +664,15 @@ export async function handler(event) {
     }
   }
 
-  // Pre-generate TTS audio and upload to S3
-  if (newArticlesForTts.length > 0) {
+  // Pre-generate TTS audio and upload to S3 (skip if SKIP_TTS is set)
+  if (newArticlesForTts.length > 0 && !process.env.SKIP_TTS) {
     try {
       await generateBatch(newArticlesForTts, 20);
     } catch (err) {
       console.warn(`[ingest] TTS generation failed: ${err.message}`);
     }
+  } else if (process.env.SKIP_TTS) {
+    console.log(`[ingest] TTS skipped (SKIP_TTS=${process.env.SKIP_TTS})`);
   }
 
   // Update S3 sitemaps (daily + news + index)
