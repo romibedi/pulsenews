@@ -91,6 +91,24 @@ resource "aws_iam_role_policy" "apprunner_opensearch" {
   })
 }
 
+# Bedrock access for generating search query embeddings (Titan Embeddings v2)
+resource "aws_iam_role_policy" "apprunner_bedrock" {
+  name = "bedrock-embeddings"
+  role = aws_iam_role.apprunner_instance.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = ["bedrock:InvokeModel"]
+      Resource = [
+        "arn:aws:bedrock:${var.aws_region}::foundation-model/amazon.titan-embed-text-v2:0",
+        "arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-embed-text-v2:0",
+      ]
+    }]
+  })
+}
+
 # Auto-scaling configuration
 resource "aws_apprunner_auto_scaling_configuration_version" "app" {
   auto_scaling_configuration_name = "pulsenews-scaling-${var.environment}"
@@ -122,6 +140,7 @@ resource "aws_apprunner_service" "app" {
           SITE_URL            = "https://${var.domain_name}"
           AWS_REGION          = var.aws_region
           AUDIO_BUCKET        = aws_s3_bucket.audio.id
+          ENABLE_KNN          = var.enable_knn
         }
       }
     }

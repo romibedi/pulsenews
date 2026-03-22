@@ -140,19 +140,6 @@ export default function About() {
           </div>
         </div>
 
-        <div className="bg-[var(--surface)] rounded-2xl p-6 md:p-8 border border-[var(--border)] shadow-sm">
-          <h2 className="text-xl font-normal text-[var(--text)] mb-3">Built by VeyricTech</h2>
-          <p className="text-[var(--text-secondary)] leading-relaxed mb-4">
-            PulseNewsToday is built and maintained by VeyricTech. We build AI-powered products
-            that make information more accessible and useful.
-          </p>
-          <p className="text-sm text-[var(--text-muted)]">
-            Questions or feedback?{' '}
-            <a href="mailto:info@veyrictech.com" className="text-[#e05d44] dark:text-[#e87461] hover:underline no-underline">
-              info@veyrictech.com
-            </a>
-          </p>
-        </div>
       </div>
 
       {/* CTA */}

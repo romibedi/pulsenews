@@ -52,7 +52,7 @@ export default function Footer() {
 
         <div className="border-t border-[var(--border)] mt-8 pt-6 text-center">
           <p className="text-xs text-[var(--text-muted)]">
-            &copy; 2026 PulseNewsToday. A product of VeyricTech.
+            &copy; 2026 PulseNewsToday.
           </p>
         </div>
       </div>

@@ -10,6 +10,10 @@ import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedroc
 const EMBEDDING_MODEL = 'amazon.titan-embed-text-v2:0';
 const DIMENSIONS = 1024;
 
+// Set ENABLE_KNN=true to enable vector embedding generation.
+// When disabled, all callers fall back to BM25-only search automatically.
+const KNN_ENABLED = process.env.ENABLE_KNN === 'true';
+
 let _client = null;
 
 function getBedrockClient() {
@@ -24,6 +28,7 @@ function getBedrockClient() {
  * Returns a Float32Array of DIMENSIONS length, or null on failure.
  */
 export async function generateEmbedding(text) {
+  if (!KNN_ENABLED) return null;
   if (!text || text.trim().length === 0) return null;
 
   try {

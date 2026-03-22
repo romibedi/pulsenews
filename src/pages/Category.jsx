@@ -9,7 +9,8 @@ import useAudio from '../contexts/AudioContext';
 import NewsCard from '../components/NewsCard';
 import Loader from '../components/Loader';
 import StockTicker from '../components/StockTicker';
-import { clusterArticles, extractPullquote, timeAgo, POPULAR_CITIES } from '../utils/articleHelpers';
+import { clusterArticles, extractPullquote, timeAgo, getCitiesForRegion, extractSmartPullquote, pickTopStory, pickPhotoOfDay, extractStatistic, getDailyPoll, dailyShuffle, getTimeDivider } from '../utils/articleHelpers';
+import QuickPoll from '../components/QuickPoll';
 
 const SITE_URL = 'https://pulsenewstoday.com';
 
@@ -151,10 +152,20 @@ export default function Category() {
     }).slice(0, 10).map((a) => a.source);
   }, [displayArticles]);
 
+  const smartPullquote = extractSmartPullquote(displayArticles);
+  const topStory = pickTopStory(displayArticles);
+  let photoOfDay = pickPhotoOfDay(displayArticles);
+  if (photoOfDay && topStory && photoOfDay.id === topStory.id) photoOfDay = null;
+  const stat = extractStatistic(displayArticles);
+  const poll = getDailyPoll(category);
+
+  const excludeIds = new Set([
+    ...(topStory ? [topStory.id] : []),
+    ...(photoOfDay ? [photoOfDay.id] : []),
+  ]);
+
   const hero = displayArticles[0];
-  const gridArticles = displayArticles.slice(1).filter((a) => !clusteredIds.has(a.id));
-  const pullquoteArticle = displayArticles.slice(3, 9).find((a) => extractPullquote(a));
-  const pullquote = pullquoteArticle ? extractPullquote(pullquoteArticle) : null;
+  const gridArticles = displayArticles.slice(1).filter((a) => !clusteredIds.has(a.id) && !excludeIds.has(a.id));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
@@ -256,46 +267,36 @@ export default function Category() {
 
           {/* ── Interleaved article grids + break sections ─────── */}
           {(() => {
-            // Build a pool of break elements to interleave between article grid chunks
-            const breaks = [];
-
-            // Trending clusters — each one is its own break
+            // Build break pool — content breaks shuffled daily, nav breaks spaced evenly
+            const contentBreaks = [];
             clusters.forEach((cluster) => {
-              breaks.push({ type: 'cluster', key: `cluster-${cluster.topic}`, cluster });
+              contentBreaks.push({ type: 'cluster', key: `cluster-${cluster.topic}`, cluster });
             });
+            if (topStory) contentBreaks.push({ type: 'top-story', key: 'top-story' });
+            if (smartPullquote) contentBreaks.push({ type: 'pullquote', key: 'pullquote' });
+            if (stat) contentBreaks.push({ type: 'stat', key: 'stat' });
+            if (photoOfDay) contentBreaks.push({ type: 'photo', key: 'photo' });
+            contentBreaks.push({ type: 'poll', key: 'poll' });
+            if (sources.length > 0) contentBreaks.push({ type: 'sources', key: 'sources' });
+            if (showMarket) contentBreaks.push({ type: 'market', key: 'market' });
 
-            // Pullquote
-            if (pullquote) {
-              breaks.push({ type: 'pullquote', key: 'pullquote' });
-            }
+            const navBreaks = [
+              ...(gridArticles.length > 3 ? [{ type: 'related', key: 'related' }] : []),
+              ...(gridArticles.length > 6 ? [{ type: 'regions', key: 'regions' }] : []),
+              ...(gridArticles.length > 4 ? [{ type: 'cities', key: 'cities' }] : []),
+              { type: 'explore', key: 'explore' },
+            ];
 
-            // Related topics strip
-            if (gridArticles.length > 3) {
-              breaks.push({ type: 'related', key: 'related' });
-            }
-
-            // Sources chips
-            if (sources.length > 0) {
-              breaks.push({ type: 'sources', key: 'sources' });
-            }
-
-            // Regions strip
-            if (gridArticles.length > 6) {
-              breaks.push({ type: 'regions', key: 'regions' });
-            }
-
-            // Cities strip
-            if (gridArticles.length > 4) {
-              breaks.push({ type: 'cities', key: 'cities' });
-            }
-
-            // Market widget (for relevant categories)
-            if (showMarket) {
-              breaks.push({ type: 'market', key: 'market' });
-            }
-
-            // Explore links
-            breaks.push({ type: 'explore', key: 'explore' });
+            const shuffledContent = dailyShuffle(contentBreaks);
+            const breaks = [];
+            let navIdx = 0;
+            shuffledContent.forEach((br, i) => {
+              breaks.push(br);
+              if ((i + 1) % 3 === 0 && navIdx < navBreaks.length) {
+                breaks.push(navBreaks[navIdx++]);
+              }
+            });
+            while (navIdx < navBreaks.length) breaks.push(navBreaks[navIdx++]);
 
             // Mobile: chunks of 3 articles, break every 1 chunk (every 3 articles)
             // Desktop: chunks of 3 articles, break every 2 chunks (every 6 articles)
@@ -311,6 +312,21 @@ export default function Category() {
             let breakIdx = 0;
 
             chunks.forEach((chunk, ci) => {
+              // Time divider when there's a big gap between chunks
+              if (ci > 0) {
+                const prevChunk = chunks[ci - 1];
+                const dividerLabel = getTimeDivider(prevChunk[prevChunk.length - 1]?.date, chunk[0]?.date);
+                if (dividerLabel) {
+                  elements.push(
+                    <div key={`divider-${ci}`} className="flex items-center gap-3 -my-2">
+                      <div className="flex-1 border-t border-[var(--border)]" />
+                      <span className="text-[10px] text-[var(--text-muted)] whitespace-nowrap">{dividerLabel}</span>
+                      <div className="flex-1 border-t border-[var(--border)]" />
+                    </div>
+                  );
+                }
+              }
+
               // Mid-story wide feature at intervals
               if (ci > 0 && ci % MID_FEATURE_INTERVAL === 0 && chunk[0]) {
                 const a = chunk[0];
@@ -407,20 +423,67 @@ export default function Category() {
                   );
 
                 case 'pullquote':
-                  return (
+                  return smartPullquote ? (
                     <div key={br.key} className="relative py-3 sm:py-4">
                       <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[var(--border)]" /></div>
                       <div className="relative bg-[var(--bg)] mx-auto max-w-2xl px-4 sm:px-6 py-4 sm:py-5 rounded-xl border border-[var(--border)]">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-[#e05d44]/20 dark:text-[#e87461]/20 mb-2">
                           <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
                         </svg>
-                        <p className="text-sm sm:text-base text-[var(--text)] leading-relaxed italic" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>{pullquote}</p>
+                        <p className="text-sm sm:text-base text-[var(--text)] leading-relaxed italic" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>{smartPullquote.quote}</p>
                         <p className="text-[10px] sm:text-xs text-[var(--text-muted)] mt-2">
-                          — {pullquoteArticle.source || 'Source'}{pullquoteArticle.title ? `, "${pullquoteArticle.title.slice(0, 50)}${pullquoteArticle.title.length > 50 ? '...' : ''}"` : ''}
+                          — {smartPullquote.article.source || 'Source'}{smartPullquote.article.title ? `, "${smartPullquote.article.title.slice(0, 50)}${smartPullquote.article.title.length > 50 ? '...' : ''}"` : ''}
                         </p>
                       </div>
                     </div>
-                  );
+                  ) : null;
+
+                case 'top-story':
+                  return topStory ? (
+                    <div key={br.key} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-0">
+                        {topStory.image && <div className="md:col-span-2"><img src={topStory.image} alt="" className="w-full h-48 md:h-full object-cover" loading="lazy" /></div>}
+                        <div className={`p-5 sm:p-6 flex flex-col justify-center ${topStory.image ? 'md:col-span-3' : 'md:col-span-5'}`}>
+                          <span className="text-[10px] font-bold text-[#e05d44] dark:text-[#e87461] uppercase tracking-widest mb-2">Top Story</span>
+                          <Link
+                            to={topStory.slug ? `/news/${topStory.slug}` : `/article/${encodeURIComponent(topStory.id)}`}
+                            className="text-xl sm:text-2xl font-medium text-[var(--text)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline leading-snug"
+                            style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}
+                          >{topStory.title}</Link>
+                          <p className="text-sm text-[var(--text-muted)] mt-3 line-clamp-3 leading-relaxed">
+                            {(topStory.description || '').replace(/<[^>]*>/g, '').slice(0, 300)}
+                          </p>
+                          <p className="text-xs text-[var(--text-muted)] mt-3">{topStory.source}{topStory.date ? ` \u00b7 ${timeAgo(topStory.date)}` : ''}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null;
+
+                case 'stat':
+                  return stat ? (
+                    <Link key={br.key} to={stat.article.slug ? `/news/${stat.article.slug}` : `/article/${encodeURIComponent(stat.article.id)}`} className="block bg-gradient-to-br from-[var(--surface)] to-[var(--bg)] border border-[var(--border)] rounded-2xl p-5 sm:p-6 no-underline group hover:border-[#e05d44]/30 dark:hover:border-[#e87461]/30 transition-colors">
+                      <span className="text-[10px] font-semibold text-[#e05d44] dark:text-[#e87461] uppercase tracking-widest">By the Numbers</span>
+                      <p className="text-2xl sm:text-3xl font-bold text-[var(--text)] mt-2 group-hover:text-[#e05d44] dark:group-hover:text-[#e87461] transition-colors" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>{stat.stat}</p>
+                      <p className="text-sm text-[var(--text-muted)] mt-2 line-clamp-2 leading-relaxed">{stat.context}</p>
+                      <p className="text-[10px] text-[var(--text-muted)] mt-2">{stat.article.source}</p>
+                    </Link>
+                  ) : null;
+
+                case 'photo':
+                  return photoOfDay ? (
+                    <Link key={br.key} to={photoOfDay.slug ? `/news/${photoOfDay.slug}` : `/article/${encodeURIComponent(photoOfDay.id)}`} className="block rounded-2xl overflow-hidden relative group no-underline">
+                      <img src={photoOfDay.image} alt="" className="w-full h-56 sm:h-72 object-cover group-hover:scale-[1.02] transition-transform duration-500" loading="lazy" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
+                        <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest">Photo of the Day</span>
+                        <p className="text-white text-base sm:text-lg font-medium mt-1 line-clamp-2 leading-snug" style={{ fontFamily: "'Instrument Serif', Georgia, serif" }}>{photoOfDay.title}</p>
+                        <p className="text-white/60 text-[10px] mt-1">{photoOfDay.source}{photoOfDay.date ? ` \u00b7 ${timeAgo(photoOfDay.date)}` : ''}</p>
+                      </div>
+                    </Link>
+                  ) : null;
+
+                case 'poll':
+                  return <QuickPoll key={br.key} poll={poll} />;
 
                 case 'related':
                   return (
@@ -471,7 +534,7 @@ export default function Category() {
                         <Link to="/cities" className="text-[10px] sm:text-xs text-[#e05d44] dark:text-[#e87461] no-underline hover:underline">View all cities</Link>
                       </div>
                       <div className="flex gap-2 overflow-x-auto sm:overflow-visible sm:flex-wrap pb-1 sm:pb-0 -mx-1 px-1 scrollbar-hide">
-                        {POPULAR_CITIES.map((c) => (
+                        {getCitiesForRegion(region).map((c) => (
                           <Link key={c.key} to={`/city/${c.key}`} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs no-underline transition-colors shrink-0 whitespace-nowrap text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg)] border border-transparent hover:border-[var(--border)]">
                             <span>{c.flag}</span><span>{c.label}</span>
                           </Link>

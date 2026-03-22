@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CATEGORIES } from '../api/newsApi';
 import { useTheme } from '../contexts/ThemeContext';
@@ -9,9 +9,14 @@ import useRegion from '../hooks/useRegion';
 import useCity from '../hooks/useCity';
 import LanguageSelector from './LanguageSelector';
 
+const PRIMARY_CATS = ['technology', 'business', 'science', 'sport', 'politics', 'entertainment', 'ai'];
+const MORE_CATS = CATEGORIES.filter((c) => c !== 'world' && !PRIMARY_CATS.includes(c));
+
 export default function Navbar() {
   const [query, setQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [moreCatsOpen, setMoreCatsOpen] = useState(false);
   const [online, setOnline] = useState(navigator.onLine);
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
@@ -20,6 +25,8 @@ export default function Navbar() {
   const { t, tCat } = useLanguage();
   const { region, regionInfo } = useRegion();
   const { city: detectedCity } = useCity();
+  const moreRef = useRef(null);
+  const moreCatsRef = useRef(null);
 
   useEffect(() => {
     const on = () => setOnline(true);
@@ -27,6 +34,16 @@ export default function Navbar() {
     window.addEventListener('online', on);
     window.addEventListener('offline', off);
     return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
+  }, []);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false);
+      if (moreCatsRef.current && !moreCatsRef.current.contains(e.target)) setMoreCatsOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
   }, []);
 
   const handleSearch = (e) => {
@@ -63,7 +80,7 @@ export default function Navbar() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('search')}
-                className="w-64 bg-[var(--bg)] border border-[var(--border)] rounded-full px-4 py-2 pl-10 text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#e05d44] dark:focus:border-[#e87461] focus:ring-1 focus:ring-[#e05d44] dark:focus:ring-[#e87461] transition-all"
+                className="w-56 lg:w-64 bg-[var(--bg)] border border-[var(--border)] rounded-full px-4 py-2 pl-10 text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#e05d44] dark:focus:border-[#e87461] focus:ring-1 focus:ring-[#e05d44] dark:focus:ring-[#e87461] transition-all"
               />
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" strokeWidth="2" strokeLinecap="round" />
@@ -71,7 +88,7 @@ export default function Navbar() {
             </div>
           </form>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             {!online && (
               <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded-full">Offline</span>
             )}
@@ -86,8 +103,8 @@ export default function Navbar() {
               </svg>
             </button>
 
-            {/* Bookmarks link - desktop */}
-            <Link to="/bookmarks" className="hidden md:flex items-center gap-1 text-sm text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline relative p-1.5">
+            {/* Bookmarks - desktop */}
+            <Link to="/bookmarks" className="hidden md:flex items-center text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline relative p-1.5 rounded-lg hover:bg-[var(--bg)]">
               <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
               </svg>
@@ -111,7 +128,7 @@ export default function Navbar() {
                   ? 'text-[#e05d44] dark:text-[#e87461] bg-[#fef0ed] dark:bg-[#e87461]/10'
                   : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg)]'
               }`}
-              title={autoplay ? 'Autoplay is on — click to turn off' : 'Autoplay is off — click to turn on'}
+              title={autoplay ? 'Autoplay is on' : 'Autoplay is off'}
             >
               {autoplay ? (
                 <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -132,7 +149,7 @@ export default function Navbar() {
             <button
               onClick={toggleTheme}
               className="hidden md:block p-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors rounded-lg hover:bg-[var(--bg)]"
-              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={isDark ? 'Light mode' : 'Dark mode'}
             >
               {isDark ? (
                 <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
@@ -146,25 +163,46 @@ export default function Navbar() {
               )}
             </button>
 
-            {/* More menu - desktop */}
-            <div className="hidden md:flex items-center gap-1">
-              {[
-                { to: '/region/india', label: t('regions') },
-                { to: '/cities', label: 'Cities' },
-                { to: '/archive', label: t('archive') },
-                { to: '/feeds', label: t('feeds') },
-                { to: '/about', label: t('about') },
-              ].map((link) => (
-                <Link key={link.to} to={link.to} className="text-xs text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] transition-colors no-underline px-2 py-1 rounded-md hover:bg-[var(--bg)]">
-                  {link.label}
-                </Link>
-              ))}
+            {/* More menu (Archive, Feeds, About) - desktop */}
+            <div className="hidden md:block relative" ref={moreRef}>
+              <button
+                onClick={() => setMoreOpen(!moreOpen)}
+                className="p-2 text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors rounded-lg hover:bg-[var(--bg)]"
+                title="More"
+              >
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="5" r="2" />
+                  <circle cx="12" cy="12" r="2" />
+                  <circle cx="12" cy="19" r="2" />
+                </svg>
+              </button>
+              {moreOpen && (
+                <div className="absolute right-0 top-10 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-lg py-1 z-30 min-w-[160px] animate-fade-in">
+                  {[
+                    { to: '/archive', label: t('archive'), icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+                    { to: '/feeds', label: t('feeds'), icon: 'M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 100-2 1 1 0 000 2z' },
+                    { to: '/bookmarks', label: t('bookmarks'), icon: 'M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z' },
+                    { to: '/about', label: t('about'), icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+                  ].map((link) => (
+                    <Link
+                      key={link.to}
+                      to={link.to}
+                      onClick={() => setMoreOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] hover:bg-[var(--bg)] transition-colors no-underline"
+                    >
+                      <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" className="shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d={link.icon} /></svg>
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Category bar - desktop */}
-        <div className="hidden md:flex items-center gap-1 pb-2 overflow-x-auto">
+        <div className="hidden md:flex items-center gap-1 pb-2">
+          {/* Region + city chips */}
           {region && region !== 'world' && (
             <Link
               to={`/region/${region}`}
@@ -184,7 +222,14 @@ export default function Navbar() {
               Local
             </Link>
           )}
-          {CATEGORIES.filter((c) => c !== 'world').map((cat) => (
+
+          {/* Separator after region chips */}
+          {(region && region !== 'world') || detectedCity ? (
+            <div className="w-px h-4 bg-[var(--border)] mx-1" />
+          ) : null}
+
+          {/* Primary categories */}
+          {PRIMARY_CATS.map((cat) => (
             <Link
               key={cat}
               to={`/category/${cat}`}
@@ -193,6 +238,52 @@ export default function Navbar() {
               {tCat(cat)}
             </Link>
           ))}
+
+          {/* More categories dropdown */}
+          <div className="relative" ref={moreCatsRef}>
+            <button
+              onClick={() => setMoreCatsOpen(!moreCatsOpen)}
+              className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-[var(--text-muted)] hover:text-[#e05d44] dark:hover:text-[#e87461] hover:bg-[#fef0ed] dark:hover:bg-[#e87461]/10 rounded-full transition-all whitespace-nowrap"
+            >
+              More
+              <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className={`transition-transform ${moreCatsOpen ? 'rotate-180' : ''}`}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+            {moreCatsOpen && (
+              <div className="absolute left-0 top-8 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-lg py-1 z-30 min-w-[140px] animate-fade-in">
+                {MORE_CATS.map((cat) => (
+                  <Link
+                    key={cat}
+                    to={`/category/${cat}`}
+                    onClick={() => setMoreCatsOpen(false)}
+                    className="block px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] hover:bg-[var(--bg)] transition-colors no-underline capitalize"
+                  >
+                    {tCat(cat)}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Spacer pushes Regions/Cities to the right */}
+          <div className="flex-1" />
+
+          {/* Regions & Cities links - right-aligned */}
+          <Link
+            to="/region/india"
+            className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] hover:bg-[#fef0ed] dark:hover:bg-[#e87461]/10 rounded-full transition-all no-underline whitespace-nowrap"
+          >
+            <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>
+            {t('regions')}
+          </Link>
+          <Link
+            to="/cities"
+            className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-[var(--text-secondary)] hover:text-[#e05d44] dark:hover:text-[#e87461] hover:bg-[#fef0ed] dark:hover:bg-[#e87461]/10 rounded-full transition-all no-underline whitespace-nowrap"
+          >
+            <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9v.01M9 12v.01M9 15v.01M9 18v.01" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            Cities
+          </Link>
         </div>
       </div>
     </nav>

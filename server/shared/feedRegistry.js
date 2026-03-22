@@ -2,7 +2,7 @@
 // feedRegistry.js -- Single source of truth for every RSS feed the app uses.
 // ---------------------------------------------------------------------------
 
-// --- Global category feeds (8 categories) ---
+// --- Global category feeds (15 categories) ---
 export const FEEDS = {
   world: [
     { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', source: 'BBC News' },
@@ -12,34 +12,74 @@ export const FEEDS = {
     { url: 'https://www.theguardian.com/world/rss', source: 'The Guardian' },
     { url: 'https://feedx.net/rss/ap.xml', source: 'AP News' },
     { url: 'https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en', source: 'Google News' },
+    { url: 'http://rss.cnn.com/rss/cnn_world.rss', source: 'CNN World' },
+    { url: 'https://moxie.foxnews.com/google-publisher/world.xml', source: 'Fox News World' },
+    { url: 'https://www.cbsnews.com/latest/rss/world', source: 'CBS News World' },
+    { url: 'https://feeds.skynews.com/feeds/rss/world.xml', source: 'Sky News World' },
+    { url: 'https://www.independent.co.uk/news/world/rss', source: 'The Independent World' },
+    { url: 'https://www.cnbc.com/id/100727362/device/rss/rss.html', source: 'CNBC World' },
+    { url: 'https://theconversation.com/global/home-page.atom', source: 'The Conversation' },
+    { url: 'http://rssfeeds.usatoday.com/usatoday-NewsTopStories', source: 'USA Today' },
+    { url: 'https://rss.dw.com/xml/rss-en-all', source: 'DW News' },
   ],
   technology: [
     { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', source: 'BBC Tech' },
     { url: 'https://feeds.npr.org/1019/rss.xml', source: 'NPR Tech' },
     { url: 'https://feeds.arstechnica.com/arstechnica/index', source: 'Ars Technica' },
     { url: 'https://www.theguardian.com/technology/rss', source: 'The Guardian Tech' },
+    { url: 'https://www.wired.com/feed/rss', source: 'Wired' },
+    { url: 'https://www.engadget.com/rss.xml', source: 'Engadget' },
+    { url: 'https://www.cnet.com/rss/news/', source: 'CNET' },
+    { url: 'https://www.zdnet.com/news/rss.xml', source: 'ZDNet' },
+    { url: 'http://rss.cnn.com/rss/cnn_tech.rss', source: 'CNN Tech' },
+    { url: 'https://www.cnbc.com/id/19854910/device/rss/rss.html', source: 'CNBC Tech' },
+    { url: 'https://feeds.skynews.com/feeds/rss/technology.xml', source: 'Sky News Tech' },
+    { url: 'https://moxie.foxnews.com/google-publisher/tech.xml', source: 'Fox News Tech' },
   ],
   business: [
     { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', source: 'BBC Business' },
     { url: 'https://feeds.npr.org/1006/rss.xml', source: 'NPR Business' },
+    { url: 'https://www.cnbc.com/id/10001147/device/rss/rss.html', source: 'CNBC Business' },
+    { url: 'http://rss.cnn.com/rss/money_latest.rss', source: 'CNN Business' },
+    { url: 'https://feeds.skynews.com/feeds/rss/business.xml', source: 'Sky News Business' },
+    { url: 'https://fortune.com/feed/', source: 'Fortune' },
+    { url: 'http://feeds2.feedburner.com/businessinsider', source: 'Business Insider' },
+    { url: 'https://rss.dw.com/xml/rss-en-bus', source: 'DW Business' },
   ],
   science: [
     { url: 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml', source: 'BBC Science' },
     { url: 'https://feeds.npr.org/1007/rss.xml', source: 'NPR Science' },
+    { url: 'http://rss.sciam.com/ScientificAmerican-Global', source: 'Scientific American' },
+    { url: 'https://phys.org/rss-feed/', source: 'Phys.org' },
+    { url: 'https://moxie.foxnews.com/google-publisher/science.xml', source: 'Fox News Science' },
+    { url: 'https://www.cbsnews.com/latest/rss/science', source: 'CBS News Science' },
+    { url: 'https://rss.dw.com/xml/rss-en-science', source: 'DW Science' },
   ],
   sport: [
     { url: 'https://feeds.bbci.co.uk/sport/rss.xml', source: 'BBC Sport' },
+    { url: 'https://www.espn.com/espn/rss/news', source: 'ESPN' },
+    { url: 'https://www.theguardian.com/uk/sport/rss', source: 'The Guardian Sport' },
+    { url: 'https://moxie.foxnews.com/google-publisher/sports.xml', source: 'Fox News Sports' },
   ],
   culture: [
     { url: 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml', source: 'BBC Arts' },
     { url: 'https://feeds.npr.org/1008/rss.xml', source: 'NPR Arts' },
+    { url: 'https://www.theguardian.com/culture/rss', source: 'The Guardian Culture' },
+    { url: 'https://rss.dw.com/xml/rss-en-cul', source: 'DW Culture' },
   ],
   environment: [
     { url: 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml', source: 'BBC Environment' },
+    { url: 'https://www.theguardian.com/environment/rss', source: 'The Guardian Environment' },
   ],
   politics: [
     { url: 'https://feeds.bbci.co.uk/news/politics/rss.xml', source: 'BBC Politics' },
     { url: 'https://feeds.npr.org/1014/rss.xml', source: 'NPR Politics' },
+    { url: 'https://rss.politico.com/politics-news.xml', source: 'Politico' },
+    { url: 'https://thehill.com/news/feed/', source: 'The Hill' },
+    { url: 'http://rss.cnn.com/rss/cnn_allpolitics.rss', source: 'CNN Politics' },
+    { url: 'https://moxie.foxnews.com/google-publisher/politics.xml', source: 'Fox News Politics' },
+    { url: 'https://www.cnbc.com/id/10000113/device/rss/rss.html', source: 'CNBC Politics' },
+    { url: 'https://feeds.skynews.com/feeds/rss/politics.xml', source: 'Sky News Politics' },
   ],
   ai: [
     { url: 'https://techcrunch.com/category/artificial-intelligence/feed/', source: 'TechCrunch AI' },
@@ -52,6 +92,8 @@ export const FEEDS = {
     { url: 'https://deadline.com/feed/', source: 'Deadline' },
     { url: 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml', source: 'BBC Entertainment' },
     { url: 'https://www.theguardian.com/culture/rss', source: 'The Guardian Culture' },
+    { url: 'https://www.hollywoodreporter.com/feed/', source: 'Hollywood Reporter' },
+    { url: 'http://rss.cnn.com/rss/cnn_showbiz.rss', source: 'CNN Entertainment' },
   ],
   gaming: [
     { url: 'https://feeds.feedburner.com/ign/all', source: 'IGN' },
@@ -72,11 +114,14 @@ export const FEEDS = {
     { url: 'https://spacenews.com/feed/', source: 'SpaceNews' },
     { url: 'https://www.space.com/feeds/all', source: 'Space.com' },
     { url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss', source: 'NASA' },
+    { url: 'https://www.universetoday.com/feed', source: 'Universe Today' },
   ],
   crypto: [
     { url: 'https://www.coindesk.com/arc/outboundfeeds/rss/', source: 'CoinDesk' },
     { url: 'https://cointelegraph.com/rss', source: 'CoinTelegraph' },
     { url: 'https://decrypt.co/feed', source: 'Decrypt' },
+    { url: 'https://www.theblock.co/rss.xml', source: 'The Block' },
+    { url: 'https://bitcoinmagazine.com/feed', source: 'Bitcoin Magazine' },
   ],
 };
 
@@ -96,35 +141,65 @@ export const REGIONAL_FEEDS = {
     { url: 'https://feeds.bbci.co.uk/news/england/rss.xml', source: 'BBC England' },
     { url: 'https://feeds.skynews.com/feeds/rss/uk.xml', source: 'Sky News UK' },
     { url: 'https://news.google.com/rss?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News UK' },
+    { url: 'https://www.independent.co.uk/news/uk/rss', source: 'The Independent UK' },
+    { url: 'https://www.theguardian.com/uk-news/rss', source: 'The Guardian UK' },
+    { url: 'https://www.rte.ie/rss/news.xml', source: 'RTÉ News' },
+    { url: 'https://www.thejournal.ie/feed/', source: 'The Journal.ie' },
   ],
   us: [
     { url: 'https://feeds.npr.org/1003/rss.xml', source: 'NPR US' },
     { url: 'https://abcnews.go.com/abcnews/usheadlines', source: 'ABC US' },
     { url: 'https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml', source: 'BBC US' },
     { url: 'https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en', source: 'Google News US' },
+    { url: 'http://rss.cnn.com/rss/cnn_topstories.rss', source: 'CNN' },
+    { url: 'https://moxie.foxnews.com/google-publisher/us.xml', source: 'Fox News US' },
+    { url: 'https://www.cbsnews.com/latest/rss/main', source: 'CBS News' },
+    { url: 'http://rssfeeds.usatoday.com/usatoday-NewsTopStories', source: 'USA Today' },
+    { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html', source: 'CNBC' },
   ],
   australia: [
     { url: 'https://www.abc.net.au/news/feed/2942460/rss.xml', source: 'ABC Australia' },
     { url: 'https://feeds.bbci.co.uk/news/world/australia/rss.xml', source: 'BBC Australia' },
+    { url: 'https://www.theguardian.com/australia-news/rss', source: 'Guardian Australia' },
+    { url: 'https://www.stuff.co.nz/rss', source: 'Stuff NZ' },
   ],
   'middle-east': [
     { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
     { url: 'https://feeds.bbci.co.uk/news/world/middle_east/rss.xml', source: 'BBC Middle East' },
+    { url: 'https://www.dailysabah.com/rss/home-page', source: 'Daily Sabah' },
+    { url: 'https://www.timesofisrael.com/feed/', source: 'Times of Israel' },
   ],
   europe: [
     { url: 'https://feeds.bbci.co.uk/news/world/europe/rss.xml', source: 'BBC Europe' },
     { url: 'https://www.rfi.fr/en/rss', source: 'RFI' },
+    { url: 'https://rss.dw.com/xml/rss-en-world', source: 'DW News' },
+    { url: 'http://feeds.feedburner.com/euronews/en/home/', source: 'EuroNews' },
+    { url: 'https://www.rte.ie/rss/news.xml', source: 'RTÉ' },
+    { url: 'https://www.thejournal.ie/feed/', source: 'The Journal.ie' },
   ],
   africa: [
     { url: 'https://feeds.bbci.co.uk/news/world/africa/rss.xml', source: 'BBC Africa' },
     { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
+    { url: 'https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf', source: 'AllAfrica' },
+    { url: 'https://www.premiumtimesng.com/feed', source: 'Premium Times Nigeria' },
+    { url: 'https://www.vanguardngr.com/feed/', source: 'Vanguard Nigeria' },
+    { url: 'https://feeds.news24.com/articles/news24/TopStories/rss', source: 'News24 SA' },
+    { url: 'https://punchng.com/feed/', source: 'Punch Nigeria' },
   ],
   asia: [
     { url: 'https://feeds.bbci.co.uk/news/world/asia/rss.xml', source: 'BBC Asia' },
     { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
+    { url: 'https://www.scmp.com/rss/91/feed', source: 'SCMP' },
+    { url: 'https://www.straitstimes.com/news/rss.xml', source: 'Straits Times' },
+    { url: 'https://en.yna.co.kr/RSS/news.xml', source: 'Yonhap English' },
+    { url: 'https://www.rappler.com/feed/', source: 'Rappler' },
+    { url: 'https://e.vnexpress.net/rss/news.rss', source: 'VnExpress English' },
+    { url: 'https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml', source: 'CNA' },
+    { url: 'https://www.japantimes.co.jp/feed/', source: 'Japan Times' },
   ],
   latam: [
     { url: 'https://feeds.bbci.co.uk/news/world/latin_america/rss.xml', source: 'BBC Latin America' },
+    { url: 'https://en.mercopress.com/rss', source: 'MercoPress' },
   ],
 };
 
@@ -287,9 +362,11 @@ export const REGIONAL_CATEGORY_FEEDS = {
     world: [
       { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
       { url: 'https://feeds.bbci.co.uk/news/world/middle_east/rss.xml', source: 'BBC Middle East' },
+      { url: 'https://www.dailysabah.com/rss/world', source: 'Daily Sabah World' },
     ],
     technology: [
       { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', source: 'BBC Tech' },
+      { url: 'https://www.dailysabah.com/rss/business/tech', source: 'Daily Sabah Tech' },
     ],
     business: [
       { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', source: 'BBC Business' },
@@ -306,6 +383,7 @@ export const REGIONAL_CATEGORY_FEEDS = {
     politics: [
       { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
       { url: 'https://feeds.bbci.co.uk/news/world/middle_east/rss.xml', source: 'BBC Middle East' },
+      { url: 'https://www.timesofisrael.com/feed/', source: 'Times of Israel' },
     ],
   },
   europe: {
@@ -313,16 +391,22 @@ export const REGIONAL_CATEGORY_FEEDS = {
       { url: 'https://feeds.bbci.co.uk/news/world/europe/rss.xml', source: 'BBC Europe' },
       { url: 'https://www.rfi.fr/en/rss', source: 'RFI' },
       { url: 'https://rss.dw.com/xml/rss-en-world', source: 'DW News' },
+      { url: 'http://feeds.feedburner.com/euronews/en/home/', source: 'EuroNews' },
+      { url: 'https://www.rte.ie/rss/news.xml', source: 'RTÉ' },
     ],
     technology: [
       { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', source: 'BBC Tech' },
+      { url: 'https://feeds.nos.nl/nosnieuwstech', source: 'NOS Tech' },
     ],
     business: [
       { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', source: 'BBC Business' },
       { url: 'https://rss.dw.com/xml/rss-en-bus', source: 'DW Business' },
+      { url: 'https://feeds.nos.nl/nosnieuwseconomie', source: 'NOS Economy' },
+      { url: 'https://www.rte.ie/rss/business.xml', source: 'RTÉ Business' },
     ],
     sport: [
       { url: 'https://feeds.bbci.co.uk/sport/rss.xml', source: 'BBC Sport' },
+      { url: 'https://www.rte.ie/rss/sport.xml', source: 'RTÉ Sport' },
     ],
     science: [
       { url: 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml', source: 'BBC Science' },
@@ -341,12 +425,17 @@ export const REGIONAL_CATEGORY_FEEDS = {
     world: [
       { url: 'https://feeds.bbci.co.uk/news/world/africa/rss.xml', source: 'BBC Africa' },
       { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
+      { url: 'https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf', source: 'AllAfrica' },
+      { url: 'https://www.premiumtimesng.com/feed', source: 'Premium Times Nigeria' },
+      { url: 'https://www.vanguardngr.com/feed/', source: 'Vanguard Nigeria' },
+      { url: 'https://punchng.com/feed/', source: 'Punch Nigeria' },
     ],
     technology: [
       { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', source: 'BBC Tech' },
     ],
     business: [
       { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', source: 'BBC Business' },
+      { url: 'https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf', source: 'AllAfrica' },
     ],
     sport: [
       { url: 'https://feeds.bbci.co.uk/sport/rss.xml', source: 'BBC Sport' },
@@ -359,18 +448,26 @@ export const REGIONAL_CATEGORY_FEEDS = {
     ],
     politics: [
       { url: 'https://feeds.bbci.co.uk/news/world/africa/rss.xml', source: 'BBC Africa' },
+      { url: 'https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf', source: 'AllAfrica' },
     ],
   },
   asia: {
     world: [
       { url: 'https://feeds.bbci.co.uk/news/world/asia/rss.xml', source: 'BBC Asia' },
       { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
+      { url: 'https://www.scmp.com/rss/91/feed', source: 'SCMP' },
+      { url: 'https://www.straitstimes.com/news/rss.xml', source: 'Straits Times' },
+      { url: 'https://en.yna.co.kr/RSS/news.xml', source: 'Yonhap English' },
+      { url: 'https://www.rappler.com/feed/', source: 'Rappler' },
+      { url: 'https://e.vnexpress.net/rss/news.rss', source: 'VnExpress English' },
     ],
     technology: [
       { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', source: 'BBC Tech' },
+      { url: 'https://www.scmp.com/rss/36/feed', source: 'SCMP Tech' },
     ],
     business: [
       { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', source: 'BBC Business' },
+      { url: 'https://www.scmp.com/rss/92/feed', source: 'SCMP Business' },
     ],
     sport: [
       { url: 'https://feeds.bbci.co.uk/sport/rss.xml', source: 'BBC Sport' },
@@ -383,18 +480,21 @@ export const REGIONAL_CATEGORY_FEEDS = {
     ],
     politics: [
       { url: 'https://feeds.bbci.co.uk/news/world/asia/rss.xml', source: 'BBC Asia' },
+      { url: 'https://www.scmp.com/rss/4/feed', source: 'SCMP China' },
     ],
   },
   latam: {
     world: [
       { url: 'https://feeds.bbci.co.uk/news/world/latin_america/rss.xml', source: 'BBC Latin America' },
       { url: 'https://www.aljazeera.com/xml/rss/all.xml', source: 'Al Jazeera' },
+      { url: 'https://en.mercopress.com/rss', source: 'MercoPress' },
     ],
     technology: [
       { url: 'https://feeds.bbci.co.uk/news/technology/rss.xml', source: 'BBC Tech' },
     ],
     business: [
       { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', source: 'BBC Business' },
+      { url: 'https://en.mercopress.com/rss', source: 'MercoPress' },
     ],
     sport: [
       { url: 'https://feeds.bbci.co.uk/sport/rss.xml', source: 'BBC Sport' },
@@ -411,97 +511,168 @@ export const REGIONAL_CATEGORY_FEEDS = {
   },
 };
 
-// --- Language-specific feeds (16 languages) ---
+// --- Language-specific feeds (28 languages) ---
 export const LANG_FEEDS = {
+  // ===== Indian Languages =====
   hi: [
     { url: 'https://feeds.bbci.co.uk/hindi/rss.xml', source: 'BBC Hindi' },
     { url: 'https://rss.jagran.com/rss/news/national.xml', source: 'Dainik Jagran' },
     { url: 'https://www.amarujala.com/rss/breaking-news.xml', source: 'Amar Ujala' },
     { url: 'https://www.bhaskar.com/rss-feed/1061/', source: 'Dainik Bhaskar' },
+    { url: 'https://feeds.feedburner.com/ndtvkhabar', source: 'NDTV Hindi' },
+    { url: 'https://feed.livehindustan.com/rss/3127', source: 'Live Hindustan' },
+    { url: 'https://www.jansatta.com/feed/', source: 'Jansatta' },
+    { url: 'https://news.google.com/rss?hl=hi-IN&gl=IN&ceid=IN:hi', source: 'Google News Hindi' },
   ],
   ta: [
     { url: 'https://feeds.bbci.co.uk/tamil/rss.xml', source: 'BBC Tamil' },
     { url: 'https://www.hindutamil.in/stories.rss', source: 'The Hindu Tamil' },
+    { url: 'https://www.dinamalar.com/rssfeed.asp', source: 'Dinamalar' },
+    { url: 'https://www.vikatan.com/rss', source: 'Vikatan' },
+    { url: 'https://news.google.com/rss?hl=ta-IN&gl=IN&ceid=IN:ta', source: 'Google News Tamil' },
   ],
   te: [
     { url: 'https://feeds.bbci.co.uk/telugu/rss.xml', source: 'BBC Telugu' },
     { url: 'https://www.sakshi.com/rss.xml', source: 'Sakshi' },
+    { url: 'https://www.eenadu.net/rss/telugu-news.xml', source: 'Eenadu' },
+    { url: 'https://news.google.com/rss?hl=te-IN&gl=IN&ceid=IN:te', source: 'Google News Telugu' },
   ],
   bn: [
     { url: 'https://feeds.bbci.co.uk/bengali/rss.xml', source: 'BBC Bangla' },
     { url: 'https://eisamay.com/stories.rss', source: 'Ei Samay' },
     { url: 'https://zeenews.india.com/bengali/rssfeed/nation.xml', source: 'Zee News Bengali' },
+    { url: 'https://news.google.com/rss?hl=bn-IN&gl=IN&ceid=IN:bn', source: 'Google News Bengali' },
   ],
   mr: [
     { url: 'https://zeenews.india.com/marathi/rss/india-news.xml', source: 'Zee News Marathi' },
     { url: 'https://zeenews.india.com/marathi/rss/maharashtra-news.xml', source: 'Zee News Maharashtra' },
+    { url: 'https://www.loksatta.com/desh-videsh/feed/', source: 'Loksatta' },
+    { url: 'https://news.google.com/rss?hl=mr-IN&gl=IN&ceid=IN:mr', source: 'Google News Marathi' },
   ],
-  ur: [
-    { url: 'https://feeds.bbci.co.uk/urdu/rss.xml', source: 'BBC Urdu' },
-  ],
-  ar: [
-    { url: 'https://feeds.bbci.co.uk/arabic/rss.xml', source: 'BBC Arabic' },
-  ],
-  fr: [
-    { url: 'https://www.france24.com/fr/rss', source: 'France 24' },
-    { url: 'https://www.rfi.fr/fr/rss', source: 'RFI French' },
-    { url: 'https://www.lemonde.fr/rss/une.xml', source: 'Le Monde' },
-  ],
-  de: [
-    { url: 'https://rss.dw.com/xml/rss-de-all', source: 'DW German' },
-    { url: 'https://www.tagesschau.de/xml/rss2', source: 'Tagesschau' },
-  ],
-  es: [
-    { url: 'https://feeds.bbci.co.uk/mundo/rss.xml', source: 'BBC Mundo' },
-    { url: 'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada', source: 'El Pais' },
-  ],
-  pt: [
-    { url: 'https://feeds.bbci.co.uk/portuguese/rss.xml', source: 'BBC Portuguese' },
-  ],
-  zh: [
-    { url: 'https://feeds.bbci.co.uk/zhongwen/simp/rss.xml', source: 'BBC Chinese' },
-  ],
-  ja: [
-    { url: 'https://feeds.bbci.co.uk/japanese/rss.xml', source: 'BBC Japanese' },
-    { url: 'https://www3.nhk.or.jp/rss/news/cat0.xml', source: 'NHK' },
-  ],
-  ko: [
-    { url: 'https://feeds.bbci.co.uk/korean/rss.xml', source: 'BBC Korean' },
-  ],
-  sw: [
-    { url: 'https://feeds.bbci.co.uk/swahili/rss.xml', source: 'BBC Swahili' },
-  ],
-  // Indian regional languages
   kn: [
-    { url: 'https://feeds.bbci.co.uk/kannada/rss.xml', source: 'BBC Kannada' },
     { url: 'https://news.google.com/rss?hl=kn-IN&gl=IN&ceid=IN:kn', source: 'Google News Kannada' },
+    { url: 'https://vijaykarnataka.com/rssfeedsdefault.cms', source: 'Vijaya Karnataka' },
   ],
   ml: [
-    { url: 'https://feeds.bbci.co.uk/malayalam/rss.xml', source: 'BBC Malayalam' },
     { url: 'https://news.google.com/rss?hl=ml-IN&gl=IN&ceid=IN:ml', source: 'Google News Malayalam' },
+    { url: 'http://feeds.feedburner.com/mathrubhumi', source: 'Mathrubhumi' },
+    { url: 'https://www.manoramaonline.com/rss/news/', source: 'Manorama Online' },
   ],
   gu: [
     { url: 'https://feeds.bbci.co.uk/gujarati/rss.xml', source: 'BBC Gujarati' },
     { url: 'https://news.google.com/rss?hl=gu-IN&gl=IN&ceid=IN:gu', source: 'Google News Gujarati' },
+    { url: 'https://www.gujaratsamachar.com/rss/top-stories', source: 'Gujarat Samachar' },
+    { url: 'https://www.divyabhaskar.co.in/rss-feed/1037/', source: 'Divya Bhaskar' },
   ],
   pa: [
     { url: 'https://feeds.bbci.co.uk/punjabi/rss.xml', source: 'BBC Punjabi' },
     { url: 'https://news.google.com/rss?hl=pa-IN&gl=IN&ceid=IN:pa', source: 'Google News Punjabi' },
   ],
+  ur: [
+    { url: 'https://feeds.bbci.co.uk/urdu/rss.xml', source: 'BBC Urdu' },
+    { url: 'https://news.google.com/rss?hl=ur-PK&gl=PK&ceid=PK:ur', source: 'Google News Urdu' },
+  ],
   as: [
     { url: 'https://news.google.com/rss?hl=as-IN&gl=IN&ceid=IN:as', source: 'Google News Assamese' },
   ],
-  // International languages
+
+  // ===== Middle East & Africa =====
+  ar: [
+    { url: 'https://feeds.bbci.co.uk/arabic/rss.xml', source: 'BBC Arabic' },
+    { url: 'https://aawsat.com/feed', source: 'Asharq Al-Awsat' },
+    { url: 'https://arabic.rt.com/rss/', source: 'RT Arabic' },
+    { url: 'https://news.google.com/rss?hl=ar-SA&gl=SA&ceid=SA:ar', source: 'Google News Arabic' },
+    { url: 'https://news.google.com/rss?hl=ar-EG&gl=EG&ceid=EG:ar', source: 'Google News Arabic Egypt' },
+  ],
+  fa: [
+    { url: 'https://feeds.bbci.co.uk/persian/rss.xml', source: 'BBC Persian' },
+    { url: 'https://news.google.com/rss?hl=fa-IR&gl=IR&ceid=IR:fa', source: 'Google News Persian' },
+  ],
+  he: [
+    { url: 'https://news.google.com/rss?hl=iw-IL&gl=IL&ceid=IL:he', source: 'Google News Hebrew' },
+  ],
+  sw: [
+    { url: 'https://feeds.bbci.co.uk/swahili/rss.xml', source: 'BBC Swahili' },
+    { url: 'https://news.google.com/rss?hl=sw-KE&gl=KE&ceid=KE:sw', source: 'Google News Swahili' },
+  ],
+
+  // ===== European Languages =====
+  fr: [
+    { url: 'https://www.france24.com/fr/rss', source: 'France 24' },
+    { url: 'https://www.rfi.fr/fr/rss', source: 'RFI French' },
+    { url: 'https://www.lemonde.fr/rss/une.xml', source: 'Le Monde' },
+    { url: 'http://www.lefigaro.fr/rss/figaro_actualites.xml', source: 'Le Figaro' },
+    { url: 'https://www.20minutes.fr/feeds/rss-une.xml', source: '20 Minutes' },
+    { url: 'https://news.google.com/rss?hl=fr-FR&gl=FR&ceid=FR:fr', source: 'Google News French' },
+  ],
+  de: [
+    { url: 'https://rss.dw.com/xml/rss-de-all', source: 'DW German' },
+    { url: 'https://www.tagesschau.de/xml/rss2', source: 'Tagesschau' },
+    { url: 'https://www.spiegel.de/schlagzeilen/index.rss', source: 'Der Spiegel' },
+    { url: 'https://rss.sueddeutsche.de/rss/Topthemen', source: 'Süddeutsche Zeitung' },
+    { url: 'https://news.google.com/rss?hl=de-DE&gl=DE&ceid=DE:de', source: 'Google News German' },
+  ],
+  es: [
+    { url: 'https://feeds.bbci.co.uk/mundo/rss.xml', source: 'BBC Mundo' },
+    { url: 'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada', source: 'El Pais' },
+    { url: 'https://www.clarin.com/rss/lo-ultimo/', source: 'Clarín' },
+    { url: 'https://www.lanacion.com.ar/arc/outboundfeeds/rss/', source: 'La Nación Argentina' },
+    { url: 'https://www.eltiempo.com/rss/eltiempo.xml', source: 'El Tiempo Colombia' },
+    { url: 'https://news.google.com/rss?hl=es-419&gl=MX&ceid=MX:es-419', source: 'Google News Spanish' },
+  ],
+  pt: [
+    { url: 'https://feeds.bbci.co.uk/portuguese/rss.xml', source: 'BBC Portuguese' },
+    { url: 'https://feeds.folha.uol.com.br/emcimadahora/rss091.xml', source: 'Folha de S.Paulo' },
+    { url: 'http://rss.home.uol.com.br/index.xml', source: 'UOL' },
+    { url: 'https://news.google.com/rss?hl=pt-BR&gl=BR&ceid=BR:pt-419', source: 'Google News Portuguese' },
+  ],
+  it: [
+    { url: 'https://news.google.com/rss?hl=it-IT&gl=IT&ceid=IT:it', source: 'Google News Italian' },
+    { url: 'https://www.ansa.it/sito/ansait_rss.xml', source: 'ANSA' },
+    { url: 'http://xml2.corriereobjects.it/rss/homepage.xml', source: 'Corriere della Sera' },
+    { url: 'https://www.repubblica.it/rss/homepage/rss2.0.xml', source: 'La Repubblica' },
+  ],
+  nl: [
+    { url: 'https://news.google.com/rss?hl=nl-NL&gl=NL&ceid=NL:nl', source: 'Google News Dutch' },
+    { url: 'https://feeds.nos.nl/nosnieuwsalgemeen', source: 'NOS Nieuws' },
+    { url: 'https://www.telegraaf.nl/rss', source: 'De Telegraaf' },
+    { url: 'https://www.dutchnews.nl/feed/', source: 'DutchNews' },
+  ],
+  sv: [
+    { url: 'https://news.google.com/rss?hl=sv-SE&gl=SE&ceid=SE:sv', source: 'Google News Swedish' },
+    { url: 'https://www.svt.se/nyheter/rss.xml', source: 'SVT Nyheter' },
+    { url: 'https://rss.aftonbladet.se/rss2/small/pages/sections/senastenytt/', source: 'Aftonbladet' },
+  ],
   tr: [
     { url: 'https://feeds.bbci.co.uk/turkce/rss.xml', source: 'BBC Turkish' },
     { url: 'https://news.google.com/rss?hl=tr-TR&gl=TR&ceid=TR:tr', source: 'Google News Turkish' },
   ],
-  it: [
-    { url: 'https://news.google.com/rss?hl=it-IT&gl=IT&ceid=IT:it', source: 'Google News Italian' },
+  pl: [
+    { url: 'https://www.rmf24.pl/feed', source: 'RMF24' },
+    { url: 'https://news.google.com/rss?hl=pl-PL&gl=PL&ceid=PL:pl', source: 'Google News Polish' },
   ],
-  nl: [
-    { url: 'https://news.google.com/rss?hl=nl-NL&gl=NL&ceid=NL:nl', source: 'Google News Dutch' },
+  ru: [
+    { url: 'https://feeds.bbci.co.uk/russian/rss.xml', source: 'BBC Russian' },
+    { url: 'https://news.google.com/rss?hl=ru-RU&gl=RU&ceid=RU:ru', source: 'Google News Russian' },
   ],
+
+  // ===== East Asia =====
+  zh: [
+    { url: 'https://feeds.bbci.co.uk/zhongwen/simp/rss.xml', source: 'BBC Chinese' },
+    { url: 'https://news.google.com/rss?hl=zh-CN&gl=CN&ceid=CN:zh-Hans', source: 'Google News Chinese' },
+    { url: 'https://news.google.com/rss?hl=zh-TW&gl=TW&ceid=TW:zh-Hant', source: 'Google News Chinese TW' },
+  ],
+  ja: [
+    { url: 'https://feeds.bbci.co.uk/japanese/rss.xml', source: 'BBC Japanese' },
+    { url: 'https://www3.nhk.or.jp/rss/news/cat0.xml', source: 'NHK' },
+    { url: 'https://news.google.com/rss?hl=ja-JP&gl=JP&ceid=JP:ja', source: 'Google News Japanese' },
+  ],
+  ko: [
+    { url: 'https://feeds.bbci.co.uk/korean/rss.xml', source: 'BBC Korean' },
+    { url: 'https://news.google.com/rss?hl=ko-KR&gl=KR&ceid=KR:ko', source: 'Google News Korean' },
+  ],
+
+  // ===== Southeast Asia =====
   th: [
     { url: 'https://feeds.bbci.co.uk/thai/rss.xml', source: 'BBC Thai' },
     { url: 'https://news.google.com/rss?hl=th-TH&gl=TH&ceid=TH:th', source: 'Google News Thai' },
@@ -510,8 +681,14 @@ export const LANG_FEEDS = {
     { url: 'https://feeds.bbci.co.uk/indonesia/rss.xml', source: 'BBC Indonesia' },
     { url: 'https://news.google.com/rss?hl=id-ID&gl=ID&ceid=ID:id', source: 'Google News Indonesian' },
   ],
-  sv: [
-    { url: 'https://news.google.com/rss?hl=sv-SE&gl=SE&ceid=SE:sv', source: 'Google News Swedish' },
+  vi: [
+    { url: 'https://news.google.com/rss?hl=vi-VN&gl=VN&ceid=VN:vi', source: 'Google News Vietnamese' },
+  ],
+  ms: [
+    { url: 'https://news.google.com/rss?hl=ms-MY&gl=MY&ceid=MY:ms', source: 'Google News Malay' },
+  ],
+  fil: [
+    { url: 'https://news.google.com/rss?hl=tl-PH&gl=PH&ceid=PH:tl', source: 'Google News Filipino' },
   ],
 };
 
@@ -811,7 +988,6 @@ export const CITY_FEEDS = {
     lat: 38.9072, lng: -77.0369,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Washington%20DC?hl=en-US&gl=US&ceid=US:en', source: 'Google News DC' },
-      { url: 'https://dcist.com/feed', source: 'DCist' },
       { url: 'https://wtop.com/feed/', source: 'WTOP' },
     ],
   },
@@ -940,7 +1116,6 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Dubai?hl=en-US&gl=US&ceid=US:en', source: 'Google News Dubai' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Dubai?hl=ar-AE&gl=AE&ceid=AE:ar', source: 'Google News Dubai Arabic' },
-      { url: 'https://gulfnews.com/rss', source: 'Gulf News' },
     ],
   },
   riyadh: {
@@ -949,7 +1124,6 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Riyadh?hl=en-US&gl=US&ceid=US:en', source: 'Google News Riyadh' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Riyadh?hl=ar-SA&gl=SA&ceid=SA:ar', source: 'Google News Riyadh Arabic' },
-      { url: 'https://www.arabnews.com/rss.xml', source: 'Arab News' },
     ],
   },
   istanbul: {
@@ -1092,7 +1266,6 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Bangkok?hl=en-US&gl=US&ceid=US:en', source: 'Google News Bangkok' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Bangkok?hl=th-TH&gl=TH&ceid=TH:th', source: 'Google News Bangkok Thai' },
-      { url: 'https://www.bangkokpost.com/rss/data/topstories.xml', source: 'Bangkok Post' },
     ],
   },
   jakarta: {
@@ -1101,7 +1274,6 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Jakarta?hl=en-US&gl=US&ceid=US:en', source: 'Google News Jakarta' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Jakarta?hl=id-ID&gl=ID&ceid=ID:id', source: 'Google News Jakarta Indonesian' },
-      { url: 'https://www.thejakartapost.com/rss', source: 'Jakarta Post' },
     ],
   },
 
@@ -1181,6 +1353,388 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Lima?hl=en-US&gl=US&ceid=US:en', source: 'Google News Lima' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Lima?hl=es-419&gl=PE&ceid=PE:es-419', source: 'Google News Lima Spanish' },
+    ],
+  },
+  santiago: {
+    label: 'Santiago', region: 'latam', country: 'CL',
+    lang: 'es', lat: -33.4489, lng: -70.6693,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Santiago?hl=en-US&gl=US&ceid=US:en', source: 'Google News Santiago' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Santiago?hl=es-419&gl=CL&ceid=CL:es-419', source: 'Google News Santiago Spanish' },
+    ],
+  },
+  'rio-de-janeiro': {
+    label: 'Rio de Janeiro', region: 'latam', country: 'BR',
+    lang: 'pt', lat: -22.9068, lng: -43.1729,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Rio%20de%20Janeiro?hl=en-US&gl=US&ceid=US:en', source: 'Google News Rio' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Rio%20de%20Janeiro?hl=pt-BR&gl=BR&ceid=BR:pt-419', source: 'Google News Rio Portuguese' },
+    ],
+  },
+  medellin: {
+    label: 'Medellín', region: 'latam', country: 'CO',
+    lang: 'es', lat: 6.2442, lng: -75.5812,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Medell%C3%ADn?hl=en-US&gl=US&ceid=US:en', source: 'Google News Medellín' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Medell%C3%ADn?hl=es-419&gl=CO&ceid=CO:es-419', source: 'Google News Medellín Spanish' },
+    ],
+  },
+
+  // =========================================================================
+  // UNITED STATES (10 cities)
+  // =========================================================================
+  'new-york': {
+    label: 'New York', region: 'us', country: 'US',
+    lat: 40.7128, lng: -74.006,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/New%20York?hl=en-US&gl=US&ceid=US:en', source: 'Google News New York' },
+    ],
+  },
+  'los-angeles': {
+    label: 'Los Angeles', region: 'us', country: 'US',
+    lat: 34.0522, lng: -118.2437,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Los%20Angeles?hl=en-US&gl=US&ceid=US:en', source: 'Google News LA' },
+    ],
+  },
+  chicago: {
+    label: 'Chicago', region: 'us', country: 'US',
+    lat: 41.8781, lng: -87.6298,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Chicago?hl=en-US&gl=US&ceid=US:en', source: 'Google News Chicago' },
+    ],
+  },
+  'san-francisco': {
+    label: 'San Francisco', region: 'us', country: 'US',
+    lat: 37.7749, lng: -122.4194,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/San%20Francisco?hl=en-US&gl=US&ceid=US:en', source: 'Google News SF' },
+    ],
+  },
+  houston: {
+    label: 'Houston', region: 'us', country: 'US',
+    lat: 29.7604, lng: -95.3698,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Houston?hl=en-US&gl=US&ceid=US:en', source: 'Google News Houston' },
+    ],
+  },
+  miami: {
+    label: 'Miami', region: 'us', country: 'US',
+    lat: 25.7617, lng: -80.1918,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Miami?hl=en-US&gl=US&ceid=US:en', source: 'Google News Miami' },
+    ],
+  },
+  washington: {
+    label: 'Washington DC', region: 'us', country: 'US',
+    lat: 38.9072, lng: -77.0369,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Washington%20DC?hl=en-US&gl=US&ceid=US:en', source: 'Google News DC' },
+    ],
+  },
+  seattle: {
+    label: 'Seattle', region: 'us', country: 'US',
+    lat: 47.6062, lng: -122.3321,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Seattle?hl=en-US&gl=US&ceid=US:en', source: 'Google News Seattle' },
+    ],
+  },
+  boston: {
+    label: 'Boston', region: 'us', country: 'US',
+    lat: 42.3601, lng: -71.0589,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Boston?hl=en-US&gl=US&ceid=US:en', source: 'Google News Boston' },
+    ],
+  },
+  dallas: {
+    label: 'Dallas', region: 'us', country: 'US',
+    lat: 32.7767, lng: -96.797,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Dallas?hl=en-US&gl=US&ceid=US:en', source: 'Google News Dallas' },
+    ],
+  },
+
+  // =========================================================================
+  // UNITED KINGDOM (4 cities)
+  // =========================================================================
+  manchester: {
+    label: 'Manchester', region: 'uk', country: 'GB',
+    lat: 53.4808, lng: -2.2426,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Manchester?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Manchester' },
+    ],
+  },
+  birmingham: {
+    label: 'Birmingham', region: 'uk', country: 'GB',
+    lat: 52.4862, lng: -1.8904,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Birmingham%20UK?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Birmingham' },
+    ],
+  },
+  edinburgh: {
+    label: 'Edinburgh', region: 'uk', country: 'GB',
+    lat: 55.9533, lng: -3.1883,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Edinburgh?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Edinburgh' },
+    ],
+  },
+  glasgow: {
+    label: 'Glasgow', region: 'uk', country: 'GB',
+    lat: 55.8642, lng: -4.2518,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Glasgow?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Glasgow' },
+    ],
+  },
+
+  // =========================================================================
+  // AUSTRALIA (3 cities)
+  // =========================================================================
+  sydney: {
+    label: 'Sydney', region: 'australia', country: 'AU',
+    lat: -33.8688, lng: 151.2093,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Sydney?hl=en-AU&gl=AU&ceid=AU:en', source: 'Google News Sydney' },
+    ],
+  },
+  melbourne: {
+    label: 'Melbourne', region: 'australia', country: 'AU',
+    lat: -37.8136, lng: 144.9631,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Melbourne?hl=en-AU&gl=AU&ceid=AU:en', source: 'Google News Melbourne' },
+    ],
+  },
+  auckland: {
+    label: 'Auckland', region: 'australia', country: 'NZ',
+    lat: -36.8485, lng: 174.7633,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Auckland?hl=en-NZ&gl=NZ&ceid=NZ:en', source: 'Google News Auckland' },
+    ],
+  },
+
+  // =========================================================================
+  // MORE EUROPE (8 cities)
+  // =========================================================================
+  vienna: {
+    label: 'Vienna', region: 'europe', country: 'AT',
+    lang: 'de', lat: 48.2082, lng: 16.3738,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Vienna?hl=en-US&gl=US&ceid=US:en', source: 'Google News Vienna' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Wien?hl=de-AT&gl=AT&ceid=AT:de', source: 'Google News Wien' },
+    ],
+  },
+  warsaw: {
+    label: 'Warsaw', region: 'europe', country: 'PL',
+    lang: 'pl', lat: 52.2297, lng: 21.0122,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Warsaw?hl=en-US&gl=US&ceid=US:en', source: 'Google News Warsaw' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Warszawa?hl=pl-PL&gl=PL&ceid=PL:pl', source: 'Google News Warsaw Polish' },
+    ],
+  },
+  lisbon: {
+    label: 'Lisbon', region: 'europe', country: 'PT',
+    lang: 'pt', lat: 38.7223, lng: -9.1393,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Lisbon?hl=en-US&gl=US&ceid=US:en', source: 'Google News Lisbon' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Lisboa?hl=pt-PT&gl=PT&ceid=PT:pt-150', source: 'Google News Lisboa' },
+    ],
+  },
+  athens: {
+    label: 'Athens', region: 'europe', country: 'GR',
+    lat: 37.9838, lng: 23.7275,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Athens?hl=en-US&gl=US&ceid=US:en', source: 'Google News Athens' },
+    ],
+  },
+  zurich: {
+    label: 'Zurich', region: 'europe', country: 'CH',
+    lang: 'de', lat: 47.3769, lng: 8.5417,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Zurich?hl=en-US&gl=US&ceid=US:en', source: 'Google News Zurich' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Z%C3%BCrich?hl=de-CH&gl=CH&ceid=CH:de', source: 'Google News Zürich' },
+    ],
+  },
+  dublin: {
+    label: 'Dublin', region: 'europe', country: 'IE',
+    lat: 53.3498, lng: -6.2603,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Dublin?hl=en-IE&gl=IE&ceid=IE:en', source: 'Google News Dublin' },
+      { url: 'https://www.rte.ie/rss/news.xml', source: 'RTÉ' },
+      { url: 'https://www.thejournal.ie/feed/', source: 'The Journal.ie' },
+    ],
+  },
+  prague: {
+    label: 'Prague', region: 'europe', country: 'CZ',
+    lat: 50.0755, lng: 14.4378,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Prague?hl=en-US&gl=US&ceid=US:en', source: 'Google News Prague' },
+    ],
+  },
+  copenhagen: {
+    label: 'Copenhagen', region: 'europe', country: 'DK',
+    lat: 55.6761, lng: 12.5683,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Copenhagen?hl=en-US&gl=US&ceid=US:en', source: 'Google News Copenhagen' },
+    ],
+  },
+
+  // =========================================================================
+  // MORE ASIA (6 cities)
+  // =========================================================================
+  manila: {
+    label: 'Manila', region: 'asia', country: 'PH',
+    lang: 'fil', lat: 14.5995, lng: 120.9842,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Manila?hl=en-US&gl=US&ceid=US:en', source: 'Google News Manila' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Manila?hl=tl-PH&gl=PH&ceid=PH:tl', source: 'Google News Manila Filipino' },
+      { url: 'https://www.rappler.com/feed/', source: 'Rappler' },
+    ],
+  },
+  'kuala-lumpur': {
+    label: 'Kuala Lumpur', region: 'asia', country: 'MY',
+    lang: 'ms', lat: 3.139, lng: 101.6869,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Kuala%20Lumpur?hl=en-MY&gl=MY&ceid=MY:en', source: 'Google News KL' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Kuala%20Lumpur?hl=ms-MY&gl=MY&ceid=MY:ms', source: 'Google News KL Malay' },
+    ],
+  },
+  hanoi: {
+    label: 'Hanoi', region: 'asia', country: 'VN',
+    lang: 'vi', lat: 21.0285, lng: 105.8542,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Hanoi?hl=en-US&gl=US&ceid=US:en', source: 'Google News Hanoi' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Hanoi?hl=vi-VN&gl=VN&ceid=VN:vi', source: 'Google News Hanoi Vietnamese' },
+      { url: 'https://e.vnexpress.net/rss/news.rss', source: 'VnExpress English' },
+    ],
+  },
+  'ho-chi-minh': {
+    label: 'Ho Chi Minh City', region: 'asia', country: 'VN',
+    lang: 'vi', lat: 10.8231, lng: 106.6297,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Ho%20Chi%20Minh%20City?hl=en-US&gl=US&ceid=US:en', source: 'Google News HCMC' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Ho%20Chi%20Minh%20City?hl=vi-VN&gl=VN&ceid=VN:vi', source: 'Google News HCMC Vietnamese' },
+    ],
+  },
+  taipei: {
+    label: 'Taipei', region: 'asia', country: 'TW',
+    lang: 'zh', lat: 25.033, lng: 121.5654,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Taipei?hl=en-US&gl=US&ceid=US:en', source: 'Google News Taipei' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Taipei?hl=zh-TW&gl=TW&ceid=TW:zh-Hant', source: 'Google News Taipei Chinese' },
+    ],
+  },
+  osaka: {
+    label: 'Osaka', region: 'asia', country: 'JP',
+    lang: 'ja', lat: 34.6937, lng: 135.5023,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Osaka?hl=en-US&gl=US&ceid=US:en', source: 'Google News Osaka' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Osaka?hl=ja-JP&gl=JP&ceid=JP:ja', source: 'Google News Osaka Japanese' },
+    ],
+  },
+
+  // =========================================================================
+  // MORE AFRICA (4 cities)
+  // =========================================================================
+  accra: {
+    label: 'Accra', region: 'africa', country: 'GH',
+    lat: 5.6037, lng: -0.187,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Accra?hl=en-GH&gl=GH&ceid=GH:en', source: 'Google News Accra' },
+      { url: 'https://allafrica.com/tools/headlines/rdf/ghana/headlines.rdf', source: 'AllAfrica Ghana' },
+    ],
+  },
+  'dar-es-salaam': {
+    label: 'Dar es Salaam', region: 'africa', country: 'TZ',
+    lang: 'sw', lat: -6.7924, lng: 39.2083,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Dar%20es%20Salaam?hl=en-US&gl=US&ceid=US:en', source: 'Google News Dar es Salaam' },
+      { url: 'https://allafrica.com/tools/headlines/rdf/tanzania/headlines.rdf', source: 'AllAfrica Tanzania' },
+    ],
+  },
+  'addis-ababa': {
+    label: 'Addis Ababa', region: 'africa', country: 'ET',
+    lat: 9.0222, lng: 38.7468,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Addis%20Ababa?hl=en-US&gl=US&ceid=US:en', source: 'Google News Addis Ababa' },
+      { url: 'https://allafrica.com/tools/headlines/rdf/ethiopia/headlines.rdf', source: 'AllAfrica Ethiopia' },
+    ],
+  },
+  abuja: {
+    label: 'Abuja', region: 'africa', country: 'NG',
+    lat: 9.0579, lng: 7.4951,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Abuja?hl=en-NG&gl=NG&ceid=NG:en', source: 'Google News Abuja' },
+      { url: 'https://www.premiumtimesng.com/feed', source: 'Premium Times' },
+    ],
+  },
+
+  // =========================================================================
+  // MORE MIDDLE EAST (3 cities)
+  // =========================================================================
+  'abu-dhabi': {
+    label: 'Abu Dhabi', region: 'middle-east', country: 'AE',
+    lang: 'ar', lat: 24.4539, lng: 54.3773,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Abu%20Dhabi?hl=en-US&gl=US&ceid=US:en', source: 'Google News Abu Dhabi' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Abu%20Dhabi?hl=ar-AE&gl=AE&ceid=AE:ar', source: 'Google News Abu Dhabi Arabic' },
+    ],
+  },
+  tehran: {
+    label: 'Tehran', region: 'middle-east', country: 'IR',
+    lang: 'fa', lat: 35.6892, lng: 51.389,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Tehran?hl=en-US&gl=US&ceid=US:en', source: 'Google News Tehran' },
+    ],
+  },
+  'tel-aviv': {
+    label: 'Tel Aviv', region: 'middle-east', country: 'IL',
+    lang: 'he', lat: 32.0853, lng: 34.7818,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Tel%20Aviv?hl=en-US&gl=US&ceid=US:en', source: 'Google News Tel Aviv' },
+      { url: 'https://www.timesofisrael.com/feed/', source: 'Times of Israel' },
+    ],
+  },
+
+  // =========================================================================
+  // MORE INDIA (5 cities)
+  // =========================================================================
+  guwahati: {
+    label: 'Guwahati', region: 'india', country: 'IN',
+    lang: 'as', lat: 26.1445, lng: 91.7362,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Guwahati?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Guwahati' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Guwahati?hl=as-IN&gl=IN&ceid=IN:as', source: 'Google News Guwahati Assamese' },
+    ],
+  },
+  nagpur: {
+    label: 'Nagpur', region: 'india', country: 'IN',
+    lang: 'mr', lat: 21.1458, lng: 79.0882,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Nagpur?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Nagpur' },
+      { url: 'https://timesofindia.indiatimes.com/rssfeeds/3012535.cms', source: 'TOI Nagpur' },
+    ],
+  },
+  coimbatore: {
+    label: 'Coimbatore', region: 'india', country: 'IN',
+    lang: 'ta', lat: 11.0168, lng: 76.9558,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Coimbatore?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Coimbatore' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Coimbatore?hl=ta-IN&gl=IN&ceid=IN:ta', source: 'Google News Coimbatore Tamil' },
+    ],
+  },
+  visakhapatnam: {
+    label: 'Visakhapatnam', region: 'india', country: 'IN',
+    lang: 'te', lat: 17.6868, lng: 83.2185,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Visakhapatnam?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Vizag' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Visakhapatnam?hl=te-IN&gl=IN&ceid=IN:te', source: 'Google News Vizag Telugu' },
+    ],
+  },
+  indore: {
+    label: 'Indore', region: 'india', country: 'IN',
+    lang: 'hi', lat: 22.7196, lng: 75.8577,
+    feeds: [
+      { url: 'https://news.google.com/rss/headlines/section/geo/Indore?hl=en-IN&gl=IN&ceid=IN:en', source: 'Google News Indore' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Indore?hl=hi-IN&gl=IN&ceid=IN:hi', source: 'Google News Indore Hindi' },
     ],
   },
 };

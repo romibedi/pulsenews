@@ -418,16 +418,33 @@ const TTS_VOICES = {
   te: 'te-IN-ShrutiNeural',
   bn: 'bn-IN-TanishaaNeural',
   mr: 'mr-IN-AarohiNeural',
+  kn: 'kn-IN-SapnaNeural',
+  ml: 'ml-IN-SobhanaNeural',
+  gu: 'gu-IN-DhwaniNeural',
+  pa: 'pa-IN-GurpreetNeural',
   ur: 'ur-PK-UzmaNeural',
   ar: 'ar-SA-ZariyahNeural',
+  fa: 'fa-IR-DilaraNeural',
+  he: 'he-IL-HilaNeural',
+  sw: 'sw-KE-ZuriNeural',
   fr: 'fr-FR-DeniseNeural',
   de: 'de-DE-KatjaNeural',
   es: 'es-ES-ElviraNeural',
   pt: 'pt-BR-FranciscaNeural',
+  it: 'it-IT-ElsaNeural',
+  nl: 'nl-NL-ColetteNeural',
+  sv: 'sv-SE-SofieNeural',
+  tr: 'tr-TR-EmelNeural',
+  pl: 'pl-PL-AgnieszkaNeural',
+  ru: 'ru-RU-SvetlanaNeural',
   zh: 'zh-CN-XiaoxiaoNeural',
   ja: 'ja-JP-NanamiNeural',
   ko: 'ko-KR-SunHiNeural',
-  sw: 'sw-KE-ZuriNeural',
+  th: 'th-TH-PremwadeeNeural',
+  id: 'id-ID-GadisNeural',
+  vi: 'vi-VN-HoaiMyNeural',
+  ms: 'ms-MY-YasminNeural',
+  fil: 'fil-PH-BlessicaNeural',
 };
 
 // Regional accent voices — keyed by lang, then region
@@ -598,7 +615,7 @@ app.post('/api/voice-query', async (req, res) => {
 
           const result = await client.search({
             index: idx,
-            params: { search_pipeline: HYBRID_PIPELINE_NAME },
+            search_pipeline: HYBRID_PIPELINE_NAME,
             body: {
               query: {
                 hybrid: {
@@ -749,7 +766,7 @@ app.get('/api/related/:id', async (req, res) => {
         // Hybrid: BM25 more_like_this + kNN vector similarity
         const result = await client.search({
           index: `articles-${lang}`,
-          params: { search_pipeline: HYBRID_PIPELINE_NAME },
+          search_pipeline: HYBRID_PIPELINE_NAME,
           body: {
             query: {
               hybrid: {
@@ -876,7 +893,7 @@ app.get('/api/threads/:id', async (req, res) => {
         // Hybrid: BM25 more_like_this + kNN for semantic thread matching
         const result = await client.search({
           index: `articles-${lang}`,
-          params: { search_pipeline: HYBRID_PIPELINE_NAME },
+          search_pipeline: HYBRID_PIPELINE_NAME,
           body: {
             query: {
               hybrid: {
@@ -1172,7 +1189,7 @@ app.get('/api/search', async (req, res) => {
     };
     // Attach hybrid pipeline only when using hybrid query
     if (queryEmbedding) {
-      searchParams.params = { search_pipeline: HYBRID_PIPELINE_NAME };
+      searchParams.search_pipeline = HYBRID_PIPELINE_NAME;
     }
 
     const result = await client.search(searchParams);

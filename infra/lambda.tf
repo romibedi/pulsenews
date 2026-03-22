@@ -43,6 +43,7 @@ resource "aws_lambda_function" "indexer" {
     variables = {
       OPENSEARCH_ENDPOINT = "https://${aws_opensearch_domain.search.endpoint}"
       NODE_ENV            = "production"
+      ENABLE_KNN          = var.enable_knn
     }
   }
 
@@ -54,14 +55,14 @@ resource "aws_lambda_function" "indexer" {
 # ---------------------------------------------------------------------------
 
 resource "aws_lambda_function" "ingest" {
-  function_name    = "pulsenews-ingest-${var.environment}"
-  role             = aws_iam_role.ingest_lambda.arn
-  handler          = "ingest/handler.handler"
-  runtime          = "nodejs20.x"
-  architectures    = ["arm64"]
-  memory_size      = 512
-  timeout          = 900 # 15 min max — ingestion can be slow with TTS generation
-  reserved_concurrent_executions = 1 # Prevent overlapping ingestion runs
+  function_name                  = "pulsenews-ingest-${var.environment}"
+  role                           = aws_iam_role.ingest_lambda.arn
+  handler                        = "ingest/handler.handler"
+  runtime                        = "nodejs20.x"
+  architectures                  = ["arm64"]
+  memory_size                    = 512
+  timeout                        = 900 # 15 min max — ingestion can be slow with TTS generation
+  reserved_concurrent_executions = 1   # Prevent overlapping ingestion runs
 
   filename         = "${path.module}/lambda.zip"
   source_code_hash = data.archive_file.lambda_fallback.output_base64sha256

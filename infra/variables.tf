@@ -40,3 +40,9 @@ variable "opensearch_volume_size" {
   type        = number
   default     = 10
 }
+
+variable "enable_knn" {
+  description = "Enable kNN vector search (Bedrock embeddings). Set to 'true' to enable hybrid BM25+kNN, 'false' for BM25-only."
+  type        = string
+  default     = "false"
+}

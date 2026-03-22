@@ -59,6 +59,24 @@ resource "aws_iam_role_policy" "indexer_lambda_opensearch" {
   })
 }
 
+# Bedrock access for generating article embeddings at index time (Titan Embeddings v2)
+resource "aws_iam_role_policy" "indexer_lambda_bedrock" {
+  name = "bedrock-embeddings"
+  role = aws_iam_role.indexer_lambda.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = ["bedrock:InvokeModel"]
+      Resource = [
+        "arn:aws:bedrock:${var.aws_region}::foundation-model/amazon.titan-embed-text-v2:0",
+        "arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-embed-text-v2:0",
+      ]
+    }]
+  })
+}
+
 # ---------------------------------------------------------------------------
 # IAM — Ingestion Lambda role (RSS feeds → DynamoDB + S3 TTS audio)
 # ---------------------------------------------------------------------------

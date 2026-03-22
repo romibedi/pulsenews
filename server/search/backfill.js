@@ -107,12 +107,18 @@ async function main() {
   let totalEmbeddings = 0;
   let lastKey = undefined;
 
+  // Scan all content partitions (GLOBAL#CAT#, LANG#, REGION#, CITY#) for full article data
+  const prefixes = ['GLOBAL#CAT#', 'LANG#', 'REGION#', 'CITY#'];
+  for (const prefix of prefixes) {
+    console.log(`  Scanning ${prefix}* ...`);
+    lastKey = undefined;
+
   do {
     const result = await docClient.send(
       new ScanCommand({
         TableName: TABLE_NAME,
         FilterExpression: 'begins_with(PK, :prefix)',
-        ExpressionAttributeValues: { ':prefix': 'GLOBAL#CAT#' },
+        ExpressionAttributeValues: { ':prefix': prefix },
         ExclusiveStartKey: lastKey,
       }),
     );
@@ -131,7 +137,7 @@ async function main() {
 
     // Generate embeddings for the batch
     if (!SKIP_EMBEDDINGS && uniqueItems.length > 0) {
-      await enrichWithEmbeddings(uniqueItems, 5);
+      await enrichWithEmbeddings(uniqueItems, 3);
     }
 
     // Bulk index
@@ -172,23 +178,49 @@ async function main() {
       );
     }
 
-    if (bulkBody.length > 0) {
-      const bulkResult = await osClient.bulk({
-        body: bulkBody,
-        refresh: false,
-      });
+    // Split into micro-batches of 20 docs to avoid overwhelming kNN indexing
+    const MICRO_BATCH = 20;
+    for (let b = 0; b < bulkBody.length; b += MICRO_BATCH * 2) {
+      const chunk = bulkBody.slice(b, b + MICRO_BATCH * 2);
+      if (chunk.length === 0) break;
 
-      const indexedCount = bulkBody.length / 2;
-      totalIndexed += indexedCount;
+      let retries = 0;
+      while (retries < 6) {
+        try {
+          const bulkResult = await osClient.bulk({
+            body: chunk,
+            refresh: false,
+          });
 
-      if (bulkResult.body.errors) {
-        const errors = bulkResult.body.items.filter((i) => i.index?.error);
-        console.warn(`  Batch had ${errors.length} errors`);
-        if (errors.length > 0) {
-          console.warn(`  First error: ${JSON.stringify(errors[0].index.error)}`);
+          const indexedCount = chunk.length / 2;
+          totalIndexed += indexedCount;
+
+          if (bulkResult.body.errors) {
+            const errors = bulkResult.body.items.filter((i) => i.index?.error);
+            console.warn(`  Batch had ${errors.length} errors`);
+            if (errors.length > 0) {
+              console.warn(`  First error: ${JSON.stringify(errors[0].index.error)}`);
+            }
+          }
+          break; // Success
+        } catch (err) {
+          if (err.meta?.statusCode === 429 && retries < 5) {
+            const delay = Math.pow(2, retries) * 3000;
+            console.log(`  Rate limited (429), waiting ${delay / 1000}s before retry...`);
+            await new Promise((r) => setTimeout(r, delay));
+            retries++;
+          } else {
+            throw err;
+          }
         }
       }
+      // Pace between micro-batches
+      if (b + MICRO_BATCH * 2 < bulkBody.length) {
+        await new Promise((r) => setTimeout(r, 500));
+      }
+    }
 
+    if (bulkBody.length > 0) {
       console.log(
         `  Scanned ${totalScanned} items | indexed ${totalIndexed} articles | ${totalEmbeddings} embeddings`,
       );
@@ -196,6 +228,7 @@ async function main() {
 
     lastKey = result.LastEvaluatedKey;
   } while (lastKey);
+  } // end for-of prefixes
 
   await osClient.indices.refresh({ index: 'articles-*' });
 

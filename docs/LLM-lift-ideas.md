@@ -145,3 +145,57 @@ This is free and fast but less accurate than LLM classification. Good enough for
 | **Future** | Prediction extraction | High | Medium |
 
 Start with entity extraction + de-clickbait headlines — both are low-to-medium effort with the highest differentiation value. The unified pipeline means adding more fields later is nearly free.
+
+---
+
+## Tier 4 — Server-Side Pre-Computation (Ingestion-Time)
+
+These features are too compute-heavy or require cross-article context that can't be done client-side. They should run during ingestion, not on page load.
+
+### 9. LLM-Powered Story Threads
+
+Group related articles across multiple days into ongoing narratives using Haiku. Instead of dumb keyword matching, the LLM understands that "Boeing machinists vote" and "Boeing strike enters week 3" and "FAA grounds 737 MAX" are all part of the same story.
+
+- **Why it matters:** Turns a flat news feed into an evolving narrative. "Trump tariffs saga (12 articles over 3 days)" — users can follow a story from start to finish.
+- **How it works:** At ingestion, send the last 50 article titles + new batch to Haiku. Ask it to group them into story threads with a label and timeline. Store thread assignments in DynamoDB (`threadId`, `threadLabel`, `threadOrder`).
+- **Cost:** ~$0.005 per ingestion run (one Haiku call with ~50 titles). ~$0.50/month.
+- **Differentiation:** No major news aggregator surfaces story threads well. Apple News and Google News show "Full Coverage" but it's just a search results page — not a curated narrative.
+
+### 10. Pre-Generated Audio Briefings
+
+Generate a 60-second morning briefing per region, ready before users wake up. Instead of on-demand TTS of concatenated titles, create a proper scripted briefing.
+
+- **Why it matters:** Users can listen to a polished "Good morning, here are today's top 5 stories in the US" briefing during their commute — without clicking anything.
+- **How it works:** At ingestion (e.g. 5 AM per timezone), Haiku writes a natural briefing script from the top 5 regional articles → Edge TTS generates audio → store in S3. Serve as a persistent player at the top of the homepage.
+- **Cost:** 9 regions × 1 Haiku call ($0.005) + 9 TTS generations ($0) = ~$0.05/day. Negligible.
+- **Differentiation:** Turns PulseNewsToday into a podcast-like experience. Users form a daily habit around the briefing. Retention play.
+
+### 11. AI-Written Cluster Summaries
+
+When multiple articles cover the same event, generate a synthesis paragraph: "3 stories about the Boeing strike — here's the full picture."
+
+- **Why it matters:** Instead of showing 3 near-duplicate articles, show one authoritative summary with links to all sources. Saves the user time, adds editorial value.
+- **How it works:** During ingestion, after dedup, identify clusters of 2+ articles on the same topic. Send their titles + descriptions to Haiku → get a 2-3 sentence synthesis. Store as a `clusterSummary` object in DynamoDB.
+- **Cost:** ~3-5 clusters per category × 15 categories = ~60 Haiku calls per run. ~$0.30/day = ~$9/month.
+- **Differentiation:** This is what human editors do at outlets like The Economist or Reuters. Automating it at scale is a genuine moat — no aggregator does this today.
+
+---
+
+### Why These 3 Must Be Server-Side
+
+| Feature | Why not client-side? |
+|---|---|
+| Story threads | Requires cross-day article context (last 3-7 days). Client only sees current page articles. |
+| Audio briefings | TTS generation takes 5-10 seconds. Must be pre-built so it plays instantly. |
+| Cluster summaries | LLM call takes 1-2 seconds. Can't block page render. Also needs deduped cross-source context. |
+
+### Combined Cost
+
+| Feature | Per Day | Per Month |
+|---|---|---|
+| Story threads | ~$0.02 | ~$0.50 |
+| Audio briefings | ~$0.05 | ~$1.50 |
+| Cluster summaries | ~$0.30 | ~$9.00 |
+| **Total** | **~$0.37** | **~$11.00** |
+
+All three combined cost less than a cup of coffee per month while adding editorial-quality intelligence that no competitor offers at scale.

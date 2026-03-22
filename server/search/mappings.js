@@ -33,6 +33,19 @@ export const LANGUAGE_ANALYZERS = {
   ja: { analyzer: 'kuromoji', name: 'Japanese' },
   ko: { analyzer: 'icu_analyzer', name: 'Korean' },
   sw: { analyzer: 'icu_analyzer', name: 'Swahili' },
+  tr: { analyzer: 'turkish', name: 'Turkish' },
+  it: { analyzer: 'italian', name: 'Italian' },
+  nl: { analyzer: 'dutch', name: 'Dutch' },
+  th: { analyzer: 'thai', name: 'Thai' },
+  id: { analyzer: 'indonesian', name: 'Indonesian' },
+  sv: { analyzer: 'swedish', name: 'Swedish' },
+  pl: { analyzer: 'icu_analyzer', name: 'Polish' },
+  ru: { analyzer: 'russian', name: 'Russian' },
+  fa: { analyzer: 'persian', name: 'Persian' },
+  he: { analyzer: 'icu_analyzer', name: 'Hebrew' },
+  vi: { analyzer: 'icu_analyzer', name: 'Vietnamese' },
+  ms: { analyzer: 'icu_analyzer', name: 'Malay' },
+  fil: { analyzer: 'icu_analyzer', name: 'Filipino' },
 };
 
 /**
