@@ -25,6 +25,7 @@ import Settings from './pages/Settings';
 import Archive from './pages/Archive';
 
 const CustomFeeds = lazy(() => import('./pages/CustomFeeds'));
+const Admin = lazy(() => import('./pages/Admin'));
 
 function PageLoader() {
   return <div className="max-w-7xl mx-auto px-4 py-20 text-center text-[var(--text-muted)]">Loading...</div>;
@@ -57,6 +58,7 @@ export default function App() {
                   <Route path="/bookmarks" element={<Bookmarks />} />
                   <Route path="/archive" element={<Archive />} />
                   <Route path="/feeds" element={<CustomFeeds />} />
+                  <Route path="/admin" element={<Admin />} />
                 </Routes>
               </Suspense>
             </main>

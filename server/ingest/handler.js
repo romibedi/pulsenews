@@ -216,7 +216,7 @@ async function analyzeWithGemini(title, content) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -225,6 +225,7 @@ async function analyzeWithGemini(title, content) {
         responseMimeType: 'application/json',
         maxOutputTokens: 500,
         temperature: 0.1,
+        thinkingConfig: { thinkingBudget: 0 },
       },
     }),
   });

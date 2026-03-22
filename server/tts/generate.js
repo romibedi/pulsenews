@@ -48,6 +48,23 @@ const VOICES = {
   vi: 'vi-VN-HoaiMyNeural',
   ms: 'ms-MY-YasminNeural',
   fil: 'fil-PH-BlessicaNeural',
+  // New languages
+  da: 'da-DK-ChristelNeural',
+  no: 'nb-NO-PernilleNeural',
+  fi: 'fi-FI-NooraNeural',
+  el: 'el-GR-AthinaNeural',
+  ro: 'ro-RO-AlinaNeural',
+  cs: 'cs-CZ-VlastaNeural',
+  hu: 'hu-HU-NoemiNeural',
+  uk: 'uk-UA-PolinaNeural',
+  sr: 'sr-RS-SophieNeural',
+  bg: 'bg-BG-KalinaNeural',
+  my: 'my-MM-NilarNeural',
+  km: 'km-KH-SreymomNeural',
+  si: 'si-LK-ThiliniNeural',
+  ne: 'ne-NP-HemkalaNeural',
+  am: 'am-ET-MekdesNeural',
+  ha: 'ha-NG-HasiyaNeural',  // Hausa
 };
 
 // Regional English accent voices — must match server/app.js EN_REGION_VOICES
@@ -92,15 +109,15 @@ async function audioExists(key) {
  * @param {object} article - Article with title, body/description, lang, slug
  * @returns {Promise<{key: string, size: number} | null>}
  */
-export async function generateAndUpload(article) {
+export async function generateAndUpload(article, { force = false } = {}) {
   const lang = article.lang || 'en';
   const slug = article.slug;
   if (!slug) return null;
 
   const key = audioKey(lang, slug);
 
-  // Skip if already generated
-  if (await audioExists(key)) return { key, size: 0, skipped: true };
+  // Skip if already generated (unless force)
+  if (!force && await audioExists(key)) return { key, size: 0, skipped: true };
 
   // Build text: title + body, max 2000 chars
   const body = (article.body || article.description || '')

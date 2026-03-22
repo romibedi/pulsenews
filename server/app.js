@@ -34,6 +34,7 @@ import {
 } from './ssr.js';
 import { INDEXNOW_KEY } from './indexnow.js';
 import { generateCard } from './card.js';
+import adminRouter from './admin.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -445,6 +446,23 @@ const TTS_VOICES = {
   vi: 'vi-VN-HoaiMyNeural',
   ms: 'ms-MY-YasminNeural',
   fil: 'fil-PH-BlessicaNeural',
+  // New languages
+  da: 'da-DK-ChristelNeural',
+  no: 'nb-NO-PernilleNeural',
+  fi: 'fi-FI-NooraNeural',
+  el: 'el-GR-AthinaNeural',
+  ro: 'ro-RO-AlinaNeural',
+  cs: 'cs-CZ-VlastaNeural',
+  hu: 'hu-HU-NoemiNeural',
+  uk: 'uk-UA-PolinaNeural',
+  sr: 'sr-RS-SophieNeural',
+  bg: 'bg-BG-KalinaNeural',
+  my: 'my-MM-NilarNeural',
+  km: 'km-KH-SreymomNeural',
+  si: 'si-LK-ThiliniNeural',
+  ne: 'ne-NP-HemkalaNeural',
+  am: 'am-ET-MekdesNeural',
+  ha: 'ha-NG-HasiyaNeural',
 };
 
 // Regional accent voices — keyed by lang, then region
@@ -1399,6 +1417,9 @@ app.get('/city/:city', async (req, res, next) => {
   res.set('Cache-Control', 's-maxage=600, stale-while-revalidate=1200');
   res.send(renderCityPage(cityKey, cityMeta.label, articles));
 });
+
+// --- Admin dashboard ---
+app.use('/api/admin', adminRouter);
 
 // --- Static files + SPA fallback (for App Runner / container deployment) ---
 // Serve Vite-built assets with long cache (filenames are content-hashed)
