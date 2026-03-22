@@ -897,6 +897,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Manchester?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Manchester' },
       { url: 'https://feeds.bbci.co.uk/news/england/manchester/rss.xml', source: 'BBC Manchester' },
+      { url: 'https://www.manchestereveningnews.co.uk/?service=rss', source: 'Manchester Evening News' },
     ],
   },
   birmingham: {
@@ -905,6 +906,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Birmingham%20UK?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Birmingham' },
       { url: 'https://feeds.bbci.co.uk/news/england/birmingham_and_black_country/rss.xml', source: 'BBC Birmingham' },
+      { url: 'https://www.birminghammail.co.uk/?service=rss', source: 'Birmingham Mail' },
     ],
   },
   edinburgh: {
@@ -913,6 +915,8 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Edinburgh?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Edinburgh' },
       { url: 'https://feeds.bbci.co.uk/news/scotland/edinburgh_east_and_fife/rss.xml', source: 'BBC Edinburgh' },
+      { url: 'https://www.edinburghlive.co.uk/?service=rss', source: 'Edinburgh Live' },
+      { url: 'https://www.scotsman.com/rss', source: 'The Scotsman' },
     ],
   },
   glasgow: {
@@ -921,6 +925,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Glasgow?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Glasgow' },
       { url: 'https://feeds.bbci.co.uk/news/scotland/glasgow_and_west/rss.xml', source: 'BBC Glasgow' },
+      { url: 'https://www.glasgowtimes.co.uk/news/rss/', source: 'Glasgow Times' },
     ],
   },
   leeds: {
@@ -929,6 +934,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Leeds?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Leeds' },
       { url: 'https://feeds.bbci.co.uk/news/england/leeds_and_west_yorkshire/rss.xml', source: 'BBC Leeds' },
+      { url: 'https://www.yorkshireeveningpost.co.uk/rss', source: 'Yorkshire Evening Post' },
     ],
   },
   liverpool: {
@@ -937,6 +943,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Liverpool?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Liverpool' },
       { url: 'https://feeds.bbci.co.uk/news/england/merseyside/rss.xml', source: 'BBC Merseyside' },
+      { url: 'https://www.liverpoolecho.co.uk/?service=rss', source: 'Liverpool Echo' },
     ],
   },
   bristol: {
@@ -945,6 +952,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Bristol?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Bristol' },
       { url: 'https://feeds.bbci.co.uk/news/england/bristol/rss.xml', source: 'BBC Bristol' },
+      { url: 'https://www.bristolpost.co.uk/?service=rss', source: 'Bristol Post' },
     ],
   },
 
@@ -956,6 +964,8 @@ export const CITY_FEEDS = {
       { url: 'https://news.google.com/rss/headlines/section/geo/New%20York?hl=en-US&gl=US&ceid=US:en', source: 'Google News NYC' },
       { url: 'https://gothamist.com/feed', source: 'Gothamist' },
       { url: 'https://nypost.com/feed/', source: 'NY Post' },
+      { url: 'https://www.thecity.nyc/feed/', source: 'The City NYC' },
+      { url: 'https://rss.nytimes.com/services/xml/rss/nyt/NYRegion.xml', source: 'NY Times NY Region' },
     ],
   },
   'los-angeles': {
@@ -964,7 +974,8 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Los%20Angeles?hl=en-US&gl=US&ceid=US:en', source: 'Google News LA' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Los%20Angeles?hl=es-419&gl=US&ceid=US:es-419', source: 'Google News LA Spanish' },
-      { url: 'https://laist.com/feed', source: 'LAist' },
+      { url: 'https://laist.com/index.atom', source: 'LAist' },
+      { url: 'https://ktla.com/feed/', source: 'KTLA' },
     ],
   },
   chicago: {
@@ -980,7 +991,9 @@ export const CITY_FEEDS = {
     lat: 37.7749, lng: -122.4194,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/San%20Francisco?hl=en-US&gl=US&ceid=US:en', source: 'Google News SF' },
-      { url: 'https://www.kqed.org/news/feed', source: 'KQED' },
+      { url: 'https://ww2.kqed.org/news/feed/', source: 'KQED' },
+      { url: 'https://sfstandard.com/feed/', source: 'SF Standard' },
+      { url: 'https://missionlocal.org/feed/', source: 'Mission Local' },
     ],
   },
   'washington-dc': {
@@ -997,6 +1010,8 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Houston?hl=en-US&gl=US&ceid=US:en', source: 'Google News Houston' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Houston?hl=es-419&gl=US&ceid=US:es-419', source: 'Google News Houston Spanish' },
+      { url: 'https://houstonlanding.org/feed/', source: 'Houston Landing' },
+      { url: 'https://abc13.com/feed/', source: 'ABC13 Houston' },
     ],
   },
   miami: {
@@ -1005,6 +1020,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Miami?hl=en-US&gl=US&ceid=US:en', source: 'Google News Miami' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Miami?hl=es-419&gl=US&ceid=US:es-419', source: 'Google News Miami Spanish' },
+      { url: 'https://www.nbcmiami.com/feed/', source: 'NBC Miami' },
     ],
   },
   dallas: {
@@ -1012,6 +1028,8 @@ export const CITY_FEEDS = {
     lat: 32.7767, lng: -96.797,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Dallas?hl=en-US&gl=US&ceid=US:en', source: 'Google News Dallas' },
+      { url: 'https://www.wfaa.com/feeds/syndication/rss/news/local', source: 'WFAA Dallas' },
+      { url: 'https://www.texastribune.org/feed/', source: 'Texas Tribune' },
     ],
   },
   seattle: {
@@ -1020,6 +1038,8 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Seattle?hl=en-US&gl=US&ceid=US:en', source: 'Google News Seattle' },
       { url: 'https://www.kuow.org/rss.xml', source: 'KUOW Seattle' },
+      { url: 'https://crosscut.com/feed', source: 'Crosscut' },
+      { url: 'https://publicola.com/feed/', source: 'PubliCola' },
     ],
   },
   boston: {
@@ -1027,7 +1047,7 @@ export const CITY_FEEDS = {
     lat: 42.3601, lng: -71.0589,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Boston?hl=en-US&gl=US&ceid=US:en', source: 'Google News Boston' },
-      { url: 'https://www.wbur.org/rss/news', source: 'WBUR Boston' },
+      { url: 'https://www.wbur.org/feed', source: 'WBUR Boston' },
     ],
   },
   atlanta: {
@@ -1035,6 +1055,7 @@ export const CITY_FEEDS = {
     lat: 33.749, lng: -84.388,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Atlanta?hl=en-US&gl=US&ceid=US:en', source: 'Google News Atlanta' },
+      { url: 'https://www.11alive.com/feeds/syndication/rss/news/local', source: '11Alive Atlanta' },
     ],
   },
   denver: {
@@ -1043,6 +1064,8 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Denver?hl=en-US&gl=US&ceid=US:en', source: 'Google News Denver' },
       { url: 'https://www.cpr.org/feed/', source: 'CPR News' },
+      { url: 'https://denverite.com/feed/', source: 'Denverite' },
+      { url: 'https://coloradosun.com/feed/', source: 'Colorado Sun' },
     ],
   },
   philadelphia: {
@@ -1051,6 +1074,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Philadelphia?hl=en-US&gl=US&ceid=US:en', source: 'Google News Philadelphia' },
       { url: 'https://whyy.org/feed/', source: 'WHYY Philadelphia' },
+      { url: 'https://www.phillyvoice.com/feed/', source: 'PhillyVoice' },
     ],
   },
   detroit: {
@@ -1058,6 +1082,7 @@ export const CITY_FEEDS = {
     lat: 42.3314, lng: -83.0458,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Detroit?hl=en-US&gl=US&ceid=US:en', source: 'Google News Detroit' },
+      { url: 'https://www.bridgedetroit.com/feed/', source: 'Bridge Detroit' },
     ],
   },
   phoenix: {
@@ -1065,6 +1090,8 @@ export const CITY_FEEDS = {
     lat: 33.4484, lng: -112.074,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Phoenix?hl=en-US&gl=US&ceid=US:en', source: 'Google News Phoenix' },
+      { url: 'https://ktar.com/feed/', source: 'KTAR Phoenix' },
+      { url: 'https://www.12news.com/feeds/syndication/rss/news/local', source: '12 News Phoenix' },
     ],
   },
 
@@ -1090,6 +1117,7 @@ export const CITY_FEEDS = {
     lat: -27.4698, lng: 153.0251,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Brisbane?hl=en-AU&gl=AU&ceid=AU:en', source: 'Google News Brisbane' },
+      { url: 'https://www.brisbanetimes.com.au/rss/feed.xml', source: 'Brisbane Times' },
     ],
   },
   perth: {
@@ -1097,6 +1125,7 @@ export const CITY_FEEDS = {
     lat: -31.9505, lng: 115.8605,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Perth?hl=en-AU&gl=AU&ceid=AU:en', source: 'Google News Perth' },
+      { url: 'https://www.watoday.com.au/rss/feed.xml', source: 'WAtoday' },
     ],
   },
   adelaide: {
@@ -1104,6 +1133,7 @@ export const CITY_FEEDS = {
     lat: -34.9285, lng: 138.6007,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Adelaide?hl=en-AU&gl=AU&ceid=AU:en', source: 'Google News Adelaide' },
+      { url: 'https://www.abc.net.au/news/feed/2942460/rss.xml', source: 'ABC Adelaide' },
     ],
   },
 
@@ -1116,6 +1146,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Dubai?hl=en-US&gl=US&ceid=US:en', source: 'Google News Dubai' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Dubai?hl=ar-AE&gl=AE&ceid=AE:ar', source: 'Google News Dubai Arabic' },
+      { url: 'https://www.dubaichronicle.com/feed/', source: 'Dubai Chronicle' },
     ],
   },
   riyadh: {
@@ -1141,6 +1172,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Cairo?hl=en-US&gl=US&ceid=US:en', source: 'Google News Cairo' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Cairo?hl=ar-EG&gl=EG&ceid=EG:ar', source: 'Google News Cairo Arabic' },
+      { url: 'https://www.dailynewsegypt.com/feed/', source: 'Daily News Egypt' },
     ],
   },
   doha: {
@@ -1161,7 +1193,8 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Paris?hl=en-US&gl=US&ceid=US:en', source: 'Google News Paris' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Paris?hl=fr-FR&gl=FR&ceid=FR:fr', source: 'Google News Paris French' },
-      { url: 'https://www.france24.com/en/france/rss', source: 'France 24' },
+      { url: 'https://www.france24.com/en/france/rss', source: 'France 24 France' },
+      { url: 'https://feeds.thelocal.com/rss/fr', source: 'The Local France' },
     ],
   },
   berlin: {
@@ -1171,6 +1204,7 @@ export const CITY_FEEDS = {
       { url: 'https://news.google.com/rss/headlines/section/geo/Berlin?hl=en-US&gl=US&ceid=US:en', source: 'Google News Berlin' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Berlin?hl=de-DE&gl=DE&ceid=DE:de', source: 'Google News Berlin German' },
       { url: 'https://rss.dw.com/xml/rss-en-all', source: 'DW News' },
+      { url: 'https://feeds.thelocal.com/rss/de', source: 'The Local Germany' },
     ],
   },
   madrid: {
@@ -1179,6 +1213,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Madrid?hl=en-US&gl=US&ceid=US:en', source: 'Google News Madrid' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Madrid?hl=es-ES&gl=ES&ceid=ES:es', source: 'Google News Madrid Spanish' },
+      { url: 'https://feeds.thelocal.com/rss/es', source: 'The Local Spain' },
     ],
   },
   rome: {
@@ -1187,6 +1222,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Rome?hl=en-US&gl=US&ceid=US:en', source: 'Google News Rome' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Rome?hl=it-IT&gl=IT&ceid=IT:it', source: 'Google News Rome Italian' },
+      { url: 'https://feeds.thelocal.com/rss/it', source: 'The Local Italy' },
     ],
   },
   amsterdam: {
@@ -1196,6 +1232,7 @@ export const CITY_FEEDS = {
       { url: 'https://news.google.com/rss/headlines/section/geo/Amsterdam?hl=en-US&gl=US&ceid=US:en', source: 'Google News Amsterdam' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Amsterdam?hl=nl-NL&gl=NL&ceid=NL:nl', source: 'Google News Amsterdam Dutch' },
       { url: 'https://www.dutchnews.nl/feed/', source: 'DutchNews' },
+      { url: 'https://nltimes.nl/feed', source: 'NL Times' },
     ],
   },
   barcelona: {
@@ -1220,6 +1257,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Stockholm?hl=en-US&gl=US&ceid=US:en', source: 'Google News Stockholm' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Stockholm?hl=sv-SE&gl=SE&ceid=SE:sv', source: 'Google News Stockholm Swedish' },
+      { url: 'https://feeds.thelocal.com/rss/se', source: 'The Local Sweden' },
     ],
   },
 
@@ -1241,6 +1279,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Singapore?hl=en-SG&gl=SG&ceid=SG:en', source: 'Google News Singapore' },
       { url: 'https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml', source: 'CNA Singapore' },
+      { url: 'https://www.straitstimes.com/news/singapore/rss.xml', source: 'Straits Times Singapore' },
     ],
   },
   'hong-kong': {
@@ -1258,6 +1297,8 @@ export const CITY_FEEDS = {
       { url: 'https://news.google.com/rss/headlines/section/geo/Seoul?hl=en-US&gl=US&ceid=US:en', source: 'Google News Seoul' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Seoul?hl=ko-KR&gl=KR&ceid=KR:ko', source: 'Google News Seoul Korean' },
       { url: 'http://www.koreaherald.com/common/rss_xml.php', source: 'Korea Herald' },
+      { url: 'https://www.koreaherald.com/rss/020100000000.xml', source: 'Korea Herald' },
+      { url: 'https://www.koreatimes.co.kr/www/rss/rss.xml', source: 'Korea Times' },
     ],
   },
   bangkok: {
@@ -1266,6 +1307,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Bangkok?hl=en-US&gl=US&ceid=US:en', source: 'Google News Bangkok' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Bangkok?hl=th-TH&gl=TH&ceid=TH:th', source: 'Google News Bangkok Thai' },
+      { url: 'https://www.bangkokpost.com/rss/data/most-recent.xml', source: 'Bangkok Post' },
     ],
   },
   jakarta: {
@@ -1274,6 +1316,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Jakarta?hl=en-US&gl=US&ceid=US:en', source: 'Google News Jakarta' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Jakarta?hl=id-ID&gl=ID&ceid=ID:id', source: 'Google News Jakarta Indonesian' },
+      { url: 'https://rss.thejakartapost.com/home', source: 'Jakarta Post' },
     ],
   },
 
@@ -1286,6 +1329,8 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Nairobi?hl=en-KE&gl=KE&ceid=KE:en', source: 'Google News Nairobi' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Nairobi?hl=sw-KE&gl=KE&ceid=KE:sw', source: 'Google News Nairobi Swahili' },
+      { url: 'https://nation.africa/kenya/rss.xml', source: 'Nation Africa Kenya' },
+      { url: 'https://nairobileo.co.ke/feed/', source: 'Nairobi Leo' },
     ],
   },
   lagos: {
@@ -1294,6 +1339,8 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Lagos?hl=en-NG&gl=NG&ceid=NG:en', source: 'Google News Lagos' },
       { url: 'https://punchng.com/feed/', source: 'Punch Nigeria' },
+      { url: 'https://www.vanguardngr.com/feed/', source: 'Vanguard Nigeria' },
+      { url: 'https://businessday.ng/feed/', source: 'BusinessDay Nigeria' },
     ],
   },
   johannesburg: {
@@ -1302,6 +1349,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Johannesburg?hl=en-ZA&gl=ZA&ceid=ZA:en', source: 'Google News Johannesburg' },
       { url: 'https://feeds.news24.com/articles/news24/TopStories/rss', source: 'News24' },
+      { url: 'https://www.dailymaverick.co.za/dmrss/', source: 'Daily Maverick' },
     ],
   },
   'cape-town': {
@@ -1309,6 +1357,8 @@ export const CITY_FEEDS = {
     lat: -33.9249, lng: 18.4241,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Cape%20Town?hl=en-ZA&gl=ZA&ceid=ZA:en', source: 'Google News Cape Town' },
+      { url: 'https://www.dailymaverick.co.za/dmrss/', source: 'Daily Maverick' },
+      { url: 'https://www.capetownetc.com/feed/', source: 'CapeTownEtc' },
     ],
   },
 
@@ -1321,6 +1371,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/S%C3%A3o%20Paulo?hl=en-US&gl=US&ceid=US:en', source: 'Google News São Paulo' },
       { url: 'https://news.google.com/rss/headlines/section/geo/S%C3%A3o%20Paulo?hl=pt-BR&gl=BR&ceid=BR:pt-419', source: 'Google News SP Portuguese' },
+      { url: 'https://riotimesonline.com/feed/', source: 'Rio Times' },
     ],
   },
   'mexico-city': {
@@ -1329,6 +1380,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Mexico%20City?hl=en-US&gl=US&ceid=US:en', source: 'Google News Mexico City' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Mexico%20City?hl=es-419&gl=MX&ceid=MX:es-419', source: 'Google News CDMX Spanish' },
+      { url: 'https://mexiconewsdaily.com/feed/', source: 'Mexico News Daily' },
     ],
   },
   'buenos-aires': {
@@ -1337,6 +1389,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Buenos%20Aires?hl=en-US&gl=US&ceid=US:en', source: 'Google News Buenos Aires' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Buenos%20Aires?hl=es-419&gl=AR&ceid=AR:es-419', source: 'Google News BA Spanish' },
+      { url: 'https://buenosairesherald.com/feed/', source: 'Buenos Aires Herald' },
     ],
   },
   bogota: {
@@ -1345,6 +1398,8 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Bogot%C3%A1?hl=en-US&gl=US&ceid=US:en', source: 'Google News Bogotá' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Bogot%C3%A1?hl=es-419&gl=CO&ceid=CO:es-419', source: 'Google News Bogotá Spanish' },
+      { url: 'https://colombiareports.com/feed/', source: 'Colombia Reports' },
+      { url: 'https://thecitypaperbogota.com/feed/', source: 'The City Paper Bogota' },
     ],
   },
   lima: {
@@ -1353,6 +1408,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Lima?hl=en-US&gl=US&ceid=US:en', source: 'Google News Lima' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Lima?hl=es-419&gl=PE&ceid=PE:es-419', source: 'Google News Lima Spanish' },
+      { url: 'https://perureports.com/feed/', source: 'Peru Reports' },
     ],
   },
   santiago: {
@@ -1361,6 +1417,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Santiago?hl=en-US&gl=US&ceid=US:en', source: 'Google News Santiago' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Santiago?hl=es-419&gl=CL&ceid=CL:es-419', source: 'Google News Santiago Spanish' },
+      { url: 'https://santiagotimes.cl/feed/', source: 'Santiago Times' },
     ],
   },
   'rio-de-janeiro': {
@@ -1369,6 +1426,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Rio%20de%20Janeiro?hl=en-US&gl=US&ceid=US:en', source: 'Google News Rio' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Rio%20de%20Janeiro?hl=pt-BR&gl=BR&ceid=BR:pt-419', source: 'Google News Rio Portuguese' },
+      { url: 'https://riotimesonline.com/feed/', source: 'Rio Times Online' },
     ],
   },
   medellin: {
@@ -1377,6 +1435,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Medell%C3%ADn?hl=en-US&gl=US&ceid=US:en', source: 'Google News Medellín' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Medell%C3%ADn?hl=es-419&gl=CO&ceid=CO:es-419', source: 'Google News Medellín Spanish' },
+      { url: 'https://colombiareports.com/feed/', source: 'Colombia Reports' },
     ],
   },
 
@@ -1388,6 +1447,8 @@ export const CITY_FEEDS = {
     lat: 40.7128, lng: -74.006,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/New%20York?hl=en-US&gl=US&ceid=US:en', source: 'Google News New York' },
+      { url: 'https://www.thecity.nyc/feed/', source: 'The City NYC' },
+      { url: 'https://rss.nytimes.com/services/xml/rss/nyt/NYRegion.xml', source: 'NY Times NY Region' },
     ],
   },
   'los-angeles': {
@@ -1395,6 +1456,8 @@ export const CITY_FEEDS = {
     lat: 34.0522, lng: -118.2437,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Los%20Angeles?hl=en-US&gl=US&ceid=US:en', source: 'Google News LA' },
+      { url: 'https://laist.com/index.atom', source: 'LAist' },
+      { url: 'https://ktla.com/feed/', source: 'KTLA' },
     ],
   },
   chicago: {
@@ -1402,6 +1465,7 @@ export const CITY_FEEDS = {
     lat: 41.8781, lng: -87.6298,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Chicago?hl=en-US&gl=US&ceid=US:en', source: 'Google News Chicago' },
+      { url: 'https://blockclubchicago.org/feed/', source: 'Block Club Chicago' },
     ],
   },
   'san-francisco': {
@@ -1409,6 +1473,9 @@ export const CITY_FEEDS = {
     lat: 37.7749, lng: -122.4194,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/San%20Francisco?hl=en-US&gl=US&ceid=US:en', source: 'Google News SF' },
+      { url: 'https://ww2.kqed.org/news/feed/', source: 'KQED' },
+      { url: 'https://sfstandard.com/feed/', source: 'SF Standard' },
+      { url: 'https://missionlocal.org/feed/', source: 'Mission Local' },
     ],
   },
   houston: {
@@ -1416,6 +1483,8 @@ export const CITY_FEEDS = {
     lat: 29.7604, lng: -95.3698,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Houston?hl=en-US&gl=US&ceid=US:en', source: 'Google News Houston' },
+      { url: 'https://houstonlanding.org/feed/', source: 'Houston Landing' },
+      { url: 'https://abc13.com/feed/', source: 'ABC13 Houston' },
     ],
   },
   miami: {
@@ -1423,6 +1492,7 @@ export const CITY_FEEDS = {
     lat: 25.7617, lng: -80.1918,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Miami?hl=en-US&gl=US&ceid=US:en', source: 'Google News Miami' },
+      { url: 'https://www.nbcmiami.com/feed/', source: 'NBC Miami' },
     ],
   },
   washington: {
@@ -1430,6 +1500,7 @@ export const CITY_FEEDS = {
     lat: 38.9072, lng: -77.0369,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Washington%20DC?hl=en-US&gl=US&ceid=US:en', source: 'Google News DC' },
+      { url: 'https://wtop.com/feed/', source: 'WTOP' },
     ],
   },
   seattle: {
@@ -1437,6 +1508,8 @@ export const CITY_FEEDS = {
     lat: 47.6062, lng: -122.3321,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Seattle?hl=en-US&gl=US&ceid=US:en', source: 'Google News Seattle' },
+      { url: 'https://crosscut.com/feed', source: 'Crosscut' },
+      { url: 'https://publicola.com/feed/', source: 'PubliCola' },
     ],
   },
   boston: {
@@ -1444,6 +1517,7 @@ export const CITY_FEEDS = {
     lat: 42.3601, lng: -71.0589,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Boston?hl=en-US&gl=US&ceid=US:en', source: 'Google News Boston' },
+      { url: 'https://www.wbur.org/feed', source: 'WBUR Boston' },
     ],
   },
   dallas: {
@@ -1451,6 +1525,8 @@ export const CITY_FEEDS = {
     lat: 32.7767, lng: -96.797,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Dallas?hl=en-US&gl=US&ceid=US:en', source: 'Google News Dallas' },
+      { url: 'https://www.wfaa.com/feeds/syndication/rss/news/local', source: 'WFAA Dallas' },
+      { url: 'https://www.texastribune.org/feed/', source: 'Texas Tribune' },
     ],
   },
 
@@ -1462,6 +1538,7 @@ export const CITY_FEEDS = {
     lat: 53.4808, lng: -2.2426,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Manchester?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Manchester' },
+      { url: 'https://www.manchestereveningnews.co.uk/?service=rss', source: 'Manchester Evening News' },
     ],
   },
   birmingham: {
@@ -1469,6 +1546,7 @@ export const CITY_FEEDS = {
     lat: 52.4862, lng: -1.8904,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Birmingham%20UK?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Birmingham' },
+      { url: 'https://www.birminghammail.co.uk/?service=rss', source: 'Birmingham Mail' },
     ],
   },
   edinburgh: {
@@ -1476,6 +1554,8 @@ export const CITY_FEEDS = {
     lat: 55.9533, lng: -3.1883,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Edinburgh?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Edinburgh' },
+      { url: 'https://www.edinburghlive.co.uk/?service=rss', source: 'Edinburgh Live' },
+      { url: 'https://www.scotsman.com/rss', source: 'The Scotsman' },
     ],
   },
   glasgow: {
@@ -1483,6 +1563,7 @@ export const CITY_FEEDS = {
     lat: 55.8642, lng: -4.2518,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Glasgow?hl=en-GB&gl=GB&ceid=GB:en', source: 'Google News Glasgow' },
+      { url: 'https://www.glasgowtimes.co.uk/news/rss/', source: 'Glasgow Times' },
     ],
   },
 
@@ -1494,6 +1575,7 @@ export const CITY_FEEDS = {
     lat: -33.8688, lng: 151.2093,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Sydney?hl=en-AU&gl=AU&ceid=AU:en', source: 'Google News Sydney' },
+      { url: 'https://www.smh.com.au/rss/feed.xml', source: 'Sydney Morning Herald' },
     ],
   },
   melbourne: {
@@ -1501,6 +1583,7 @@ export const CITY_FEEDS = {
     lat: -37.8136, lng: 144.9631,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Melbourne?hl=en-AU&gl=AU&ceid=AU:en', source: 'Google News Melbourne' },
+      { url: 'https://www.theage.com.au/rss/feed.xml', source: 'The Age' },
     ],
   },
   auckland: {
@@ -1520,6 +1603,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Vienna?hl=en-US&gl=US&ceid=US:en', source: 'Google News Vienna' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Wien?hl=de-AT&gl=AT&ceid=AT:de', source: 'Google News Wien' },
+      { url: 'https://feeds.thelocal.com/rss/at', source: 'The Local Austria' },
     ],
   },
   warsaw: {
@@ -1528,6 +1612,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Warsaw?hl=en-US&gl=US&ceid=US:en', source: 'Google News Warsaw' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Warszawa?hl=pl-PL&gl=PL&ceid=PL:pl', source: 'Google News Warsaw Polish' },
+      { url: 'https://notesfrompoland.com/feed/', source: 'Notes from Poland' },
     ],
   },
   lisbon: {
@@ -1536,6 +1621,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Lisbon?hl=en-US&gl=US&ceid=US:en', source: 'Google News Lisbon' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Lisboa?hl=pt-PT&gl=PT&ceid=PT:pt-150', source: 'Google News Lisboa' },
+      { url: 'https://www.theportugalnews.com/rss', source: 'The Portugal News' },
     ],
   },
   athens: {
@@ -1543,6 +1629,7 @@ export const CITY_FEEDS = {
     lat: 37.9838, lng: 23.7275,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Athens?hl=en-US&gl=US&ceid=US:en', source: 'Google News Athens' },
+      { url: 'https://greekreporter.com/feed/', source: 'Greek Reporter' },
     ],
   },
   zurich: {
@@ -1560,6 +1647,7 @@ export const CITY_FEEDS = {
       { url: 'https://news.google.com/rss/headlines/section/geo/Dublin?hl=en-IE&gl=IE&ceid=IE:en', source: 'Google News Dublin' },
       { url: 'https://www.rte.ie/rss/news.xml', source: 'RTÉ' },
       { url: 'https://www.thejournal.ie/feed/', source: 'The Journal.ie' },
+      { url: 'https://www.irishtimes.com/cmlink/news-1.1319192', source: 'Irish Times' },
     ],
   },
   prague: {
@@ -1567,6 +1655,7 @@ export const CITY_FEEDS = {
     lat: 50.0755, lng: 14.4378,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Prague?hl=en-US&gl=US&ceid=US:en', source: 'Google News Prague' },
+      { url: 'https://praguemonitor.com/feed/', source: 'Prague Monitor' },
     ],
   },
   copenhagen: {
@@ -1574,6 +1663,7 @@ export const CITY_FEEDS = {
     lat: 55.6761, lng: 12.5683,
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Copenhagen?hl=en-US&gl=US&ceid=US:en', source: 'Google News Copenhagen' },
+      { url: 'https://cphpost.dk/feed/', source: 'Copenhagen Post' },
     ],
   },
 
@@ -1587,6 +1677,7 @@ export const CITY_FEEDS = {
       { url: 'https://news.google.com/rss/headlines/section/geo/Manila?hl=en-US&gl=US&ceid=US:en', source: 'Google News Manila' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Manila?hl=tl-PH&gl=PH&ceid=PH:tl', source: 'Google News Manila Filipino' },
       { url: 'https://www.rappler.com/feed/', source: 'Rappler' },
+      { url: 'https://www.inquirer.net/fullfeed', source: 'Philippine Inquirer' },
     ],
   },
   'kuala-lumpur': {
@@ -1595,6 +1686,8 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Kuala%20Lumpur?hl=en-MY&gl=MY&ceid=MY:en', source: 'Google News KL' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Kuala%20Lumpur?hl=ms-MY&gl=MY&ceid=MY:ms', source: 'Google News KL Malay' },
+      { url: 'https://www.malaymail.com/feed/rss/malaysia', source: 'Malay Mail' },
+      { url: 'https://www.thestar.com.my/RSS/News', source: 'The Star Malaysia' },
     ],
   },
   hanoi: {
@@ -1620,6 +1713,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Taipei?hl=en-US&gl=US&ceid=US:en', source: 'Google News Taipei' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Taipei?hl=zh-TW&gl=TW&ceid=TW:zh-Hant', source: 'Google News Taipei Chinese' },
+      { url: 'https://www.taipeitimes.com/xml/index.rss', source: 'Taipei Times' },
     ],
   },
   osaka: {
@@ -1640,6 +1734,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Accra?hl=en-GH&gl=GH&ceid=GH:en', source: 'Google News Accra' },
       { url: 'https://allafrica.com/tools/headlines/rdf/ghana/headlines.rdf', source: 'AllAfrica Ghana' },
+      { url: 'https://adomonline.com/feed/', source: 'Adom Online' },
     ],
   },
   'dar-es-salaam': {
@@ -1648,6 +1743,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Dar%20es%20Salaam?hl=en-US&gl=US&ceid=US:en', source: 'Google News Dar es Salaam' },
       { url: 'https://allafrica.com/tools/headlines/rdf/tanzania/headlines.rdf', source: 'AllAfrica Tanzania' },
+      { url: 'https://dailynews.co.tz/feed/', source: 'Daily News Tanzania' },
     ],
   },
   'addis-ababa': {
@@ -1656,6 +1752,8 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Addis%20Ababa?hl=en-US&gl=US&ceid=US:en', source: 'Google News Addis Ababa' },
       { url: 'https://allafrica.com/tools/headlines/rdf/ethiopia/headlines.rdf', source: 'AllAfrica Ethiopia' },
+      { url: 'https://addisfortune.news/feed/', source: 'Addis Fortune' },
+      { url: 'https://ethiopianmonitor.com/feed/', source: 'Ethiopian Monitor' },
     ],
   },
   abuja: {
@@ -1664,6 +1762,7 @@ export const CITY_FEEDS = {
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/Abuja?hl=en-NG&gl=NG&ceid=NG:en', source: 'Google News Abuja' },
       { url: 'https://www.premiumtimesng.com/feed', source: 'Premium Times' },
+      { url: 'https://www.premiumtimesng.com/category/news/feed', source: 'Premium Times' },
     ],
   },
 
