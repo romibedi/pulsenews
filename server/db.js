@@ -409,6 +409,11 @@ export async function updateArticleAI(articleId, aiFields) {
     ),
   );
 
+  const rejected = results.filter(r => r.status === 'rejected');
+  if (rejected.length > 0) {
+    console.warn(`[updateArticleAI] ${rejected.length}/${items.length} updates failed for ${articleId}: ${rejected[0].reason?.message}`);
+  }
+
   return results.filter(r => r.status === 'fulfilled').length;
 }
 

@@ -55,6 +55,7 @@ export async function handler(event) {
           if (updated > 0) {
             enriched++;
           } else {
+            console.warn(`[ai-enrich] Update returned 0 for ${article.articleId}`);
             failed++;
           }
         } catch (err) {
