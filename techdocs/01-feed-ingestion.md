@@ -1,6 +1,14 @@
 # Feed Ingestion Pipeline
 
-The ingestion pipeline runs every 15 minutes via EventBridge -> Lambda, processing 650+ RSS feeds and GDELT articles. It extracts full content, runs AI analysis, writes to DynamoDB across multiple partition keys, generates TTS audio, updates sitemaps, and submits URLs to IndexNow.
+The ingestion system uses a 3-pipeline architecture to avoid Lambda timeouts and separate concerns:
+
+| Pipeline | Lambda | Schedule | Purpose |
+|----------|--------|----------|---------|
+| **1. Feed Ingestion** | `pulsenews-ingest-prod` | Every 15 min | Fetch RSS + GDELT, extract content, write to DynamoDB |
+| **2. AI Enrichment** | `pulsenews-ai-enrich-prod` | Every 5 min | Analyze articles with Gemini Flash / Claude Haiku |
+| **3. TTS Generation** | `pulsenews-tts-prod` | Every 15 min | Generate Edge TTS audio, upload to S3 |
+
+Articles are written to DynamoDB with `needsAI: true` by Pipeline 1. Pipeline 2 picks them up, runs AI analysis, and updates all partition copies. Pipeline 3 independently checks S3 for missing audio and generates it.
 
 ## Feed Registry Structure
 
@@ -106,7 +114,7 @@ Uses `google-news-decoder` to resolve Google News redirect URLs (`news.google.co
 ### fetchFeed(feedUrl, source)
 In-memory cached fetch with 30-minute TTL. Background OG image fetch for articles missing images (up to 5 per feed).
 
-## Ingestion Handler (`server/ingest/handler.js`)
+## Pipeline 1: Feed Ingestion (`server/ingest/handler.js`)
 
 ### Main Flow
 
@@ -115,17 +123,17 @@ handler(event)
   |
   +-- 1. buildFeedContextMap() -> Map of ~650+ unique feed URLs
   |
-  +-- 2. Fetch all feeds (10 concurrent via createLimiter)
+  +-- 2. Fetch all feeds (25 concurrent via createLimiter)
   |       |
   |       +-- For each article in feed:
   |           a. articleExists(article.id) -> DynamoDB dedup check
   |           b. resolveGoogleNewsUrl() -> decode Google News URLs
   |           c. extractArticleContent(url) -> @extractus/article-extractor (10s timeout)
   |           d. Image resolution: RSS image > extracted image > OG image (skip logos)
-  |           e. analyzeArticle(title, description, body) -> Gemini Flash / Haiku fallback
-  |           f. Build DynamoDB items for ALL context PKs + SITEMAP entry
+  |           e. Use ANALYSIS_DEFAULTS (AI deferred to Pipeline 2)
+  |           f. Build DynamoDB items for ALL context PKs + SITEMAP entry (needsAI: true)
   |           g. batchWriteArticles(items) -> DynamoDB batch write
-  |           h. Collect for TTS, sitemap, IndexNow
+  |           h. Collect for sitemap, IndexNow
   |
   +-- 3. GDELT integration (sequential with 2s delays)
   |       Same per-article processing as RSS
@@ -133,52 +141,69 @@ handler(event)
   +-- 4. Post-ingestion:
   |       a. submitUrls(newArticleUrls) -> IndexNow
   |       b. pingSitemap() -> Google + Bing
-  |       c. generateBatch(articles, 20) -> Edge TTS to S3
-  |       d. updateSitemaps(articles) -> S3 XML files
+  |       c. updateSitemaps(articles) -> S3 XML files
   |
   +-- Return stats: { ingested, gdeltIngested, skipped, feedErrors, durationSeconds }
 ```
 
-### Concurrency Control
+### Lambda Config
+- **Timeout**: 900 seconds (15 minutes)
+- **Memory**: 1024 MB
+- **Concurrency**: 25 simultaneous feed fetches
 
-`createLimiter(10)` -- custom promise-based concurrency limiter (lines 53-73). Avoids adding `p-limit` as a dependency. Limits to 10 simultaneous feed fetches.
+## Pipeline 2: AI Enrichment (`server/ingest/ai-enrichment.js`)
 
-### Article Content Extraction
+### Main Flow
 
-```js
-async function extractArticleContent(url) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10_000); // 10s timeout
-  const article = await extract(url, {}, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PulseNews/1.0)' },
-    signal: controller.signal,
-  });
-  // Returns { body, image, author }
-}
+```
+handler(event)
+  |
+  +-- 1. queryArticlesNeedingAI(200) -> SITEMAP entries with needsAI=true
+  |
+  +-- 2. For each article (10 concurrent):
+  |       a. analyzeArticle(title, description, body) -> Gemini Flash / Haiku fallback
+  |       b. updateArticleAI(articleId, aiFields) -> Update ALL partition copies
+  |
+  +-- Return stats: { enriched, failed, durationSeconds }
 ```
 
-### Image Quality Filtering
+### AI Analysis (`server/ingest/ai-analysis.js`)
 
-`isLogoOrPlaceholder(url)` detects and rejects:
-- Google News app logo (`lh3.googleusercontent.com/j6_cofb`)
-- URL paths containing "logo", "favicon", "placeholder", "default-image", "brand", "icon"
-- Very small/narrow images by dimensions in URL (e.g., `100x50`)
+Shared module used by Pipeline 2. Tries Gemini 2.5 Flash first (~$0.0003/article), falls back to Claude Haiku (~$0.005/article).
 
-### Slug Generation
+Returns: `{ mood, entities, bestQuote, honestHeadline, questions, controversyScore, predictions }`
 
-```js
-function generateSlug(title, date) {
-  const datePrefix = date.slice(0, 10);  // "2026-03-23"
-  let slug = title.toLowerCase()
-    .replace(/[^\p{L}\p{N}\s-]/gu, '')  // Unicode-safe: keep letters + numbers
-    .replace(/\s+/g, '-')
-    .slice(0, 80);
-  if (!slug || slug === '-') {  // Non-Latin fallback
-    slug = Buffer.from(title.slice(0, 60)).toString('base64url').slice(0, 40);
-  }
-  return `${datePrefix}-${slug}`;  // "2026-03-23-headline-text-here"
-}
+### Lambda Config
+- **Timeout**: 300 seconds (5 minutes)
+- **Memory**: 256 MB
+- **Schedule**: Every 5 minutes
+- **Batch size**: 200 articles per invocation
+
+## Pipeline 3: TTS Generation (`server/ingest/tts-handler.js`)
+
+### Main Flow
+
 ```
+handler(event)
+  |
+  +-- 1. queryRecentArticlesForTTS(300) -> Today + yesterday's SITEMAP entries
+  |
+  +-- 2. For each article (20 concurrent):
+  |       a. generateAndUpload(article) -> Check S3, generate Edge TTS, upload
+  |
+  +-- Return stats: { generated, skipped, failed, durationSeconds }
+```
+
+### TTS Engine (`server/tts/generate.js`)
+- Edge TTS with 47 language voices
+- Regional English accents (US, UK, Australia, India, Europe)
+- Audio uploaded to S3 at `audio/{lang}/{slug}.mp3`
+- 30-second timeout per article
+
+### Lambda Config
+- **Timeout**: 600 seconds (10 minutes)
+- **Memory**: 512 MB
+- **Schedule**: Every 15 minutes
 
 ## DynamoDB Partition Key Strategy
 
@@ -191,14 +216,17 @@ Each article is written to **multiple partitions** for efficient querying:
 | `REGION#india` | `{ISO-date}#{articleId}` | Regional general feeds |
 | `LANG#hi` | `{ISO-date}#{articleId}` | Language-specific feeds |
 | `CITY#mumbai` | `{ISO-date}#{articleId}` | City-level feeds |
-| `SITEMAP` | `{ISO-date}#{articleId}` | Sitemap generation, search indexing |
+| `SITEMAP` | `{ISO-date}#{articleId}` | Sitemap generation, search indexing, AI enrichment |
 
 **SK format**: `{ISO-date}#{articleId}` -- enables descending chronological sort via `ScanIndexForward: false` and date-prefix queries via `begins_with(SK, :datePrefix)`.
 
 **TTL**: 90 days (`Math.floor(Date.now() / 1000) + (90 * 24 * 60 * 60)`)
 
+**Special fields**:
+- `needsAI: true/false` -- Flag for Pipeline 2 to pick up articles for AI enrichment
+
 **GSIs**:
-- `articleId-index` (hash: articleId, range: date) -- article lookup by ID
+- `articleId-index` (hash: articleId, range: date) -- article lookup by ID, used by AI enrichment to find all partition copies
 - `slug-index` (hash: slug, range: date) -- SEO-friendly URL lookup
 
 ## GDELT Integration (`server/ingest/gdelt.js`)
@@ -228,16 +256,27 @@ Two-level dedup:
 
 1. **Feed-level**: `buildFeedContextMap()` ensures each RSS URL is fetched once, even if registered across multiple categories/regions. Contexts accumulate.
 
-2. **Article-level**: `articleExists(articleId)` checks the `articleId-index` GSI before processing. This catches articles that were ingested in a previous 15-minute cycle.
+2. **Article-level**: `articleExists(articleId)` checks the `articleId-index` GSI before processing. This catches articles that were ingested in a previous cycle.
+
+## Deployment Scripts
+
+```bash
+# Deploy individual pipelines
+./scripts/deploy-lambda-ingest.sh        # Pipeline 1: Feed Ingestion
+./scripts/deploy-lambda-ai-enrich.sh     # Pipeline 2: AI Enrichment
+./scripts/deploy-lambda-tts.sh           # Pipeline 3: TTS Generation
+
+# Deploy everything (App Runner + all Lambdas + CloudFront invalidation)
+./scripts/deploy-all.sh
+```
 
 ## Error Handling and Timeouts
 
 - Feed fetch failures: logged and counted (`feedErrors`), processing continues
 - Article extraction: 10-second `AbortController` timeout per URL
 - Google News URL decode failure: article skipped
-- AI analysis failure: defaults applied (`ANALYSIS_DEFAULTS = { mood: 'neutral', entities: [], ... }`)
-- TTS generation failure: logged, article still ingested without audio
+- AI analysis failure: defaults applied, `needsAI` remains true for retry on next run
+- TTS generation failure: logged, S3 check means it will be retried on next run
 - IndexNow/sitemap failures: logged, non-blocking
 - GDELT: 15-second timeout per query, errors logged per-article
-- Lambda timeout: 900 seconds (15 minutes max)
-- Lambda concurrency: reserved to 1 to prevent overlapping runs
+- Lambda timeouts: Pipeline 1 (900s), Pipeline 2 (300s), Pipeline 3 (600s)

@@ -14,19 +14,27 @@ echo " PulseNews Full Deployment"
 echo "========================================"
 echo ""
 
-echo "[1/4] Deploying App Runner..."
+echo "[1/6] Deploying App Runner..."
 "$SCRIPTS_DIR/deploy-app.sh"
 echo ""
 
-echo "[2/4] Deploying Ingest Lambda..."
+echo "[2/6] Deploying Ingest Lambda..."
 "$SCRIPTS_DIR/deploy-lambda-ingest.sh"
 echo ""
 
-echo "[3/4] Deploying Search Indexer Lambda..."
+echo "[3/6] Deploying AI Enrichment Lambda..."
+"$SCRIPTS_DIR/deploy-lambda-ai-enrich.sh"
+echo ""
+
+echo "[4/6] Deploying TTS Lambda..."
+"$SCRIPTS_DIR/deploy-lambda-tts.sh"
+echo ""
+
+echo "[5/6] Deploying Search Indexer Lambda..."
 "$SCRIPTS_DIR/deploy-lambda-indexer.sh"
 echo ""
 
-echo "[4/4] Invalidating CloudFront cache..."
+echo "[6/6] Invalidating CloudFront cache..."
 "$SCRIPTS_DIR/invalidate-cache.sh"
 echo ""
 

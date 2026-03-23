@@ -3,6 +3,7 @@ import {
   DynamoDBDocumentClient,
   QueryCommand,
   BatchWriteCommand,
+  UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 
 const TABLE_NAME = process.env.DYNAMODB_TABLE || 'pulsenews-articles';
@@ -333,4 +334,114 @@ export async function querySitemapAll(chunkSize = 45000) {
     chunks.push(cleaned.slice(i, i + chunkSize));
   }
   return chunks;
+}
+
+/**
+ * Query SITEMAP articles that need AI enrichment (needsAI = true).
+ * Returns raw items (with PK/SK) for use by the AI enrichment pipeline.
+ */
+export async function queryArticlesNeedingAI(limit = 200) {
+  const today = new Date().toISOString().slice(0, 10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const items = [];
+  let lastKey;
+
+  // Query today's and yesterday's SITEMAP entries with needsAI filter
+  for (const datePrefix of [today, yesterday]) {
+    lastKey = undefined;
+    do {
+      const result = await docClient.send(new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
+        FilterExpression: 'needsAI = :yes',
+        ExpressionAttributeValues: {
+          ':pk': 'SITEMAP',
+          ':prefix': datePrefix,
+          ':yes': true,
+        },
+        ProjectionExpression: 'PK, SK, articleId, title, description, body',
+        ...(lastKey && { ExclusiveStartKey: lastKey }),
+      }));
+      items.push(...(result.Items || []));
+      lastKey = result.LastEvaluatedKey;
+      if (items.length >= limit) break;
+    } while (lastKey);
+    if (items.length >= limit) break;
+  }
+
+  return items.slice(0, limit);
+}
+
+/**
+ * Update all partition copies of an article with AI analysis results.
+ * Finds all items via articleId-index, then updates each with the AI fields.
+ */
+export async function updateArticleAI(articleId, aiFields) {
+  // Find all partition copies
+  const result = await docClient.send(new QueryCommand({
+    TableName: TABLE_NAME,
+    IndexName: 'articleId-index',
+    KeyConditionExpression: 'articleId = :aid',
+    ExpressionAttributeValues: { ':aid': articleId },
+    ProjectionExpression: 'PK, SK',
+  }));
+
+  const items = result.Items || [];
+  if (items.length === 0) return 0;
+
+  const results = await Promise.allSettled(
+    items.map(({ PK, SK }) =>
+      docClient.send(new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: { PK, SK },
+        UpdateExpression: 'SET mood = :mood, entities = :entities, bestQuote = :bq, honestHeadline = :hh, questions = :q, controversyScore = :cs, predictions = :pred, needsAI = :no',
+        ExpressionAttributeValues: {
+          ':mood': aiFields.mood,
+          ':entities': aiFields.entities,
+          ':bq': aiFields.bestQuote,
+          ':hh': aiFields.honestHeadline,
+          ':q': aiFields.questions,
+          ':cs': aiFields.controversyScore,
+          ':pred': aiFields.predictions,
+          ':no': false,
+        },
+      })),
+    ),
+  );
+
+  return results.filter(r => r.status === 'fulfilled').length;
+}
+
+/**
+ * Query recent SITEMAP articles for TTS generation check.
+ * Returns raw items with fields needed for TTS.
+ */
+export async function queryRecentArticlesForTTS(limit = 300) {
+  const today = new Date().toISOString().slice(0, 10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const items = [];
+  let lastKey;
+
+  for (const datePrefix of [today, yesterday]) {
+    lastKey = undefined;
+    do {
+      const result = await docClient.send(new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
+        ExpressionAttributeValues: {
+          ':pk': 'SITEMAP',
+          ':prefix': datePrefix,
+        },
+        ProjectionExpression: 'articleId, title, description, body, slug, lang',
+        ScanIndexForward: false,
+        ...(lastKey && { ExclusiveStartKey: lastKey }),
+      }));
+      items.push(...(result.Items || []));
+      lastKey = result.LastEvaluatedKey;
+      if (items.length >= limit) break;
+    } while (lastKey);
+    if (items.length >= limit) break;
+  }
+
+  return items.slice(0, limit);
 }

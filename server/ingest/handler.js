@@ -1,9 +1,9 @@
 // ---------------------------------------------------------------------------
-// Ingestion Lambda for PulseNewsToday
+// Pipeline 1: Feed Ingestion Lambda
 //
-// Triggered every 15 minutes via EventBridge.  Iterates every registered RSS
-// feed, fetches new articles, extracts full-text content, and writes them to
-// DynamoDB in all relevant PK partitions plus a SITEMAP entry.
+// Triggered every 15 minutes via EventBridge. Fetches RSS feeds, extracts
+// article content, and writes to DynamoDB. AI analysis and TTS generation
+// are handled by separate pipelines (ai-enrichment.js and tts-handler.js).
 // ---------------------------------------------------------------------------
 
 import { extract } from '@extractus/article-extractor';
@@ -11,15 +11,9 @@ import { buildFeedContextMap } from '../shared/feedRegistry.js';
 import { parseRssFeed, fetchOgImage, resolveGoogleNewsUrl } from '../rss.js';
 import { articleExists, batchWriteArticles } from '../db.js';
 import { submitUrls, articleUrl, pingSitemap } from '../indexnow.js';
-// Dynamic import — edge-tts-universal may not be in the Lambda package
-const generateBatch = async (...args) => {
-  try {
-    const mod = await import('../tts/generate.js');
-    return mod.generateBatch(...args);
-  } catch { return { generated: 0, skipped: 0, failed: 0 }; }
-};
 import { updateSitemaps } from '../sitemap/generate.js';
 import { fetchGdeltArticles, buildGdeltContexts } from './gdelt.js';
+import { ANALYSIS_DEFAULTS } from './ai-analysis.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -193,124 +187,6 @@ async function extractArticleContent(url) {
 }
 
 // ---------------------------------------------------------------------------
-// Unified AI analysis via Claude Haiku
-// ---------------------------------------------------------------------------
-
-const ANALYSIS_DEFAULTS = { mood: 'neutral', entities: [], bestQuote: '', honestHeadline: '', questions: [], controversyScore: 0, predictions: [] };
-
-const ANALYSIS_PROMPT = `Analyze this news article and return ONLY valid JSON (no markdown, no code blocks):
-{
-  "mood": "uplifting|neutral|investigative|breaking",
-  "entities": [{"name": "...", "type": "person|company|place"}],
-  "bestQuote": "most impactful direct quote from the article, or empty string if none",
-  "honestHeadline": "a factual, de-clickbaited headline",
-  "questions": ["what happened?", "who is affected?", "what happens next?"],
-  "controversyScore": 0-100,
-  "predictions": [{"claim": "...", "entity": "...", "targetDate": "..."}]
-}
-
-Rules:
-- entities: extract up to 5 key people, companies, or places mentioned
-- bestQuote: must be an actual quote from the text with attribution, empty string if no quotes found
-- honestHeadline: rewrite the headline to be factual and clear, removing any clickbait
-- questions: 3-5 natural questions this article answers
-- controversyScore: 0=completely neutral factual, 100=extremely polarizing
-- predictions: only include if the article contains forward-looking claims, otherwise empty array`;
-
-/** Call Gemini 2.0 Flash for article analysis (~$0.0003/article). */
-async function analyzeWithGemini(title, content) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return null;
-
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: `${ANALYSIS_PROMPT}\n\nTitle: ${title}\n\n${content}` }] }],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        maxOutputTokens: 500,
-        temperature: 0.1,
-        thinkingConfig: { thinkingBudget: 0 },
-      },
-    }),
-  });
-
-  if (!res.ok) return null;
-  const data = await res.json();
-  const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  return raw.trim();
-}
-
-/** Call Claude Haiku as fallback (~$0.005/article). */
-async function analyzeWithHaiku(title, content) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return null;
-
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 500,
-      messages: [{ role: 'user', content: `${ANALYSIS_PROMPT}\n\nTitle: ${title}\n\n${content}` }],
-    }),
-  });
-
-  if (!res.ok) return null;
-  const data = await res.json();
-  return (data.content?.[0]?.text || '').trim();
-}
-
-/**
- * Unified article analysis — tries Gemini Flash first (cheap), falls back to Haiku.
- * Set GEMINI_API_KEY to use Gemini, ANTHROPIC_API_KEY for Haiku fallback.
- */
-async function analyzeArticle(title, description, body) {
-  const content = (body || description || '').slice(0, 1500);
-  if (!content && !title) return { ...ANALYSIS_DEFAULTS };
-
-  try {
-    // Try Gemini Flash first (17x cheaper), fall back to Haiku
-    const raw = await analyzeWithGemini(title, content)
-      || await analyzeWithHaiku(title, content);
-
-    if (!raw) return { ...ANALYSIS_DEFAULTS };
-
-    // Parse JSON (handle potential markdown code blocks)
-    let parsed;
-    try {
-      const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '');
-      parsed = JSON.parse(jsonStr);
-    } catch {
-      const moodMatch = raw.match(/\b(uplifting|neutral|investigative|breaking)\b/);
-      return { ...ANALYSIS_DEFAULTS, mood: moodMatch?.[1] || 'neutral' };
-    }
-
-    // Validate and sanitize
-    const validMoods = ['uplifting', 'neutral', 'investigative', 'breaking'];
-    return {
-      mood: validMoods.includes(parsed.mood) ? parsed.mood : 'neutral',
-      entities: Array.isArray(parsed.entities) ? parsed.entities.slice(0, 5).map(e => ({
-        name: String(e.name || ''),
-        type: ['person', 'company', 'place'].includes(e.type) ? e.type : 'person',
-      })).filter(e => e.name) : [],
-      bestQuote: String(parsed.bestQuote || ''),
-      honestHeadline: String(parsed.honestHeadline || ''),
-      questions: Array.isArray(parsed.questions) ? parsed.questions.slice(0, 5).map(String) : [],
-      controversyScore: typeof parsed.controversyScore === 'number' ? Math.min(100, Math.max(0, Math.round(parsed.controversyScore))) : 0,
-      predictions: Array.isArray(parsed.predictions) ? parsed.predictions.slice(0, 3).map(p => ({
-        claim: String(p.claim || ''),
-        entity: String(p.entity || ''),
-        targetDate: String(p.targetDate || ''),
-      })).filter(p => p.claim) : [],
-    };
-  } catch {
-    return { ...ANALYSIS_DEFAULTS };
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Main handler
 // ---------------------------------------------------------------------------
 
@@ -322,13 +198,12 @@ export async function handler(event) {
   const feedMap = buildFeedContextMap();
   console.log(`[ingest] ${feedMap.size} unique feed URLs to process`);
 
-  const feedLimit = createLimiter(10);
+  const feedLimit = createLimiter(25);
   let totalIngested = 0;
   let totalSkipped = 0;
   let feedErrors = 0;
-  const newArticleUrls = []; // Collect URLs for IndexNow submission
-  const newArticlesForTts = []; // Collect articles for TTS generation
-  const newArticlesForSitemap = []; // Collect articles for sitemap generation
+  const newArticleUrls = [];
+  const newArticlesForSitemap = [];
 
   // 2. Fetch all feeds concurrently (max 10 at a time)
   const feedEntries = [...feedMap.entries()];
@@ -403,8 +278,8 @@ export async function handler(event) {
             const now = new Date().toISOString();
             const ttl = Math.floor(Date.now() / 1000) + (90 * 24 * 60 * 60);
 
-            // 5b. Unified AI analysis via Claude Haiku
-            const analysis = await analyzeArticle(article.title, article.description, body);
+            // AI analysis deferred to Pipeline 2 (ai-enrichment Lambda)
+            const analysis = { ...ANALYSIS_DEFAULTS };
 
             // 6. Build DynamoDB items for ALL relevant PK partitions
             const items = [];
@@ -444,6 +319,7 @@ export async function handler(event) {
                 questions: analysis.questions,
                 controversyScore: analysis.controversyScore,
                 predictions: analysis.predictions,
+                needsAI: true,
                 isExternal: true,
                 ttl,
                 createdAt: now,
@@ -471,6 +347,7 @@ export async function handler(event) {
               questions: analysis.questions,
               controversyScore: analysis.controversyScore,
               predictions: analysis.predictions,
+              needsAI: true,
               slug,
               date,
               ttl,
@@ -481,16 +358,6 @@ export async function handler(event) {
             await batchWriteArticles(items);
             totalIngested++;
             newArticleUrls.push(articleUrl(slug));
-            // Collect for TTS generation (use first context's lang + region)
-            const ttsCtx = contexts[0] ? contextFields(contexts[0]) : { lang: 'en', region: 'global' };
-            newArticlesForTts.push({
-              title: article.title,
-              body,
-              description: article.description,
-              lang: ttsCtx.lang,
-              region: ttsCtx.region,
-              slug,
-            });
             newArticlesForSitemap.push({
               articleId: article.id,
               slug,
@@ -549,8 +416,8 @@ export async function handler(event) {
         const now = new Date().toISOString();
         const ttl = Math.floor(Date.now() / 1000) + (90 * 24 * 60 * 60);
 
-        // Unified AI analysis via Claude Haiku
-        const analysis = await analyzeArticle(article.title, article.description || body, body);
+        // AI analysis deferred to Pipeline 2 (ai-enrichment Lambda)
+        const analysis = { ...ANALYSIS_DEFAULTS };
 
         // Build contexts from GDELT metadata
         const contexts = buildGdeltContexts(article);
@@ -588,6 +455,7 @@ export async function handler(event) {
             questions: analysis.questions,
             controversyScore: analysis.controversyScore,
             predictions: analysis.predictions,
+            needsAI: true,
             isExternal: true,
             ttl,
             createdAt: now,
@@ -615,6 +483,7 @@ export async function handler(event) {
           questions: analysis.questions,
           controversyScore: analysis.controversyScore,
           predictions: analysis.predictions,
+          needsAI: true,
           slug,
           date,
           ttl,
@@ -625,17 +494,6 @@ export async function handler(event) {
         totalIngested++;
         gdeltIngested++;
         newArticleUrls.push(articleUrl(slug));
-
-        const ttsLang = article._lang || 'en';
-        const ttsRegion = article._region || 'global';
-        newArticlesForTts.push({
-          title: article.title,
-          body,
-          description: article.description,
-          lang: ttsLang,
-          region: ttsRegion,
-          slug,
-        });
         newArticlesForSitemap.push({
           articleId: article.id,
           slug,
@@ -676,17 +534,6 @@ export async function handler(event) {
     } catch (err) {
       console.warn(`[ingest] Sitemap ping failed: ${err.message}`);
     }
-  }
-
-  // Pre-generate TTS audio and upload to S3 (skip if SKIP_TTS is set)
-  if (newArticlesForTts.length > 0 && !process.env.SKIP_TTS) {
-    try {
-      await generateBatch(newArticlesForTts, 20);
-    } catch (err) {
-      console.warn(`[ingest] TTS generation failed: ${err.message}`);
-    }
-  } else if (process.env.SKIP_TTS) {
-    console.log(`[ingest] TTS skipped (SKIP_TTS=${process.env.SKIP_TTS})`);
   }
 
   // Update S3 sitemaps (daily + news + index)
