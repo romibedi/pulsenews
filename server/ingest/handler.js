@@ -11,7 +11,13 @@ import { buildFeedContextMap } from '../shared/feedRegistry.js';
 import { parseRssFeed, fetchOgImage, resolveGoogleNewsUrl } from '../rss.js';
 import { articleExists, batchWriteArticles } from '../db.js';
 import { submitUrls, articleUrl, pingSitemap } from '../indexnow.js';
-import { generateBatch } from '../tts/generate.js';
+// Dynamic import — edge-tts-universal may not be in the Lambda package
+const generateBatch = async (...args) => {
+  try {
+    const mod = await import('../tts/generate.js');
+    return mod.generateBatch(...args);
+  } catch { return { generated: 0, skipped: 0, failed: 0 }; }
+};
 import { updateSitemaps } from '../sitemap/generate.js';
 import { fetchGdeltArticles, buildGdeltContexts } from './gdelt.js';
 
