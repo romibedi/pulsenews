@@ -19,7 +19,15 @@ import {
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { extract } from '@extractus/article-extractor';
-import { resolveGoogleNewsUrl, fetchOgImage } from '../rss.js';
+import { resolveGoogleNewsUrl, fetchOgImage as _fetchOgImage } from '../rss.js';
+
+// Wrap fetchOgImage with a 5s timeout
+function fetchOgImage(url) {
+  return Promise.race([
+    _fetchOgImage(url),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('OG timeout')), 5_000)),
+  ]).catch(() => null);
+}
 
 const TABLE_NAME = process.env.DYNAMODB_TABLE || 'pulsenews-articles';
 const GOOGLE_LOGO = 'lh3.googleusercontent.com/J6_coFb';
@@ -65,7 +73,7 @@ function htmlToText(html) {
 async function extractContent(url) {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10_000);
+    const timeout = setTimeout(() => controller.abort(), 5_000);
     const article = await extract(url, {}, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PulseNews/1.0)' },
       signal: controller.signal,
@@ -139,25 +147,24 @@ async function processArticle(articleKey, group) {
   const decoded = realUrl !== url;
 
   if (!decoded) {
-    // URL isn't a Google News redirect — just fix the logo image
-    // We can't improve it without a real URL to extract from
     return { articleKey, status: 'skip-no-decode', partitions: items.length };
   }
 
-  // Extract content from real URL
-  const extracted = await extractContent(realUrl);
+  // Run content extraction + OG image fetch in parallel
+  const [extracted, ogImg] = await Promise.all([
+    extractContent(realUrl),
+    fetchOgImage(realUrl).catch(() => null),
+  ]);
+
   const body = extracted.body || '';
 
-  // Get image
+  // Get best image
   let image = '';
   if (extracted.image && !isLogoOrPlaceholder(extracted.image)) {
     image = extracted.image;
   }
-  if (!image) {
-    const ogImg = await fetchOgImage(realUrl).catch(() => null);
-    if (ogImg && !isLogoOrPlaceholder(ogImg)) {
-      image = ogImg;
-    }
+  if (!image && ogImg && !isLogoOrPlaceholder(ogImg)) {
+    image = ogImg;
   }
 
   // Build update expression
@@ -183,35 +190,31 @@ async function processArticle(articleKey, group) {
     };
   }
 
-  // Update all partition copies of this article
-  let updated = 0;
-  for (const { PK, SK } of items) {
-    const expr = [];
-    const names = {};
-    const values = {};
+  // Build update params once, reuse for all partitions
+  const expr = [];
+  const names = {};
+  const values = {};
+  for (const [key, val] of Object.entries(updates)) {
+    expr.push(`#${key} = :${key}`);
+    names[`#${key}`] = key;
+    values[`:${key}`] = val;
+  }
+  const updateExpr = `SET ${expr.join(', ')}`;
 
-    for (const [key, val] of Object.entries(updates)) {
-      const attr = `#${key}`;
-      const placeholder = `:${key}`;
-      expr.push(`${attr} = ${placeholder}`);
-      names[attr] = key;
-      values[placeholder] = val;
-    }
-
-    try {
-      await docClient.send(new UpdateCommand({
+  // Update all partition copies in parallel
+  const results = await Promise.allSettled(
+    items.map(({ PK, SK }) =>
+      docClient.send(new UpdateCommand({
         TableName: TABLE_NAME,
         Key: { PK, SK },
-        UpdateExpression: `SET ${expr.join(', ')}`,
+        UpdateExpression: updateExpr,
         ExpressionAttributeNames: names,
         ExpressionAttributeValues: values,
-      }));
-      updated++;
-    } catch (err) {
-      console.warn(`\n[error] Failed to update PK=${PK}: ${err.message}`);
-    }
-  }
+      }))
+    )
+  );
 
+  const updated = results.filter(r => r.status === 'fulfilled').length;
   const domain = new URL(realUrl).hostname;
   return {
     articleKey,

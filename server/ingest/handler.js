@@ -363,8 +363,15 @@ export async function handler(event) {
             // 4. Resolve Google News redirect URLs to actual article URLs
             //    Google News RSS links are encrypted redirects — decode to get
             //    the real publisher URL for content extraction and OG images.
+            //    Skip articles where the URL can't be decoded — they're useless
+            //    (no real URL, no image, no body).
+            const isGoogleNewsSource = article.url?.includes('news.google.com/rss/articles/');
             const realUrl = await resolveGoogleNewsUrl(article.url);
             const isGoogleNews = realUrl !== article.url;
+            if (isGoogleNewsSource && !isGoogleNews) {
+              totalSkipped++;
+              continue;
+            }
 
             // 5. Extract full article content (10s timeout per article)
             const extracted = await extractArticleContent(realUrl);
